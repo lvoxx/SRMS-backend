@@ -111,6 +111,7 @@ graph TD
 ```
 
 ### Project Folders
+```
 /SRMS-backend
 ├── /configs                  # Configuration files
 │   ├── k8s/                  # Kubernetes manifests
@@ -184,8 +185,10 @@ graph TD
 ├── README.md
 ├── docker-compose.yml        # Local development
 └── pom.xml                   # Parent POM (for Java services)
+```
 
 ### Database Structure
+```
 /data
 ├── /cassandra      # Order data (time-series partitions)
 │   ├── /order_by_date    # Partition by YYYY-MM-DD
@@ -198,6 +201,7 @@ graph TD
 └── /postgres       # Reporting data
     ├── /daily_sales
     └── /staff_attendance
+```
 
 ### CI/CD Pipeline
 ```mermaid
