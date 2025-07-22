@@ -1,0 +1,3 @@
+networks:
+  srms:
+    driver: bridge
