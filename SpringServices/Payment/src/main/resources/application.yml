@@ -1,0 +1,6 @@
+server:
+  port: @service.port@
+
+spring:
+    application:
+        name: payment

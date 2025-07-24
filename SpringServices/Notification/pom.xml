@@ -33,6 +33,7 @@
 	</developers>
 	<properties>
 		<java.version>21</java.version>
+		<service.port>${port.notification}</service.port>
 	</properties>
 	<dependencies>
 		<dependency>
