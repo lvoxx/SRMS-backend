@@ -51,10 +51,28 @@
 	</modules>
 
 	<properties>
+		<!-- VERSIONING START -->
 		<java.version>21</java.version>
+		<spring-boot.version>3.5.3</spring-boot.version>
+		<spring-cloud.version>4.3.0</spring-cloud.version>
+		<spring-cloud.kubernetes.version>3.3.0</spring-cloud.kubernetes.version>
+		<spring-cloud.resilience4j.version>3.3.0</spring-cloud.resilience4j.version>
+
+		<micrometer-tracing-bridge-brave.version>1.5.2</micrometer-tracing-bridge-brave.version>
+		<zipkin-reporter-brave.version>3.5.1</zipkin-reporter-brave.version>
+		<postgresql.version>42.7.7</postgresql.version>
+		<r2dbc-postgresql.version>1.0.7.RELEASE</r2dbc-postgresql.version>
+		<lombok.version>1.18.38</lombok.version>
+
+		<reactor-test.version>3.7.8</reactor-test.version>
+		<testcontainers.version>1.21.3</testcontainers.version>
+		<spring-security-test.version>6.5.2</spring-security-test.version>
+		<spring-boot.testcontainers.version>3.5.3</spring-boot.testcontainers.version>
+		<!-- VERSIONING END -->
+
+		<!-- DOCKER START -->
 		<docker.image.prefix>lvoxx/srms</docker.image.prefix>
 		<skip.docker.build>true</skip.docker.build>
-
 		<!-- Định nghĩa tất cả ports ở đây -->
 		<port.config-server>8888</port.config-server>
 		<port.gateway>8080</port.gateway>
@@ -70,7 +88,7 @@
 
 		<!-- Property mặc định (cho service không tự định nghĩa) -->
 		<service.port>8080</service.port>
-
+		<!-- DOCKER END -->
 	</properties>
 
 	<repositories>
@@ -82,16 +100,157 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- SPRING BOOT -->
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter</artifactId>
+				<artifactId>spring-boot-starter-actuator</artifactId>
+				<version>${spring-boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-oauth2-client</artifactId>
+				<version>${spring-boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+				<version>${spring-boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-security</artifactId>
+				<version>${spring-boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-data-r2dbc</artifactId>
+				<version>${spring-boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+				<version>${spring-boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-webflux</artifactId>
+				<version>${spring-boot.version}</version>
+			</dependency>
+			<!-- SPRING BOOT -->
+
+			<!-- SPRING CLOUD -->
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
+				<version>${spring-cloud.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+				<version>${spring-cloud.resilience4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-config</artifactId>
+				<version>${spring-cloud.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-kubernetes-client</artifactId>
+				<version>${spring-cloud.kubernetes.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-config-server</artifactId>
+				<version>${spring-cloud.version}</version>
+			</dependency>
+			<!-- SPRING CLOUD -->
+
+			<!-- 3RD -->
+			<dependency>
+				<groupId>org.postgresql</groupId>
+				<artifactId>postgresql</artifactId>
+				<version>${postgresql.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.postgresql</groupId>
+				<artifactId>r2dbc-postgresql</artifactId>
+				<version>${r2dbc-postgresql.version}</version>
+				<scope>runtime</scope>
 			</dependency>
 
 			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
+				<optional>true</optional>
+			</dependency>
+
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-tracing-bridge-brave</artifactId>
+				<version>${micrometer-tracing-bridge-brave.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.reporter2</groupId>
+				<artifactId>zipkin-reporter-brave</artifactId>
+				<version>${zipkin-reporter-brave.version}</version>
+			</dependency>
+			<!-- 3RD -->
+
+			<!-- TEST -->
+			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-test</artifactId>
+				<version>${spring-boot.version}</version>
 				<scope>test</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-test</artifactId>
+				<version>${spring-boot.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-testcontainers</artifactId>
+				<version>${spring-boot.testcontainers.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>io.projectreactor</groupId>
+				<artifactId>reactor-test</artifactId>
+				<version>${reactor-test.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-test</artifactId>
+				<version>${spring-security-test.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>junit-jupiter</artifactId>
+				<version>${testcontainers.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>postgresql</artifactId>
+				<version>${testcontainers.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>r2dbc</artifactId>
+				<version>${testcontainers.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<!-- TEST -->
 		</dependencies>
 	</dependencyManagement>
 
@@ -130,7 +289,7 @@
 			</build>
 		</profile>
 	</profiles>
-	
+
 	<build>
 		<resources>
 			<resource>

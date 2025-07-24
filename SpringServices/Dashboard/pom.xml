@@ -3,18 +3,18 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.3</version>
-		<relativePath/>
-		<!-- lookup parent from repository -->
+		<groupId>io.github.lvoxx.srms</groupId>
+	<artifactId>root</artifactId>
+	<version>1.0.0</version>
 	</parent>
+	
 	<groupId>io.github.lvoxx.srms</groupId>
 	<artifactId>dashboard</artifactId>
 	<version>1.0.0</version>
 	<name>Dashboard</name>
 	<description>Smart Restaurant Management System - Dashboard Service</description>
 	<url/>
+
 	<licenses>
 		<license>
 			<name>MIT License</name>
@@ -31,10 +31,11 @@
 			<url>https://github.com/lvoxx</url>
 		</developer>
 	</developers>
+
 	<properties>
-		<java.version>21</java.version>
 		<service.port>${port.dashboard}</service.port>
 	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
