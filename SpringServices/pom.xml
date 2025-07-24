@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.3</version>
+		<relativePath/>
+		<!-- lookup parent from repository -->
+	</parent>
+
+	<groupId>io.github.lvoxx.srms</groupId>
+	<artifactId>root</artifactId>
+	<version>1.0.0</version>
+	<name>Root</name>
+	<description>Smart Restaurant Management System - A Restaurant Mircroservice Application</description>
+
+	<url/>
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://github.com/lvoxx/SRMS-backend/blob/main/LICENSE</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Lvoxx</name>
+			<roles>
+				<role>Maintainer</role>
+			</roles>
+			<email>lvoxxartist@gmail.com</email>
+			<url>https://github.com/lvoxx</url>
+		</developer>
+	</developers>
+
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>config_server</module>
+		<module>contactor</module>
+		<module>customer</module>
+		<module>dashboard</module>
+		<module>gateway</module>
+		<module>kitchen</module>
+		<module>notification</module>
+		<module>order</module>
+		<module>payment</module>
+		<module>reporting</module>
+		<module>warehouse</module>
+	</modules>
+
+	<properties>
+		<java.version>21</java.version>
+		<docker.image.prefix>lvoxx/srms</docker.image.prefix>
+		<skip.docker.build>true</skip.docker.build>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>confluent</id>
+			<url>https://packages.confluent.io/maven/</url>
+		</repository>
+	</repositories>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter</artifactId>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-test</artifactId>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<profiles>
+		<profile>
+			<id>docker-build</id>
+			<build>
+				<plugins>		<plugin>
+						<groupId>com.spotify</groupId>
+						<artifactId>dockerfile-maven-plugin</artifactId>
+						<version>1.4.13</version>
+						<configuration>
+							<skip>${skip.docker.build}</skip>
+							<repository>${docker.image.prefix}/${project.artifactId}</repository>
+							<tag>${project.version}</tag>
+							<dockerfile>${project.basedir}/../Dockerfile</dockerfile>
+							<buildArgs>
+								<SERVICE_NAME>${project.artifactId}</SERVICE_NAME>
+								<ARTIFACT_NAME>${project.build.finalName}</ARTIFACT_NAME>
+								<EXPOSED_PORT>${service.port}</EXPOSED_PORT>
+							</buildArgs>
+							<contextDirectory>${project.basedir}/..</contextDirectory>
+						</configuration>
+						<executions>
+							<execution>
+								<id>build-docker-image</id>
+								<phase>package</phase>
+								<goals>
+									<goal>build</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+</project>
