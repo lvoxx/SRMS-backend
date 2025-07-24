@@ -38,20 +38,18 @@ docker: $(addprefix docker-,$(SERVICES))
 
 .PHONY: $(addprefix docker-,$(SERVICES))
 $(addprefix docker-,$(SERVICES)): docker-%:
-	@echo "Building Docker image for service: $* (workspace: $(WORKSPACE))"
+	@echo "Building $* with custom port..."
 	@cd $(WORKSPACE) && \
 	SERVICE_NAME=$* && \
 	ARTIFACT_NAME=$$($(MAVEN_CMD) -f $*/pom.xml help:evaluate -Dexpression=project.build.finalName -q -DforceStdout) && \
 	EXPOSED_PORT=$$($(MAVEN_CMD) -f $*/pom.xml help:evaluate -Dexpression=service.port -q -DforceStdout) && \
 	$(DOCKER_CMD) build \
-		$(BUILD_ARGS) \
 		--build-arg SERVICE_NAME=$$SERVICE_NAME \
 		--build-arg ARTIFACT_NAME=$$ARTIFACT_NAME \
 		--build-arg EXPOSED_PORT=$$EXPOSED_PORT \
 		-t $(DOCKER_REGISTRY)/$$SERVICE_NAME:$(VERSION) \
-		-t $(DOCKER_REGISTRY)/$$SERVICE_NAME:latest \
 		-f $(DOCKER_FILE) \
-		$(DOCKER_CONTEXT)
+		.
 
 .PHONY: service
 service:

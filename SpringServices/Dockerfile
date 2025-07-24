@@ -1,8 +1,9 @@
+ARG SERVICE_NAME
+ARG EXPOSED_PORT
+ARG ARTIFACT_NAME
+
 # Stage 1: Build with Maven (optimized caching)
 FROM eclipse-temurin:21-jdk-jammy as builder
-
-ARG SERVICE_NAME
-ARG ARTIFACT_NAME
 
 WORKDIR /app
 
@@ -24,9 +25,6 @@ RUN mvn package -pl ${SERVICE_NAME} -am -DskipTests && \
 
 # Stage 2: Runtime image
 FROM eclipse-temurin:21-jre-jammy
-
-ARG SERVICE_NAME
-ARG EXPOSED_PORT
 
 WORKDIR /app
 
