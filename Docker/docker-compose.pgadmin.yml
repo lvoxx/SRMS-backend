@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:9.6.0
     container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@example.com
@@ -11,107 +9,13 @@ services:
       - "5050:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - postgres-service1
-      - postgres-service2
-      - postgres-service3
-      - postgres-service4
-      - postgres-service5
-      - postgres-service6
-      - postgres-service7
-      - postgres-service8
-      - postgres-service9
     networks:
       - postgres-network
-
-  postgres-service1:
-    image: postgres:13-alpine
-    container_name: postgres-service1
-    environment:
-      POSTGRES_DB: service1_db
-      POSTGRES_USER: service1_user
-      POSTGRES_PASSWORD: service1_pass
-    volumes:
-      - ./database/service1_db.sql:/docker-entrypoint-initdb.d/init.sql
-      - postgres_service1_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - postgres-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U service1_user -d service1_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  postgres-service2:
-    image: postgres:13-alpine
-    container_name: postgres-service2
-    environment:
-      POSTGRES_DB: service2_db
-      POSTGRES_USER: service2_user
-      POSTGRES_PASSWORD: service2_pass
-    volumes:
-      - ./database/service2_db.sql:/docker-entrypoint-initdb.d/init.sql
-      - postgres_service2_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
-    networks:
-      - postgres-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U service2_user -d service2_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  # Continue the pattern for services 3-8
-  postgres-service3:
-    image: postgres:13-alpine
-    container_name: postgres-service3
-    environment:
-      POSTGRES_DB: service3_db
-      POSTGRES_USER: service3_user
-      POSTGRES_PASSWORD: service3_pass
-    volumes:
-      - ./database/service3_db.sql:/docker-entrypoint-initdb.d/init.sql
-      - postgres_service3_data:/var/lib/postgresql/data
-    ports:
-      - "5434:5432"
-    networks:
-      - postgres-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U service3_user -d service3_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  postgres-service9:
-    image: postgres:13-alpine
-    container_name: postgres-service9
-    environment:
-      POSTGRES_DB: service9_db
-      POSTGRES_USER: service9_user
-      POSTGRES_PASSWORD: service9_pass
-    volumes:
-      - ./database/service9_db.sql:/docker-entrypoint-initdb.d/init.sql
-      - postgres_service9_data:/var/lib/postgresql/data
-    ports:
-      - "5440:5432"
-    networks:
-      - postgres-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U service9_user -d service9_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
 volumes:
   pgadmin_data:
-  postgres_service1_data:
-  postgres_service2_data:
-  postgres_service3_data:
-  # Continue for services 4-8
-  postgres_service9_data:
+  pg-customer:
+  pg-contactor:
 
 networks:
   postgres-network:

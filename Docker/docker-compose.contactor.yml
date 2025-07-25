@@ -1,0 +1,20 @@
+services:
+  pg-contactor:
+    image: postgres:14.18
+    container_name: postgres-contactor
+    environment:
+      POSTGRES_DB: contactor_db
+      POSTGRES_USER: contactor_user
+      POSTGRES_PASSWORD: contactor_pass
+    volumes:
+      - ./database/contactor.sql:/docker-entrypoint-initdb.d/init.sql
+      - pg-contactor:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U contactor_user -d contactor_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
