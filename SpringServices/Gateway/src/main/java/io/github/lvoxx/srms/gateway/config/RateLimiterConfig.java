@@ -11,18 +11,22 @@ import reactor.core.publisher.Mono;
 public class RateLimiterConfig {
 
     @Bean
-    KeyResolver apiKeyResolver() {
+    public KeyResolver apiKeyResolver() {
         return exchange -> {
-            // Rate limit by API key if present
+            // Check for API key first
             String apiKey = exchange.getRequest().getHeaders().getFirst("X-API-KEY");
             if (apiKey != null && !apiKey.isEmpty()) {
-                return Mono.just(apiKey);
+                return Mono.just("api-key-" + apiKey);
             }
 
-            // Otherwise rate limit by JWT subject
+            // Then check for JWT
             return exchange.getPrincipal()
                     .cast(JwtAuthenticationToken.class)
-                    .map(token -> token.getToken().getSubject())
+                    .map(token -> {
+                        String clientId = token.getToken().getClaimAsString("azp");
+                        String userId = token.getToken().getSubject();
+                        return "jwt-" + clientId + "-" + userId;
+                    })
                     .defaultIfEmpty("anonymous");
         };
     }

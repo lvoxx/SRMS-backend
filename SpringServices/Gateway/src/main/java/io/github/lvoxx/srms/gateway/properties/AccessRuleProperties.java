@@ -10,15 +10,14 @@ import java.util.Set;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import lombok.Data;
+
+@Data
 @Component
-@ConfigurationProperties(prefix = "security.access-rules")
+@ConfigurationProperties(prefix = "app.access-rules")
 public class AccessRuleProperties {
 
     private Map<String, List<String>> accessRules = new HashMap<>();
-
-    public Map<String, List<String>> getAccessRules() {
-        return accessRules;
-    }
 
     public void setAccessRules(Map<String, List<String>> accessRules) {
         this.accessRules = accessRules;

@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/fallback")
 public class FallbackController {
 
-    @GetMapping
+    @GetMapping("/service-unavailable")
     public Mono<ResponseEntity<Map<String, Object>>> serviceUnavailable() {
         return Mono.just(ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
