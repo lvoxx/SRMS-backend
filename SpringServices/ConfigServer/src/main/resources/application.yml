@@ -13,16 +13,6 @@ spring:
           clone-on-start: true
           force-pull: true
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka
-    fetch-registry: true
-    register-with-eureka: true
-  instance:
-    hostname: localhost
-    prefer-ip-address: true
-
 # Cấu hình Actuator (optional)
 management:
   endpoints:

@@ -4,15 +4,17 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>io.github.lvoxx.srms</groupId>
-	<artifactId>root</artifactId>
-	<version>1.0.0</version>
+		<artifactId>root</artifactId>
+		<version>1.0.0</version>
 	</parent>
+
 	<groupId>io.github.lvoxx.srms</groupId>
 	<artifactId>warehouse</artifactId>
 	<version>1.0.0</version>
 	<name>Warehouse Service</name>
 	<description>Smart Restaurant Management System - Warehouse Service</description>
 	<url/>
+
 	<licenses>
 		<license>
 			<name>MIT License</name>
@@ -29,9 +31,11 @@
 			<url>https://github.com/lvoxx</url>
 		</developer>
 	</developers>
+
 	<properties>
 		<service.port>${port.warehouse}</service.port>
 	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -51,7 +55,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+			<artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -94,7 +98,7 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	
+
 
 	<build>
 		<plugins>

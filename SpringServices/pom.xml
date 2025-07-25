@@ -57,11 +57,11 @@
 		<spring-cloud.version>4.3.0</spring-cloud.version>
 		<spring-cloud.kubernetes.version>3.3.0</spring-cloud.kubernetes.version>
 		<spring-cloud.resilience4j.version>3.3.0</spring-cloud.resilience4j.version>
+		<spring-cloud.sleuth.version>3.1.11</spring-cloud.sleuth.version>
 
-		<micrometer-tracing-bridge-brave.version>1.5.2</micrometer-tracing-bridge-brave.version>
-		<zipkin-reporter-brave.version>3.5.1</zipkin-reporter-brave.version>
 		<postgresql.version>42.7.7</postgresql.version>
 		<r2dbc-postgresql.version>1.0.7.RELEASE</r2dbc-postgresql.version>
+		<keycloak.version>25.0.3</keycloak.version>
 		<lombok.version>1.18.38</lombok.version>
 
 		<reactor-test.version>3.7.8</reactor-test.version>
@@ -156,13 +156,23 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-kubernetes-client</artifactId>
+				<artifactId>spring-cloud-starter-kubernetes-client-all</artifactId>
 				<version>${spring-cloud.kubernetes.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-config-server</artifactId>
 				<version>${spring-cloud.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-sleuth</artifactId>
+				<version>${spring-cloud.sleuth.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-sleuth-zipkin</artifactId>
+				<version>${spring-cloud.sleuth.version}</version>
 			</dependency>
 			<!-- SPRING CLOUD -->
 
@@ -179,6 +189,11 @@
 				<version>${r2dbc-postgresql.version}</version>
 				<scope>runtime</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.keycloak</groupId>
+				<artifactId>keycloak-spring-boot-starter</artifactId>
+				<version>${keycloak.version}</version>
+			</dependency>
 
 			<dependency>
 				<groupId>org.projectlombok</groupId>
@@ -187,16 +202,6 @@
 				<optional>true</optional>
 			</dependency>
 
-			<dependency>
-				<groupId>io.micrometer</groupId>
-				<artifactId>micrometer-tracing-bridge-brave</artifactId>
-				<version>${micrometer-tracing-bridge-brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.reporter2</groupId>
-				<artifactId>zipkin-reporter-brave</artifactId>
-				<version>${zipkin-reporter-brave.version}</version>
-			</dependency>
 			<!-- 3RD -->
 
 			<!-- TEST -->
