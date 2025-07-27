@@ -1,0 +1,40 @@
+server:
+  servlet:
+    context-path: /api
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: customer-service
+          uri: lb://customer-service
+          predicates:
+            - Path=/customers/**
+          filters:
+            - StripPrefix=1
+            - name: MethodRole
+              args:
+                methods: [DELETE]
+                blockedRoles: [STAFF]
+                fallbackUri: forward:/api/fallback/access-denied
+
+app:
+  cors:
+    allowed-origins: "*"
+  access-rules:
+    public:
+      - /actuator/health
+      - /fallback/**
+    staff:
+      - /customers/**
+
+keycloak:
+  realm: srms
+  auth-server-url: http://localhost:${keycloak.container.port}
+  resource: api-gateway
+  public-client: true
+  bearer-only: true

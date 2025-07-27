@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 public class RateLimiterConfig {
 
     @Bean
-    public KeyResolver apiKeyResolver() {
+    KeyResolver apiKeyResolver() {
         return exchange -> {
             // Check for API key first
             String apiKey = exchange.getRequest().getHeaders().getFirst("X-API-KEY");
@@ -19,7 +19,7 @@ public class RateLimiterConfig {
                 return Mono.just("api-key-" + apiKey);
             }
 
-            // Then check for JWT
+            // Then check for name in JWT
             return exchange.getPrincipal()
                     .cast(JwtAuthenticationToken.class)
                     .map(token -> {
@@ -27,7 +27,12 @@ public class RateLimiterConfig {
                         String userId = token.getToken().getSubject();
                         return "jwt-" + clientId + "-" + userId;
                     })
-                    .defaultIfEmpty("anonymous");
+                    .defaultIfEmpty(
+                            // If no JWT present, use IP address
+                            exchange.getRequest()
+                                    .getRemoteAddress()
+                                    .getAddress()
+                                    .getHostAddress());
         };
     }
 }

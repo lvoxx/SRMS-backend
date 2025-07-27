@@ -1,21 +1,23 @@
 package io.github.lvoxx.srms.gateway.config;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.csrf.WebSessionServerCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
-import io.github.lvoxx.srms.gateway.properties.AccessRuleProperties;
+import io.github.lvoxx.srms.gateway.rules.RolePermission;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -23,44 +25,35 @@ import lombok.RequiredArgsConstructor;
 @EnableWebFluxSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-
-    @Value("${spring.profiles.active:docker}") // Default to 'docker' if not set
-    private String activedProfile;
-
-    private final AccessRuleProperties accessRuleProps;
-
     @Bean
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        // CRSF Configuration
-        if (isDev()) {
-            // For Chill Dev
-            http.csrf(ServerHttpSecurity.CsrfSpec::disable);
-        } else {
-            // For Production
-            WebSessionServerCsrfTokenRepository csrfTokenRepository = new WebSessionServerCsrfTokenRepository();
-            csrfTokenRepository.setHeaderName("X-XSRF-TOKEN");
-
-            http.csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository));
-        }
-
-        // Access Rules Configuration
-        List<String> publicPaths = accessRuleProps.getPathsForRole("PUBLIC");
-        List<String> staffPaths = accessRuleProps.getPathsForRole("STAFF");
-        List<String> managerPaths = accessRuleProps.getPathsForRole("MANAGER");
-        List<String> adminPaths = accessRuleProps.getPathsForRole("ADMIN");
 
         // Setup security
         http
-                .authorizeExchange(auth -> auth
-                        .pathMatchers(publicPaths.toArray(new String[0])).permitAll()
-                        .pathMatchers(staffPaths.toArray(new String[0])).hasAnyRole("STAFF", "MANAGER", "ADMIN")
-                        .pathMatchers(managerPaths.toArray(new String[0])).hasAnyRole("MANAGER", "ADMIN")
-                        .pathMatchers(adminPaths.toArray(new String[0])).hasRole("ADMIN")
-                        .anyExchange().authenticated())
+                .authorizeExchange(auth -> {
+                    auth.pathMatchers("/fallback/**").permitAll();
+                    auth.pathMatchers("/actuator/**").permitAll();
+                    auth.pathMatchers("/health/**").permitAll();
+                    auth.pathMatchers("/info/**").permitAll();
+                    auth.pathMatchers("/metrics/**").permitAll();
+                    auth.pathMatchers("/trace/**").permitAll();
+
+                    // Cấu hình quyền động từ RolePermission
+                    for (RolePermission rolePermission : RolePermission.values()) {
+                        for (RolePermission.PathsPermission pathPermission : rolePermission.getPathsPermissions()) {
+                            String path = pathPermission.getPaths();
+                            for (org.springframework.http.HttpMethod method : pathPermission.getMethods()) {
+                                auth.pathMatchers(method, path).hasRole(rolePermission.getRole());
+                            }
+                        }
+                    }
+                    auth.anyExchange().authenticated();
+                })
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .jwkSetUri("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")))
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable()); // Disable CSRF for using JWT
         return http.build();
     }
 
@@ -84,7 +77,18 @@ public class SecurityConfig {
         return source;
     }
 
-    private boolean isDev() {
-        return "docker".equalsIgnoreCase(activedProfile);
+    @Bean
+    @SuppressWarnings("unchecked")
+    ReactiveJwtAuthenticationConverterAdapter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+            List<String> roles = (List<String>) realmAccess.get("roles");
+            return roles.stream()
+                    .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                            "ROLE_" + role.toUpperCase()))
+                    .collect(Collectors.toList());
+        });
+        return new ReactiveJwtAuthenticationConverterAdapter(converter);
     }
 }
