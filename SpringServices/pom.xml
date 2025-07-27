@@ -77,7 +77,6 @@
 		<docker.image.prefix>lvoxx/srms</docker.image.prefix>
 		<skip.docker.build>true</skip.docker.build>
 		<!-- Định nghĩa tất cả ports ở đây -->
-		<port.config-server>8888</port.config-server>
 		<port.gateway>8080</port.gateway>
 		<port.contactor>8081</port.contactor>
 		<port.customer>8082</port.customer>
@@ -154,18 +153,8 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-config</artifactId>
-				<version>${spring-cloud.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-kubernetes-client-all</artifactId>
 				<version>${spring-cloud.kubernetes.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-config-server</artifactId>
-				<version>${spring-cloud.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
