@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/fallback")
 public class FallbackController {
 
-        @GetMapping("/{serviceName}")
+        @GetMapping("/services/{serviceName}")
         public ResponseEntity<String> serviceUnavailable(@PathVariable String serviceName) {
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(String
                                 .format("Service %s is currently unavailable. Please try again later.", serviceName));
         }
 
-        @GetMapping("/{code}")
+        @GetMapping("/code/{code}")
         public ResponseEntity<String> handleError(@PathVariable String code) {
                 return switch (code) {
                         case "403" -> ResponseEntity.status(403).body("Access Denied");

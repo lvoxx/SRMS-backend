@@ -1,0 +1,6 @@
+apiVersion: v2
+name: gateway-configmap
+description: A Helm chart for deploying gateway service with ConfigMap
+type: application
+version: 0.1.0
+appVersion: "1.16.0"

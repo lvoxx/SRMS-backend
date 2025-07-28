@@ -2,10 +2,7 @@ server:
   port: @service.port@
 
 spring:
+  application:
+    name: gateway-service
   profiles:
     active: docker
-  cloud:
-    config:
-      uri: http://config-server:8888  # URI base của Config Server
-  config:
-    import: "configserver:"  # Spring Cloud Config sẽ tự động resolve path

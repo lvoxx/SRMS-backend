@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
 @Order(-2)
 public class GlobalErrorWebExceptionHandler implements ErrorWebExceptionHandler {
 
-    private final String fallbackUri = "/fallback/";
+    private final String fallbackUri = "/fallback/code/";
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {

@@ -56,21 +56,21 @@
 		<spring-boot.version>3.5.3</spring-boot.version>
 		<spring-cloud.version>4.3.0</spring-cloud.version>
 		<spring-cloud.kubernetes.version>3.3.0</spring-cloud.kubernetes.version>
+		<kubernetes.client.version>18.0.0</kubernetes.client.version>
 		<spring-cloud.resilience4j.version>3.3.0</spring-cloud.resilience4j.version>
 		<spring-cloud.sleuth.version>3.1.11</spring-cloud.sleuth.version>
 
 		<postgresql.version>42.7.7</postgresql.version>
 		<r2dbc-postgresql.version>1.0.7.RELEASE</r2dbc-postgresql.version>
 		<spring-keycloak.version>25.0.3</spring-keycloak.version>
-		<keycloak.version>26.0.6</keycloak.version>
 		<lombok.version>1.18.38</lombok.version>
 
-		<reactor-test.version>3.7.8</reactor-test.version>
 		<testcontainers.version>1.21.3</testcontainers.version>
-		<mockserver-client-java.version>5.15.0</mockserver-client-java.version>
 		<testcontainers-keycloak.version>3.4.0</testcontainers-keycloak.version>
+		<testcontainers-redis.version>2.2.2</testcontainers-redis.version>
 		<spring-security-test.version>6.5.2</spring-security-test.version>
 		<spring-boot.testcontainers.version>3.5.3</spring-boot.testcontainers.version>
+		<wiremock.version>3.13.1</wiremock.version>
 		<!-- VERSIONING END -->
 
 		<!-- DOCKER START -->
@@ -157,6 +157,11 @@
 				<version>${spring-cloud.kubernetes.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>io.kubernetes</groupId>
+				<artifactId>client-java</artifactId>
+				<version>${kubernetes.client.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-sleuth</artifactId>
 				<version>${spring-cloud.sleuth.version}</version>
@@ -204,15 +209,15 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-testcontainers</artifactId>
-				<version>${spring-boot.testcontainers.version}</version>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>junit-jupiter</artifactId>
+				<version>${testcontainers.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>io.projectreactor</groupId>
-				<artifactId>reactor-test</artifactId>
-				<version>${reactor-test.version}</version>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-testcontainers</artifactId>
+				<version>${spring-boot.testcontainers.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
@@ -228,26 +233,20 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.keycloak</groupId>
-				<artifactId>keycloak-admin-client</artifactId>
-				<version>${keycloak.version}</version>
+				<groupId>com.redis</groupId>
+				<artifactId>testcontainers-redis</artifactId>
+				<version>${testcontainers-redis.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.mock-server</groupId>
-				<artifactId>mockserver-client-java</artifactId>
-				<version>${mockserver-client-java.version}</version>
+				<groupId>org.wiremock</groupId>
+				<artifactId>wiremock</artifactId>
+				<version>${wiremock.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.testcontainers</groupId>
 				<artifactId>mockserver</artifactId>
-				<version>${testcontainers.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.testcontainers</groupId>
-				<artifactId>junit-jupiter</artifactId>
 				<version>${testcontainers.version}</version>
 				<scope>test</scope>
 			</dependency>
