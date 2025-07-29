@@ -37,7 +37,7 @@
 	</properties>
 
 	<dependencies>
-		<!-- Keycloak & Security -->
+		<!-- Spring Cloud -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
@@ -47,16 +47,16 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.keycloak</groupId>
-			<artifactId>keycloak-spring-boot-starter</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-loadbalancer</artifactId>
 		</dependency>
 
 		<!-- Rate Limiter với Redis -->
@@ -92,7 +92,6 @@
 		<dependency>
 			<groupId>io.kubernetes</groupId>
 			<artifactId>client-java</artifactId>
-			<version>18.0.0</version>
 		</dependency>
 
 		<dependency>
@@ -118,11 +117,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>mockserver</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>com.github.dasniko</groupId>
 			<artifactId>testcontainers-keycloak</artifactId>
 			<scope>test</scope>
@@ -138,8 +132,13 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.wiremock</groupId>
-			<artifactId>wiremock</artifactId>
+			<groupId>org.mock-server</groupId>
+			<artifactId>mockserver-client-java</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>mockserver</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

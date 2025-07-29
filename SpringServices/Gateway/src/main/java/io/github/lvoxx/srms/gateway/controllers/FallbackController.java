@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class FallbackController {
 
         @GetMapping("/services/{serviceName}")
-        public ResponseEntity<String> serviceUnavailable(@PathVariable String serviceName) {
+        public ResponseEntity<?> serviceUnavailable(@PathVariable String serviceName) {
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(String
                                 .format("Service %s is currently unavailable. Please try again later.", serviceName));
         }
 
         @GetMapping("/code/{code}")
-        public ResponseEntity<String> handleError(@PathVariable String code) {
+        public ResponseEntity<?> handleError(@PathVariable String code) {
                 return switch (code) {
                         case "403" -> ResponseEntity.status(403).body("Access Denied");
                         case "429" -> ResponseEntity.status(429).body("Rate Limit Exceeded");

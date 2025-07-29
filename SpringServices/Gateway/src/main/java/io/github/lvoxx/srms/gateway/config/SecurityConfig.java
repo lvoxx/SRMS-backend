@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -50,16 +49,10 @@ public class SecurityConfig {
                     auth.anyExchange().authenticated();
                 })
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt
-                                .jwkSetUri("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")))
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable()); // Disable CSRF for using JWT
         return http.build();
-    }
-
-    @Bean
-    KeycloakSpringBootConfigResolver keycloakConfigResolver() {
-        return new KeycloakSpringBootConfigResolver();
     }
 
     @Bean
@@ -86,6 +79,7 @@ public class SecurityConfig {
             List<String> roles = (List<String>) realmAccess.get("roles");
             return roles.stream()
                     .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                            // ROLE_ + ADMIN -> ROLE_ADMIN
                             "ROLE_" + role.toUpperCase()))
                     .collect(Collectors.toList());
         });

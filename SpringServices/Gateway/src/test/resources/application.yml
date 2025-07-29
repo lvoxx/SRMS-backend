@@ -3,16 +3,18 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8080/auth/realms/srms # LOCAL DEV
+          issuer-uri: ${keycloakIssuerUri:http://keycloak:8080/auth/realms/srms} # LOCAL DEV
 ---
 spring:
   cloud:
+    compatibility-verifier:
+      enabled: false # IMPORTANT: Disable Micrometer Tracing Autoconfiguration
     gateway:
       server:
         webflux:
           discovery:
             locator:
-              enabled: true
+              enabled: false
           default-filters:
             - name: Retry
               args:
@@ -27,7 +29,7 @@ spring:
                   basedOnPreviousValue: true
           routes:
             - id: customer-service
-              uri: lb://customer-service
+              uri: ${customerServiceUri}
               predicates:
                 - Path=/customers/**
               filters:
@@ -44,7 +46,7 @@ spring:
                     name: customerCircuitBreaker
                     fallbackUri: forward:/fallback/services/customer
             - id: contact-service
-              uri: lb://contact-service
+              uri: ${contactServiceUri}
               predicates:
                 - Path=/contacts/**
               filters:
@@ -68,28 +70,22 @@ spring:
   cloud:
     kubernetes:
       discovery:
-        enabled: true
+        enabled: false
       reload:
-        enabled: true
-        strategy: refresh # Hoặc restart_context, shutdown
-        mode: event
-      config:
-        enabled: true
-        configMaps:
-          - ${spring.application.name}
+        enabled: false
 
 ---
 # Redis, Tracing & Log Collecting
 spring:
   data:
     redis:
-      host: redis
-      port: 6379
+      host: ${redisHost:redis}
+      port: ${redisPort:6379}
   sleuth:
-    sampler:
-      probability: 1.0 # 100% sampling for tracing
+    enabled: false
   zipkin:
-    base-url: http://zipkin-service:9411/ # Tên Kubernetes Service cho Zipkin
+    enabled: false
+
 ---
 # Use for path matchers in SecurityConfig
 app:
