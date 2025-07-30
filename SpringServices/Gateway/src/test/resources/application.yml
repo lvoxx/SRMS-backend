@@ -48,7 +48,7 @@ spring:
             - id: contact-service
               uri: ${contactServiceUri}
               predicates:
-                - Path=/contacts/**
+                - Path=/contactors/**
               filters:
                 - StripPrefix=1
                 - name: RequestRateLimiter
@@ -101,6 +101,10 @@ resilience4j:
         permittedNumberOfCallsInHalfOpenState: 3
         failureRateThreshold: 50
         waitDurationInOpenState: 10000
+        registerHealthIndicator: true
+        recordExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
   retry:
     instances:
       serviceRetry:

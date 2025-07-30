@@ -14,17 +14,12 @@ public class FallbackController {
         @GetMapping("/services/{serviceName}")
         public ResponseEntity<?> serviceUnavailable(@PathVariable String serviceName) {
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(String
-                                .format("Service %s is currently unavailable. Please try again later.", serviceName));
+                                .format("Service [%s] is currently unavailable. Please try again later.", serviceName));
         }
 
         @GetMapping("/code/{code}")
         public ResponseEntity<?> handleError(@PathVariable String code) {
-                return switch (code) {
-                        case "403" -> ResponseEntity.status(403).body("Access Denied");
-                        case "429" -> ResponseEntity.status(429).body("Rate Limit Exceeded");
-                        case "503" -> ResponseEntity.status(503).body("Service Unavailable");
-                        case "404" -> ResponseEntity.status(404).body("Route Not Found");
-                        default -> ResponseEntity.status(500).body("Internal Server Error");
-                };
+                HttpStatus status = HttpStatus.valueOf(code);
+                return ResponseEntity.status(status.value()).body(status.getReasonPhrase());
         }
 }

@@ -1,5 +1,6 @@
 package io.github.lvoxx.srms.gateway.config;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -76,6 +77,9 @@ public class SecurityConfig {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+            if (realmAccess == null || !realmAccess.containsKey("roles")) {
+                return Collections.emptyList();
+            }
             List<String> roles = (List<String>) realmAccess.get("roles");
             return roles.stream()
                     .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority(

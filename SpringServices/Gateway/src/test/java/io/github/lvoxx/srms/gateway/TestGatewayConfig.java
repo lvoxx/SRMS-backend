@@ -10,13 +10,13 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @TestConfiguration
 public class TestGatewayConfig {
 
-    @Bean
-    RouterFunction<ServerResponse> fallbackRoutes() {
-        return route()
-                .GET("/fallback/services/customer",
-                        req -> ServerResponse.ok().bodyValue("Customer service unavailable"))
-                .GET("/fallback/services/contact",
-                        req -> ServerResponse.ok().bodyValue("Contact service unavailable"))
-                .build();
-    }
+        @Bean
+        RouterFunction<ServerResponse> fallbackRoutes() {
+                return route()
+                                .GET("/fallback/services/customer",
+                                                req -> ServerResponse.ok().bodyValue("Customer service unavailable"))
+                                .GET("/fallback/services/contact",
+                                                req -> ServerResponse.ok().bodyValue("Contact service unavailable"))
+                                .build();
+        }
 }
