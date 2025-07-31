@@ -37,6 +37,10 @@
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>io.github.lvoxx.srms</groupId>
+			<artifactId>common</artifactId>
+		</dependency>
 		<!-- Spring Cloud -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
