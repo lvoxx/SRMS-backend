@@ -25,7 +25,7 @@ services:
         tmpfs:
           size: 100000000
     networks:
-      - keycloak-network
+      - srms-network
     logging: *logging
 
   keycloak:
@@ -53,11 +53,8 @@ services:
     volumes:
       - ./keycloak:/opt/keycloak/data/import
     networks:
-      - keycloak-network
+      - srms-network
     logging: *logging
 
 volumes:
   pg_kc_data:
-
-networks:
-  keycloak-network:

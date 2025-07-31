@@ -10,13 +10,7 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
-      - postgres-network
+      - srms-network
 
 volumes:
   pgadmin_data:
-  pg-customer:
-  pg-contactor:
-
-networks:
-  postgres-network:
-    driver: bridge

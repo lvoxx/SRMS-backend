@@ -37,7 +37,7 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>config_server</module>
+		<module>common</module>
 		<module>contactor</module>
 		<module>customer</module>
 		<module>dashboard</module>
@@ -52,6 +52,7 @@
 
 	<properties>
 		<!-- VERSIONING START -->
+		<application.version>1.0.0</application.version>
 		<java.version>21</java.version>
 		<spring-boot.version>3.5.3</spring-boot.version>
 		<spring-cloud.version>4.3.0</spring-cloud.version>
@@ -62,15 +63,15 @@
 
 		<postgresql.version>42.7.7</postgresql.version>
 		<r2dbc-postgresql.version>1.0.7.RELEASE</r2dbc-postgresql.version>
-		<spring-keycloak.version>25.0.3</spring-keycloak.version>
 		<lombok.version>1.18.38</lombok.version>
 
 		<testcontainers.version>1.21.3</testcontainers.version>
 		<testcontainers-keycloak.version>3.4.0</testcontainers-keycloak.version>
 		<testcontainers-redis.version>2.2.2</testcontainers-redis.version>
+		<testcontainers-mockserver.version>1.21.3</testcontainers-mockserver.version>
+		<mockserver.client.version>5.15.0</mockserver.client.version>
 		<spring-security-test.version>6.5.2</spring-security-test.version>
 		<spring-boot.testcontainers.version>3.5.3</spring-boot.testcontainers.version>
-		<wiremock.version>3.13.1</wiremock.version>
 		<!-- VERSIONING END -->
 
 		<!-- DOCKER START -->
@@ -102,6 +103,13 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- APPLICATION -->
+			<dependency>
+				<groupId>io.github.lvoxx.srms</groupId>
+				<artifactId>common</artifactId>
+				<version>${application.version}</version>
+			</dependency>
+
 			<!-- SPRING BOOT -->
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
@@ -157,6 +165,11 @@
 				<version>${spring-cloud.kubernetes.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-loadbalancer</artifactId>
+				<version>${spring-cloud.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>io.kubernetes</groupId>
 				<artifactId>client-java</artifactId>
 				<version>${kubernetes.client.version}</version>
@@ -185,11 +198,6 @@
 				<artifactId>r2dbc-postgresql</artifactId>
 				<version>${r2dbc-postgresql.version}</version>
 				<scope>runtime</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.keycloak</groupId>
-				<artifactId>keycloak-spring-boot-starter</artifactId>
-				<version>${spring-keycloak.version}</version>
 			</dependency>
 
 			<dependency>
@@ -239,15 +247,15 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.wiremock</groupId>
-				<artifactId>wiremock</artifactId>
-				<version>${wiremock.version}</version>
+				<groupId>org.mock-server</groupId>
+				<artifactId>mockserver-client-java</artifactId>
+				<version>${mockserver.client.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.testcontainers</groupId>
 				<artifactId>mockserver</artifactId>
-				<version>${testcontainers.version}</version>
+				<version>${testcontainers-mockserver.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<!-- TEST -->

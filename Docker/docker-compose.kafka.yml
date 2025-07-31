@@ -13,7 +13,7 @@ services:
     volumes:
       - zk_data:/bitnami/zookeeper
     networks:
-      - kafka-network
+      - srms-network
     healthcheck:
       test: ["CMD", "zkServer.sh", "status"]
       interval: 10s
@@ -35,7 +35,7 @@ services:
       SCHEMA_REGISTRY_DEBUG: 'true'
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-broker:9092
     networks:
-      - kafka-network
+      - srms-network
       
   kafka:
     image: bitnami/kafka:3.4
@@ -63,7 +63,7 @@ services:
     volumes:
       - kafka_data:/bitnami/kafka
     networks:
-      - kafka-network
+      - srms-network
     healthcheck:
       test: ["CMD", "kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
       interval: 10s
@@ -73,6 +73,3 @@ services:
 volumes:
   zk_data:
   kafka_data:
-
-networks:
-  kafka-network:

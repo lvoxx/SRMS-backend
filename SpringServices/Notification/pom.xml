@@ -4,8 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>io.github.lvoxx.srms</groupId>
-	<artifactId>root</artifactId>
-	<version>1.0.0</version>
+		<artifactId>root</artifactId>
+		<version>1.0.0</version>
 	</parent>
 
 	<groupId>io.github.lvoxx.srms</groupId>
@@ -37,6 +37,10 @@
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>io.github.lvoxx.srms</groupId>
+			<artifactId>common</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
