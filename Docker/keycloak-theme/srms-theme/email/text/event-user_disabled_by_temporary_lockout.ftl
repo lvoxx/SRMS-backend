@@ -1,2 +1,2 @@
 <#ftl output_format="plainText">
-${msg("eventUserDisabledByTemporaryLockoutBody", event.date)}
+${msg("eventUserDisabledByTemporaryLockoutBodyHtml", event.date)}

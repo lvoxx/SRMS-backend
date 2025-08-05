@@ -1,2 +1,2 @@
 <#ftl output_format="plainText">
-${msg("eventRemoveTotpBody",event.date, event.ipAddress)}
+${msg("eventRemoveTotpBodyHtml",event.date, event.ipAddress)}

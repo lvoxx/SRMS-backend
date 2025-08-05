@@ -1,2 +1,2 @@
 <#ftl output_format="plainText">
-${msg("emailUpdateConfirmationBody",link, newEmail, realmName, linkExpirationFormatter(linkExpiration))}
+${msg("emailUpdateConfirmationBodyHtml",link, newEmail, realmName, linkExpirationFormatter(linkExpiration))}
