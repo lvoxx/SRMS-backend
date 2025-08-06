@@ -1,13 +1,4 @@
 <#macro emailLayout>
-<html lang="${locale.language}" dir="${(ltr)?then('ltr','rtl')}">
-<head>
-    <meta charset="UTF-8">
-    <title>${subject}</title>
-    <style>
-        .logo { text-align: center; margin-bottom: 20px; }
-        .content { font-family: Arial, sans-serif; }
-    </style>
-</head>
 <body>
     <div class="logo">
         <img src="https://raw.githubusercontent.com/lvoxx/SRMS-backend/refs/heads/main/Images/SRMS-Logo.png" alt="SRMS Logo" width="150" />
