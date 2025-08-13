@@ -4,8 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>io.github.lvoxx.srms</groupId>
-	<artifactId>root</artifactId>
-	<version>1.0.0</version>
+		<artifactId>root</artifactId>
+		<version>1.0.0</version>
 	</parent>
 	<groupId>io.github.lvoxx.srms</groupId>
 	<artifactId>customer</artifactId>
@@ -44,6 +44,24 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-r2dbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>r2dbc-postgresql</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -90,7 +108,7 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	
+
 
 	<build>
 		<plugins>

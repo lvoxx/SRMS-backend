@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login Alert</title>
+</head>
+<body>
+    <h1>Warning: Admin Console Login Detected</h1>
+    <p>A user has logged into the Keycloak admin console.</p>
+    <ul>
+        <li><strong>Username:</strong> ${username}</li>
+        <li><strong>IP Address:</strong> ${ipAddress}</li>
+        <li><strong>Login Time:</strong> ${loginTime}</li>
+        <li><strong>Server URL:</strong> ${serverUrl}</li>
+    </ul>
+    <p>If this was not authorized, take immediate action.</p>
+</body>
+</html>

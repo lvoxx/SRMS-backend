@@ -1,0 +1,16 @@
+spring:
+  cache:
+    type: none 
+  data:
+    redis:
+      host: redis
+      port: 6379
+      # url: redis://redis:6379  # Alternative to host/port
+      # password: SuperPassword69@#  # If authentication is required
+      # database: 0  # Default database index
+      lettuce:
+        pool:
+          max-active: 8  # Connection pool settings for Lettuce (default reactive driver)
+          max-idle: 8
+          min-idle: 0
+      timeout: 2000ms  # Connection timeout

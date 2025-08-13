@@ -14,7 +14,8 @@ CREATE TABLE customer (
     is_regular BOOLEAN NOT NULL DEFAULT FALSE,
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE
 );
 
 -- Add index for quick phone lookups (common for reservations)

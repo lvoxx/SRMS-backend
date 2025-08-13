@@ -2,5 +2,7 @@ server:
   port: @service.port@
 
 spring:
-    application:
-        name: customer
+  application:
+    name: customer-service
+  profiles:
+    active: docker
