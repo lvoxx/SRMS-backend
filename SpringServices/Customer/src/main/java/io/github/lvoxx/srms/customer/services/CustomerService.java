@@ -34,31 +34,27 @@ public class CustomerService {
                 .map(customerMapper::toResponse);
     }
 
-    public Flux<CustomerDTO.Response> findAll() {
-        // No caching for lists to avoid complexity with invalidation
-        return customerRepository.findAll()
-                .map(customerMapper::toResponse);
-    }
-
     @SuppressWarnings("null") // Just skip it, PageDTO record already check null
     public Mono<PageDTO.PageResponseDTO<CustomerDTO.Response>> findAllPaged(
-            PageDTO.PageRequestDTO pageRequest, boolean doWithDeleted) {
+            PageDTO.PageRequestDTO pageRequest, boolean showDeleted) {
         Pageable pageable = PageRequest.of(
                 pageRequest.page(),
                 pageRequest.size(),
                 Sort.by(pageRequest.sortDirection().equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC,
                         pageRequest.sortBy()));
 
-        return customerRepository.findAllActive(pageable)
+        return customerRepository.findPageByIsDeleted(pageable, showDeleted)
                 .map(customerMapper::toResponse)
                 .collectList()
+                // Count total elements
                 .zipWith(customerRepository.count()
                         .map(count -> {
-                            if (doWithDeleted) {
+                            if (showDeleted) {
                                 return count; // Count all
                             }
                             return count - customerRepository.findDeleted().count().block(); // Count active only
                         }))
+                // Map to page response
                 .map(tuple -> {
                     List<CustomerDTO.Response> content = tuple.getT1();
                     long totalElements = tuple.getT2();
@@ -70,20 +66,6 @@ public class CustomerService {
                             totalElements,
                             totalPages);
                 });
-    }
-
-    // For performance issue, restrict to use this. Use paging instead
-    public Flux<CustomerDTO.Response> findAllIncludingDeleted() {
-        // No caching
-        return customerRepository.findAllIncludingDeleted()
-                .map(customerMapper::toResponse);
-    }
-
-    // For performance issue, restrict to use this. Use paging instead
-    public Flux<CustomerDTO.Response> findDeleted() {
-        // No caching
-        return customerRepository.findDeleted()
-                .map(customerMapper::toResponse);
     }
 
     @CachePut(value = "customers", key = "#result.id")
@@ -125,6 +107,22 @@ public class CustomerService {
                 .filter(rows -> rows > 0)
                 .switchIfEmpty(Mono.error(new RuntimeException("No customer to restore")))
                 .flatMap(rows -> customerRepository.findById(id))
+                .map(customerMapper::toResponse);
+    }
+
+    // For performance issue, restrict to use this. Use paging instead.
+    @SuppressWarnings("unused")
+    private Flux<CustomerDTO.Response> findAllWithShowDeleted(boolean showDeleted) {
+        // No caching for lists to avoid complexity with invalidation
+        return customerRepository.findAllByIsDeleted(showDeleted)
+                .map(customerMapper::toResponse);
+    }
+
+    @SuppressWarnings("unused")
+    // For performance issue, restrict to use this. Use paging instead
+    private Flux<CustomerDTO.Response> findDeleted() {
+        // No caching
+        return customerRepository.findDeleted()
                 .map(customerMapper::toResponse);
     }
 }
