@@ -9,11 +9,14 @@ import org.springframework.data.relational.core.mapping.Table;
 import com.example.common.jdbc.AbstractEntity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -36,12 +39,13 @@ public class Customer extends AbstractEntity {
 
     @Column("dietary_restrictions")
     private String[] dietaryRestrictions;
-    
-    @Column("allergies") 
+
+    @Column("allergies")
     private String[] allergies;
 
     @Column("is_regular")
-    private boolean isRegular;
+    @Default
+    private boolean isRegular = false;
 
     @Column("notes")
     private String notes;
@@ -62,18 +66,17 @@ public class Customer extends AbstractEntity {
     public List<String> getDietaryRestrictionsList() {
         return dietaryRestrictions != null ? List.of(dietaryRestrictions) : List.of();
     }
-    
+
     public void setDietaryRestrictionsList(List<String> dietaryRestrictions) {
-        this.dietaryRestrictions = dietaryRestrictions != null ? 
-            dietaryRestrictions.toArray(new String[0]) : new String[0];
+        this.dietaryRestrictions = dietaryRestrictions != null ? dietaryRestrictions.toArray(new String[0])
+                : new String[0];
     }
-    
+
     public List<String> getAllergiesList() {
         return allergies != null ? List.of(allergies) : List.of();
     }
-    
+
     public void setAllergiesList(List<String> allergies) {
-        this.allergies = allergies != null ? 
-            allergies.toArray(new String[0]) : new String[0];
+        this.allergies = allergies != null ? allergies.toArray(new String[0]) : new String[0];
     }
 }

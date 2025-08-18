@@ -44,7 +44,7 @@ public class CustomerService {
                 Sort.by(pageRequest.sortDirection().equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC,
                         pageRequest.sortBy()));
 
-        return customerRepository.findPageByIsDeleted(pageable, showDeleted)
+        return customerRepository.findPageByShowDeleted(pageable, showDeleted)
                 .map(customerMapper::toResponse)
                 .collectList()
                 // Count total elements

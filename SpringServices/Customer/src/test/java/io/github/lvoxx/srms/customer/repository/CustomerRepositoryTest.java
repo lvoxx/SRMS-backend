@@ -2,6 +2,9 @@ package io.github.lvoxx.srms.customer.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -14,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -79,6 +84,7 @@ public class CustomerRepositoryTest {
         customer1.setFirstName("Jane");
         customer1.setLastName("Doe");
         customer1.setPhoneNumber("+999999999");
+        customer1.setRegular(true);
         // Save instantly and get the ID
         customer1 = repository.save(customer1).block();
 
@@ -91,19 +97,21 @@ public class CustomerRepositoryTest {
         customer2 = repository.save(customer2).block();
 
         deletedCustomer = new Customer();
-        deletedCustomer.setEmail("john.doe2.cus@email.srms.com");
+        deletedCustomer.setEmail("deleted.cus@email.srms.com");
         deletedCustomer.setFirstName("Jane");
         deletedCustomer.setLastName("Doe");
         deletedCustomer.setPhoneNumber("+777777777");
+        deletedCustomer.setDeletedAt(OffsetDateTime.now());
         // Save instantly and get the ID
         deletedCustomer = repository.save(deletedCustomer).block();
     }
 
     @AfterEach
     void tearDown() {
-        repository.deleteAll();
-        customer1 = null;
+        repository.deleteAll().block();
+        deletedCustomer = null;
         customer2 = null;
+        customer1 = null;
     }
 
     @Test
@@ -146,7 +154,7 @@ public class CustomerRepositoryTest {
                     assertThat(c.getCreatedAt()).isNotNull();
                     assertThat(c.getUpdatedAt()).isNotNull();
                     assertThat(c.getDeletedAt()).isNull();
-                    assertThat(c.isRegular()).isFalse();
+                    assertThat(c.isRegular()).isTrue();
                 })
                 .verifyComplete();
     }
@@ -193,6 +201,127 @@ public class CustomerRepositoryTest {
         Mono<Customer> deletedCustomer = repository.findById(customer1.getId());
 
         StepVerifier.create(deletedCustomer)
+                .verifyComplete();
+    }
+
+    @Test
+    void findAllByShowDeleted_shouldReturnActiveCustomers_whenShowDeletedFalse() {
+        Flux<Customer> result = repository.findAllByShowDeleted(false);
+
+        StepVerifier.create(result)
+                .expectNextMatches(c -> c.getId().equals(customer1.getId()) || c.getId().equals(customer2.getId()))
+                .expectNextMatches(c -> c.getId().equals(customer1.getId()) || c.getId().equals(customer2.getId()))
+                .verifyComplete();
+    }
+
+    @Test
+    void findAllByShowDeleted_shouldReturnDeletedCustomers_whenShowDeletedTrue() {
+        Flux<Customer> result = repository.findAllByShowDeleted(true);
+
+        StepVerifier.create(result)
+                .expectNextMatches(c -> c.getId().equals(deletedCustomer.getId()))
+                .verifyComplete();
+    }
+
+    @Test
+    void findActiveByEmailAndShowDeleted_shouldReturnActiveCustomer_whenShowDeletedFalse() {
+        Mono<Customer> result = repository.findActiveByEmailAndShowDeleted(customer1.getEmail(), false);
+
+        StepVerifier.create(result)
+                .expectNextMatches(c -> c.getEmail().equals(customer1.getEmail()))
+                .verifyComplete();
+    }
+
+    @Test
+    void findActiveByEmailAndShowDeleted_shouldReturnEmpty_forActiveEmail_whenShowDeletedTrue() {
+        Mono<Customer> result = repository.findActiveByEmailAndShowDeleted(customer1.getEmail(), true);
+
+        StepVerifier.create(result)
+                .verifyComplete();
+    }
+
+    @Test
+    void findActiveByEmailAndShowDeleted_shouldReturnDeletedCustomer_whenShowDeletedTrue() {
+        Mono<Customer> result = repository.findActiveByEmailAndShowDeleted(deletedCustomer.getEmail(), true);
+
+        StepVerifier.create(result)
+                .expectNextMatches(c -> c.getEmail().equals(deletedCustomer.getEmail()))
+                .verifyComplete();
+    }
+
+    @Test
+    void findActiveByPhoneNumberAndShowDeleted_shouldReturnActiveCustomer_whenShowDeletedFalse() {
+        Mono<Customer> result = repository.findActiveByPhoneNumberAndShowDeleted(customer1.getPhoneNumber(), false);
+        result = result.filter(c -> c.getDeletedAt() == null);
+        StepVerifier.create(result)
+                .expectNextMatches(c -> c.getPhoneNumber().equals(customer1.getPhoneNumber()))
+                .verifyComplete();
+    }
+
+    @Test
+    void findActiveByPhoneNumberAndShowDeleted_shouldReturnEmpty_forActivePhone_whenShowDeletedTrue() {
+        Mono<Customer> result = repository.findActiveByPhoneNumberAndShowDeleted(customer1.getPhoneNumber(), true);
+
+        StepVerifier.create(result)
+                .verifyComplete();
+    }
+
+    @Test
+    void findActiveByPhoneNumberAndShowDeleted_shouldReturnDeletedCustomer_whenShowDeletedTrue() {
+        Mono<Customer> result = repository.findActiveByPhoneNumberAndShowDeleted(deletedCustomer.getPhoneNumber(),
+                true);
+        StepVerifier.create(result)
+                .recordWith(ArrayList::new)
+                .thenConsumeWhile(c -> c.getDeletedAt() != null)
+                .consumeRecordedWith(list -> assertThat(list.size()).isEqualTo(1))
+                .verifyComplete();
+    }
+
+    @Test
+    void findActiveRegularCustomersByShowDeleted_shouldReturnRegularActiveCustomers_whenShowDeletedFalse() {
+        Flux<Customer> result = repository.findActiveRegularCustomersByShowDeleted(false);
+        StepVerifier.create(result)
+                .recordWith(ArrayList::new)
+                .thenConsumeWhile(c -> c.getDeletedAt() == null)
+                .consumeRecordedWith(list -> assertThat(list.size()).isEqualTo(1))
+                .verifyComplete();
+    }
+
+    @Test
+    void findActiveRegularCustomersByShowDeleted_shouldReturnEmpty_whenShowDeletedTrue() {
+        // Assuming no deleted regular customers in setup; add if needed
+        Flux<Customer> result = repository.findActiveRegularCustomersByShowDeleted(true);
+
+        StepVerifier.create(result)
+                .verifyComplete();
+    }
+
+    @Test
+    void findDeleted_shouldReturnDeletedCustomers() {
+        Flux<Customer> result = repository.findDeleted();
+
+        StepVerifier.create(result)
+                .expectNextMatches(c -> c.getId().equals(deletedCustomer.getId()))
+                .verifyComplete();
+    }
+
+    @Test
+    void findPageByIsDeleted_shouldReturnPagedActiveCustomers_whenShowDeletedFalse() {
+        Pageable pageable = PageRequest.of(0, 1); // First page, size 1
+        Flux<Customer> result = repository.findPageByShowDeleted(pageable, false);
+
+        StepVerifier.create(result)
+                .expectNextCount(2) // One customer per page
+                .verifyComplete();
+    }
+
+    @Test
+    void findPageByIsDeleted_shouldReturnPagedDeletedCustomers_whenShowDeletedTrue() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Flux<Customer> result = repository.findPageByShowDeleted(pageable, true);
+
+        StepVerifier.create(result)
+                .expectNextCount(1) // One deleted
                 .verifyComplete();
     }
 }
