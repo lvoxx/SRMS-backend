@@ -154,7 +154,7 @@ public class CustomerRepositoryTest {
     }
 
     @Test
-    void testFindAll() {
+    void shouldReturn3Customers_whenFindingAllCustomers() {
         Flux<Customer> allCustomers = repository.findAll();
 
         StepVerifier.create(allCustomers)
