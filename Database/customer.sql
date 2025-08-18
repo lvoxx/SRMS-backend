@@ -1,5 +1,5 @@
 CREATE TABLE customer (
-    customer_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     first_name VARCHAR(50) NOT NULL CHECK (trim(first_name) != ''),
     last_name VARCHAR(50) NOT NULL CHECK (trim(last_name) != ''),
     phone_number VARCHAR(20) NOT NULL CHECK (

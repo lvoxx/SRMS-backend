@@ -1,5 +1,7 @@
 package io.github.lvoxx.srms.customer.controllers;
 
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,7 +29,7 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<CustomerDTO.Response>> findById(@PathVariable String id) {
+    public Mono<ResponseEntity<CustomerDTO.Response>> findById(@PathVariable UUID id) {
         return customerService.findById(id)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
@@ -51,7 +53,7 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<CustomerDTO.Response>> update(@PathVariable String id,
+    public Mono<ResponseEntity<CustomerDTO.Response>> update(@PathVariable UUID id,
             @Valid @RequestBody CustomerDTO.Request request) {
         return customerService.update(id, request)
                 .map(ResponseEntity::ok)
@@ -59,13 +61,13 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> softDelete(@PathVariable String id) {
+    public Mono<ResponseEntity<Void>> softDelete(@PathVariable UUID id) {
         return customerService.softDelete(id)
                 .then(Mono.just(ResponseEntity.noContent().build()));
     }
 
     @PatchMapping("/{id}/restore")
-    public Mono<ResponseEntity<CustomerDTO.Response>> restore(@PathVariable String id) {
+    public Mono<ResponseEntity<CustomerDTO.Response>> restore(@PathVariable UUID id) {
         return customerService.restore(id)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());

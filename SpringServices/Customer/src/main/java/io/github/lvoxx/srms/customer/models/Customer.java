@@ -1,18 +1,13 @@
 package io.github.lvoxx.srms.customer.models;
 
-import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import com.example.common.jdbc.AbstractAuditMapper;
+import com.example.common.jdbc.AbstractEntity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,39 +19,61 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@Entity
-@Table(name = "customer")
-@SQLDelete(sql = "UPDATE customer SET deleted_at = now() WHERE id = ?")
-@SQLRestriction("deleted_at IS NULL")
-public class Customer extends AbstractAuditMapper implements Serializable {
+@Table("customer")
+public class Customer extends AbstractEntity {
 
-    @Column(name = "first_name", nullable = false, length = 50)
+    @Column("first_name")
     private String firstName;
 
-    @Column(name = "last_name", nullable = false, length = 50)
+    @Column("last_name")
     private String lastName;
 
-    @Column(name = "phone_number", nullable = false, length = 20)
+    @Column("phone_number")
     private String phoneNumber;
 
-    @Column(name = "email", length = 100)
+    @Column("email")
     private String email;
 
-    @ElementCollection
-    @Column(name = "dietary_restrictions")
-    private List<String> dietaryRestrictions;
+    @Column("dietary_restrictions")
+    private String[] dietaryRestrictions;
+    
+    @Column("allergies") 
+    private String[] allergies;
 
-    @ElementCollection
-    @Column(name = "allergies")
-    private List<String> allergies;
-
-    @Column(name = "is_regular", nullable = false)
+    @Column("is_regular")
     private boolean isRegular;
 
-    @Column(name = "notes")
+    @Column("notes")
     private String notes;
 
-    @Column(name = "deleted_at")
+    @Column("deleted_at")
     private OffsetDateTime deletedAt;
 
+    // Soft delete method
+    public void markAsDeleted() {
+        this.deletedAt = OffsetDateTime.now();
+    }
+
+    public boolean isDeleted() {
+        return this.deletedAt != null;
+    }
+
+    // Helper methods for array conversion to List
+    public List<String> getDietaryRestrictionsList() {
+        return dietaryRestrictions != null ? List.of(dietaryRestrictions) : List.of();
+    }
+    
+    public void setDietaryRestrictionsList(List<String> dietaryRestrictions) {
+        this.dietaryRestrictions = dietaryRestrictions != null ? 
+            dietaryRestrictions.toArray(new String[0]) : new String[0];
+    }
+    
+    public List<String> getAllergiesList() {
+        return allergies != null ? List.of(allergies) : List.of();
+    }
+    
+    public void setAllergiesList(List<String> allergies) {
+        this.allergies = allergies != null ? 
+            allergies.toArray(new String[0]) : new String[0];
+    }
 }

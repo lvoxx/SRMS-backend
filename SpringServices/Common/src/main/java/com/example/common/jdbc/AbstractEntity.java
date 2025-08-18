@@ -1,0 +1,25 @@
+package com.example.common.jdbc;
+
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public abstract class AbstractEntity {
+    @Id
+    @Column("id")
+    private UUID id;
+
+    @Column("created_at")
+    private OffsetDateTime createdAt;
+
+    @Column("updated_at")
+    private OffsetDateTime updatedAt;
+
+}

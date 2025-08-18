@@ -2,6 +2,7 @@ package io.github.lvoxx.srms.customer.services;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -28,7 +29,7 @@ public class CustomerService {
     private final CustomerMapper customerMapper;
 
     @Cacheable(value = "customers", key = "#id", unless = "#result == null || #result.deletedAt != null")
-    public Mono<CustomerDTO.Response> findById(String id) {
+    public Mono<CustomerDTO.Response> findById(UUID id) {
         return customerRepository.findById(id)
                 .filter(customer -> customer.getDeletedAt() == null) // Only cache active records
                 .map(customerMapper::toResponse);
@@ -76,7 +77,7 @@ public class CustomerService {
     }
 
     @CachePut(value = "customers", key = "#id")
-    public Mono<CustomerDTO.Response> update(String id, CustomerDTO.Request request) {
+    public Mono<CustomerDTO.Response> update(UUID id, CustomerDTO.Request request) {
         return customerRepository.findById(id)
                 .filter(existing -> existing.getDeletedAt() == null) // Only update active
                 .switchIfEmpty(Mono.error(new RuntimeException("Customer not found or deleted")))
@@ -89,7 +90,7 @@ public class CustomerService {
     }
 
     @CacheEvict(value = "customers", key = "#id")
-    public Mono<Void> softDelete(String id) {
+    public Mono<Void> softDelete(UUID id) {
         return customerRepository.findById(id)
                 .filter(existing -> existing.getDeletedAt() == null)
                 .switchIfEmpty(Mono.empty())
@@ -102,7 +103,7 @@ public class CustomerService {
     }
 
     @CachePut(value = "customers", key = "#id")
-    public Mono<CustomerDTO.Response> restore(String id) {
+    public Mono<CustomerDTO.Response> restore(UUID id) {
         return customerRepository.restoreById(id)
                 .filter(rows -> rows > 0)
                 .switchIfEmpty(Mono.error(new RuntimeException("No customer to restore")))
@@ -114,7 +115,7 @@ public class CustomerService {
     @SuppressWarnings("unused")
     private Flux<CustomerDTO.Response> findAllWithShowDeleted(boolean showDeleted) {
         // No caching for lists to avoid complexity with invalidation
-        return customerRepository.findAllByIsDeleted(showDeleted)
+        return customerRepository.findAllByShowDeleted(showDeleted)
                 .map(customerMapper::toResponse);
     }
 
