@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -185,10 +183,16 @@ public class CustomerRepositoryTest {
     }
 
     @Test
-    void testDeleteById() {
+    void shouldNotReturnDeletedCustomer_afterDeletingFromDatabase() {
         Mono<Void> deleteOperation = repository.deleteById(customer1.getId());
 
         StepVerifier.create(deleteOperation)
+                .verifyComplete();
+
+        // One more step to verify, customer no longer exists
+        Mono<Customer> deletedCustomer = repository.findById(customer1.getId());
+
+        StepVerifier.create(deletedCustomer)
                 .verifyComplete();
     }
 }
