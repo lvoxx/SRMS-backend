@@ -2,10 +2,6 @@ package io.github.lvoxx.srms.customer.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.UUID;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -81,30 +77,28 @@ public class CustomerRepositoryTest {
     void setUp() {
         // Create test data
         customer1 = new Customer();
-        customer1.setId(UUID.randomUUID());
         customer1.setEmail("john.doe1.cus@email.srms.com");
         customer1.setFirstName("Jane");
         customer1.setLastName("Doe");
-        customer1.setCreatedAt(OffsetDateTime.now());
-        customer1.setUpdatedAt(OffsetDateTime.now());
+        customer1.setPhoneNumber("+999999999");
+        // Save instantly and get the ID
+        customer1 = repository.save(customer1).block();
 
         customer2 = new Customer();
-        customer2.setId(UUID.randomUUID());
         customer2.setEmail("john.doe2.cus@email.srms.com");
         customer2.setFirstName("Jane");
         customer2.setLastName("Doe 2");
-        customer2.setCreatedAt(OffsetDateTime.now());
-        customer2.setUpdatedAt(OffsetDateTime.now());
+        customer2.setPhoneNumber("+888888888");
+        // Save instantly and get the ID
+        customer2 = repository.save(customer2).block();
 
         deletedCustomer = new Customer();
-        deletedCustomer.setId(UUID.randomUUID());
         deletedCustomer.setEmail("john.doe2.cus@email.srms.com");
         deletedCustomer.setFirstName("Jane");
         deletedCustomer.setLastName("Doe");
-        deletedCustomer.setCreatedAt(OffsetDateTime.now());
-        deletedCustomer.setUpdatedAt(OffsetDateTime.now());
-
-        repository.saveAll(List.of(customer1, customer2, deletedCustomer));
+        deletedCustomer.setPhoneNumber("+777777777");
+        // Save instantly and get the ID
+        deletedCustomer = repository.save(deletedCustomer).block();
     }
 
     @AfterEach
@@ -115,7 +109,7 @@ public class CustomerRepositoryTest {
     }
 
     @Test
-    void testSave() {
+    void shouldReturnANewCustomer_whenSavingGivenNewCustomer() {
         Customer newCustomer = new Customer();
         // newCustomer.setId(UUID.randomUUID());
         newCustomer.setEmail("new.cus@email.srms.com");
@@ -123,8 +117,8 @@ public class CustomerRepositoryTest {
         newCustomer.setLastName("Customer");
         newCustomer.setPhoneNumber("+1234567890");
 
-       Mono<Customer> savedCustomer = repository.save(newCustomer)
-            .flatMap(saved -> repository.findById(saved.getId()));
+        Mono<Customer> savedCustomer = repository.save(newCustomer)
+                .flatMap(saved -> repository.findById(saved.getId()));
 
         StepVerifier.create(savedCustomer)
                 .assertNext(c -> {
@@ -142,16 +136,19 @@ public class CustomerRepositoryTest {
     }
 
     @Test
-    void testFindById() {
+    void shouldReturnCustomer1_whenFindingByCustomerId() {
         Mono<Customer> foundCustomer = repository.findById(customer1.getId());
 
         StepVerifier.create(foundCustomer)
                 .assertNext(c -> {
                     assertThat(c.getId()).isEqualTo(customer1.getId());
-                    assertThat(c.getEmail()).isEqualTo("john.doe1.cus@email.srms.com");
-                    assertThat(c.getFirstName()).isEqualTo("Jane");
-                    assertThat(c.getLastName()).isEqualTo("Doe");
+                    assertThat(c.getEmail()).isEqualTo(customer1.getEmail());
+                    assertThat(c.getFirstName()).isEqualTo(customer1.getFirstName());
+                    assertThat(c.getLastName()).isEqualTo(customer1.getLastName());
+                    assertThat(c.getCreatedAt()).isNotNull();
+                    assertThat(c.getUpdatedAt()).isNotNull();
                     assertThat(c.getDeletedAt()).isNull();
+                    assertThat(c.isRegular()).isFalse();
                 })
                 .verifyComplete();
     }
