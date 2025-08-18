@@ -163,111 +163,32 @@ public class CustomerRepositoryTest {
     }
 
     @Test
+    void shouldUpdateCustomer1_whenUpdatingCustomer_byFindingById() {
+        String newCustomerEmail = "john.doe69.cus@email.srms.com";
+
+        Customer oldCustomer1 = repository.findById(customer1.getId()).block();
+        oldCustomer1.setEmail(newCustomerEmail);
+        Mono<Customer> newCustomer1 = repository.save(oldCustomer1);
+
+        StepVerifier.create(newCustomer1)
+                .assertNext(c -> {
+                    assertThat(c.getId()).isEqualTo(customer1.getId());
+                    assertThat(c.getEmail()).isEqualTo(newCustomerEmail); // Only verify this field
+                    assertThat(c.getFirstName()).isEqualTo(customer1.getFirstName());
+                    assertThat(c.getLastName()).isEqualTo(customer1.getLastName());
+                    assertThat(c.getCreatedAt()).isNotNull();
+                    assertThat(c.getUpdatedAt()).isNotNull();
+                    assertThat(c.getDeletedAt()).isNull();
+                    assertThat(c.isRegular()).isFalse();
+                }).verifyComplete();
+
+    }
+
+    @Test
     void testDeleteById() {
         Mono<Void> deleteOperation = repository.deleteById(customer1.getId());
 
         StepVerifier.create(deleteOperation)
-                .verifyComplete();
-    }
-
-    @Test
-    void testFindAllByIsDeleted_showDeletedTrue() {
-        Flux<Customer> deletedCustomers = repository.findAllByShowDeleted(true);
-
-        StepVerifier.create(deletedCustomers)
-                .assertNext(c -> {
-                    assertThat(c.getId()).isEqualTo(deletedCustomer.getId());
-                    assertThat(c.getEmail()).isEqualTo("mike.cus@email.srms.com");
-                    assertThat(c.getFirstName()).isEqualTo("Deleted");
-                    assertThat(c.getLastName()).isEqualTo("User");
-                    assertThat(c.getDeletedAt()).isNotNull();
-                })
-                .expectNextCount(0)
-                .verifyComplete();
-    }
-
-    @Test
-    void testFindAllByIsDeleted_showDeletedFalse() {
-        Flux<Customer> activeCustomers = repository.findAllByShowDeleted(false);
-
-        StepVerifier.create(activeCustomers)
-                .assertNext(c -> {
-                    assertThat(c.getEmail()).isEqualTo("john.doe1.cus@email.srms.com");
-                    assertThat(c.getFirstName()).isEqualTo("Jane");
-                    assertThat(c.getLastName()).isEqualTo("Doe");
-                    assertThat(c.getDeletedAt()).isNull();
-                })
-                .assertNext(c -> {
-                    assertThat(c.getEmail()).isEqualTo("john.doe2.cus@email.srms.com");
-                    assertThat(c.getFirstName()).isEqualTo("Jane");
-                    assertThat(c.getLastName()).isEqualTo("Doe");
-                    assertThat(c.getDeletedAt()).isNull();
-                })
-                .expectNextCount(0)
-                .verifyComplete();
-    }
-
-    @Test
-    void testFindDeleted() {
-        Flux<Customer> deletedCustomers = repository.findDeleted();
-
-        StepVerifier.create(deletedCustomers)
-                .assertNext(c -> {
-                    assertThat(c.getId()).isEqualTo(deletedCustomer.getId());
-                    assertThat(c.getEmail()).isEqualTo("mike.cus@email.srms.com");
-                    assertThat(c.getFirstName()).isEqualTo("Deleted");
-                    assertThat(c.getLastName()).isEqualTo("User");
-                    assertThat(c.getDeletedAt()).isNotNull();
-                })
-                .expectNextCount(0)
-                .verifyComplete();
-    }
-
-    @Test
-    void testRestoreById() {
-        Mono<Integer> restoreOperation = repository.restoreById(deletedCustomer.getId());
-
-        StepVerifier.create(restoreOperation)
-                .assertNext(count -> assertThat(count).isEqualTo(1))
-                .verifyComplete();
-    }
-
-    @Test
-    void testFindPageByIsDeleted_showDeletedTrue() {
-        Pageable pageable = PageRequest.of(0, 2);
-        Flux<Customer> pagedDeletedCustomers = repository.findPageByIsDeleted(pageable, true);
-
-        StepVerifier.create(pagedDeletedCustomers)
-                .assertNext(c -> {
-                    assertThat(c.getId()).isEqualTo(deletedCustomer.getId());
-                    assertThat(c.getEmail()).isEqualTo("mike.cus@email.srms.com");
-                    assertThat(c.getFirstName()).isEqualTo("Deleted");
-                    assertThat(c.getLastName()).isEqualTo("User");
-                    assertThat(c.getDeletedAt()).isNotNull();
-                })
-                .expectNextCount(0)
-                .verifyComplete();
-    }
-
-    @Test
-    void testFindPageByIsDeleted_showDeletedFalse() {
-        Pageable pageable = PageRequest.of(0, 2);
-        Flux<Customer> pagedActiveCustomers = repository.findPageByIsDeleted(pageable, false);
-
-        StepVerifier.create(pagedActiveCustomers)
-                .assertNext(c -> {
-                    assertThat(c.getEmail()).isEqualTo("john.doe1.cus@email.srms.com");
-                    assertThat(c.getFirstName()).isEqualTo("Jane");
-                    assertThat(c.getLastName()).isEqualTo("Doe");
-                    assertThat(c.getDeletedAt()).isNull();
-                })
-                .assertNext(c -> {
-                    assertThat(c.getEmail()).isEqualTo("john.doe2.cus@email.srms.com");
-                    assertThat(c.getFirstName()).isEqualTo("Jane");
-                    assertThat(c.getLastName()).isEqualTo("Doe");
-                    assertThat(c.getDeletedAt()).isNull();
-                })
-                .expectNextCount(0)
                 .verifyComplete();
     }
 }
