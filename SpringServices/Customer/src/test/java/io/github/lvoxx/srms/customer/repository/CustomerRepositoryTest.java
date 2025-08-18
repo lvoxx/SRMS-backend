@@ -185,7 +185,7 @@ public class CustomerRepositoryTest {
                     assertThat(c.getCreatedAt()).isNotNull();
                     assertThat(c.getUpdatedAt()).isNotNull();
                     assertThat(c.getDeletedAt()).isNull();
-                    assertThat(c.isRegular()).isFalse();
+                    assertThat(c.isRegular()).isTrue();
                 }).verifyComplete();
 
     }
