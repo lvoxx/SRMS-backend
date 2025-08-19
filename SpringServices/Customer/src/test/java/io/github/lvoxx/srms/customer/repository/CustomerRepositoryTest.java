@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +31,7 @@ import reactor.test.StepVerifier;
 @Tags({
         @Tag("Repository"), @Tag("Mock")
 })
+@DataR2dbcTest
 public class CustomerRepositoryTest extends AbstractDatabaseTestContainer{
 
     @Autowired
