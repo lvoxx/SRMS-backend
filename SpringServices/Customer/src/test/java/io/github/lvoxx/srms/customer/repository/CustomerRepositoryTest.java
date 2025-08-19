@@ -5,27 +5,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
+import io.github.lvoxx.srms.customer.AbstractDatabaseTestContainer;
 import io.github.lvoxx.srms.customer.models.Customer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -37,37 +30,7 @@ import reactor.test.StepVerifier;
 @Tags({
         @Tag("Repository"), @Tag("Mock")
 })
-@Testcontainers
-@DataR2dbcTest
-public class CustomerRepositoryTest {
-
-    @SuppressWarnings("resource")
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17.4-alpine")
-            .withDatabaseName("test")
-            .withUsername("root")
-            .withPassword("Te3tP4ssW@r$")
-            .withInitScript("customer_test.sql");
-
-    @DynamicPropertySource
-    static void configureR2dbc(DynamicPropertyRegistry registry) {
-        registry.add("spring.r2dbc.url",
-                () -> "r2dbc:postgresql://"
-                        + postgres.getHost() + ":" + postgres.getFirstMappedPort()
-                        + "/" + postgres.getDatabaseName());
-        registry.add("spring.r2dbc.username", postgres::getUsername);
-        registry.add("spring.r2dbc.password", postgres::getPassword);
-    }
-
-    @BeforeAll
-    static void setup() {
-        postgres.start();
-    }
-
-    @AfterAll
-    static void tearOut() {
-        postgres.stop();
-    }
+public class CustomerRepositoryTest extends AbstractDatabaseTestContainer{
 
     @Autowired
     CustomerRepository repository;
