@@ -1,7 +1,6 @@
 package io.github.lvoxx.srms.customer.dto;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -15,7 +14,7 @@ public abstract class CustomerDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @Builder
+    @Builder(toBuilder = true)
     public static class Request {
         @NotBlank(message = "First name cannot be empty")
         @Size(max = 50, message = "First name must not exceed 50 characters")
@@ -34,8 +33,8 @@ public abstract class CustomerDTO {
         @Pattern(regexp = "^(?:[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}|)$", message = "Invalid email format")
         private String email;
 
-        private List<String> dietaryRestrictions;
-        private List<String> allergies;
+        private String[] dietaryRestrictions;
+        private String[] allergies;
 
         private boolean isRegular;
 
@@ -45,15 +44,15 @@ public abstract class CustomerDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @Builder
+    @Builder(toBuilder = true)
     public static class Response {
         private String id;
         private String firstName;
         private String lastName;
         private String phoneNumber;
         private String email;
-        private List<String> dietaryRestrictions;
-        private List<String> allergies;
+        private String[] dietaryRestrictions;
+        private String[] allergies;
         private boolean isRegular;
         private String notes;
         private OffsetDateTime createdAt;
