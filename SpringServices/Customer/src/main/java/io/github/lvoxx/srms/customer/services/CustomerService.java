@@ -12,8 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.example.common.dto.PageDTO;
-
+import io.github.lvoxx.srms.common.dto.PageDTO;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
 import io.github.lvoxx.srms.customer.mappers.CustomerMapper;
 import io.github.lvoxx.srms.customer.models.Customer;

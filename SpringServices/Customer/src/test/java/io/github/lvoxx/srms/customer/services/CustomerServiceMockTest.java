@@ -33,8 +33,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import com.example.common.dto.PageDTO;
-
+import io.github.lvoxx.srms.common.dto.PageDTO;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
 import io.github.lvoxx.srms.customer.mappers.CustomerMapper;
 import io.github.lvoxx.srms.customer.models.Customer;

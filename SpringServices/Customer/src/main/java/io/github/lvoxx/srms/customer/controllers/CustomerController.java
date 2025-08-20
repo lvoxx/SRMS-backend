@@ -15,8 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import com.example.common.dto.PageDTO;
-
+import io.github.lvoxx.srms.common.dto.PageDTO;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
 import io.github.lvoxx.srms.customer.services.CustomerService;
 import jakarta.validation.Valid;

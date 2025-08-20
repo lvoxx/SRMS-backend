@@ -6,8 +6,7 @@ import java.util.List;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import com.example.common.jdbc.AbstractEntity;
-
+import io.github.lvoxx.srms.common.jdbc.AbstractEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder.Default;
 import lombok.Getter;
