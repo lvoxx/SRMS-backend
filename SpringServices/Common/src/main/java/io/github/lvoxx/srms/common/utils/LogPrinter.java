@@ -1,4 +1,4 @@
-package com.example.common.utils;
+package io.github.lvoxx.srms.common.utils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

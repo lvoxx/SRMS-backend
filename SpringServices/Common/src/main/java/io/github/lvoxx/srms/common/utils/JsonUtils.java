@@ -1,4 +1,4 @@
-package com.example.common.utils;
+package io.github.lvoxx.srms.common.utils;
 
 import java.util.Collections;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.example.common.jdbc;
+package io.github.lvoxx.srms.common.jdbc;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -6,9 +6,15 @@ import java.util.UUID;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
+@SuperBuilder(toBuilder = true)
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 public abstract class AbstractEntity {

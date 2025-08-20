@@ -54,6 +54,7 @@
 		<!-- VERSIONING START -->
 		<application.version>1.0.0</application.version>
 		<java.version>21</java.version>
+		<spring-context.version>7.0.0-M8</spring-context.version>
 		<spring-boot.version>3.5.3</spring-boot.version>
 		<spring-cloud.version>4.3.0</spring-cloud.version>
 		<spring-cloud.kubernetes.version>3.3.0</spring-cloud.kubernetes.version>
@@ -114,6 +115,11 @@
 			</dependency>
 
 			<!-- SPRING BOOT -->
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context</artifactId>
+				<version>${spring-context.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-actuator</artifactId>

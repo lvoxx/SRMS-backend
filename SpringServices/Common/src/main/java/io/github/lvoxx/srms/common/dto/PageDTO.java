@@ -1,4 +1,4 @@
-package com.example.common.dto;
+package io.github.lvoxx.srms.common.dto;
 
 import java.util.List;
 
