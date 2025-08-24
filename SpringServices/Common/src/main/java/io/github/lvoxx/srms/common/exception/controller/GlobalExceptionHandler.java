@@ -1,13 +1,17 @@
 package io.github.lvoxx.srms.common.exception.controller;
 
+import java.util.Optional;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import io.github.lvoxx.srms.common.exception.ErrorResponse;
+import io.github.lvoxx.srms.common.exception.message.SystemErrorMessages;
 import io.github.lvoxx.srms.common.exception.model.BadRequestException;
 import io.github.lvoxx.srms.common.exception.model.ConflictException;
+import io.github.lvoxx.srms.common.exception.model.DataPersistantException;
 import io.github.lvoxx.srms.common.exception.model.NotFoundException;
 import io.github.lvoxx.srms.common.exception.model.ValidationException;
 import reactor.core.publisher.Mono;
@@ -17,61 +21,92 @@ public class GlobalExceptionHandler {
 
     // Xử lý NotFoundException
     @ExceptionHandler(NotFoundException.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleNotFoundException(NotFoundException ex) {
-        ErrorResponse error = new ErrorResponse(
-                "Resource Not Found",
-                ex.getMessage(),
-                HttpStatus.NOT_FOUND.value());
-        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(error));
+    public Mono<ResponseEntity<ErrorResponse>> handleNotFoundException(RuntimeException ex) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ErrorResponse error = ErrorResponse.builder()
+                .message(SystemErrorMessages.RESOURCE_NOT_FOUND.getTitle())
+                .details(Optional.ofNullable(ex.getMessage())
+                        .orElseGet(() -> SystemErrorMessages.RESOURCE_NOT_FOUND.getDefaultDetails()))
+                .status(status.value())
+                .build();
+        return Mono.just(ResponseEntity.status(status).body(error));
     }
 
     // Xử lý BadRequestException
     @ExceptionHandler(BadRequestException.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleBadRequestException(BadRequestException ex) {
-        ErrorResponse error = new ErrorResponse(
-                "Bad Request",
-                ex.getMessage(),
-                HttpStatus.BAD_REQUEST.value());
-        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error));
+    public Mono<ResponseEntity<ErrorResponse>> handleBadRequestException(RuntimeException ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ErrorResponse error = ErrorResponse.builder()
+                .message(SystemErrorMessages.BAD_REQUEST.getTitle())
+                .details(Optional.ofNullable(ex.getMessage())
+                        .orElseGet(() -> SystemErrorMessages.BAD_REQUEST.getDefaultDetails()))
+                .status(status.value())
+                .build();
+        return Mono.just(ResponseEntity.status(status).body(error));
     }
 
     // Xử lý ConflictException
     @ExceptionHandler(ConflictException.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleConflictException(ConflictException ex) {
-        ErrorResponse error = new ErrorResponse(
-                "Conflict",
-                ex.getMessage(),
-                HttpStatus.CONFLICT.value());
-        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).body(error));
+    public Mono<ResponseEntity<ErrorResponse>> handleConflictException(RuntimeException ex) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        ErrorResponse error = ErrorResponse.builder()
+                .message(SystemErrorMessages.CONFLICT.getTitle())
+                .details(Optional.ofNullable(ex.getMessage())
+                        .orElseGet(() -> SystemErrorMessages.CONFLICT.getDefaultDetails()))
+                .status(status.value())
+                .build();
+        return Mono.just(ResponseEntity.status(status).body(error));
     }
 
     // Xử lý ValidationException
     @ExceptionHandler(ValidationException.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleValidationException(ValidationException ex) {
-        ErrorResponse error = new ErrorResponse(
-                "Validation Failed",
-                ex.getMessage(),
-                HttpStatus.BAD_REQUEST.value());
-        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error));
+    public Mono<ResponseEntity<ErrorResponse>> handleValidationException(RuntimeException ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ErrorResponse error = ErrorResponse.builder()
+                .message(SystemErrorMessages.BAD_REQUEST.getTitle())
+                .details(Optional.ofNullable(ex.getMessage())
+                        .orElseGet(() -> SystemErrorMessages.BAD_REQUEST.getDefaultDetails()))
+                .status(status.value())
+                .build();
+        return Mono.just(ResponseEntity.status(status).body(error));
+    }
+
+    // Xử lý cụ thể đã biết từ server (Internal Server Error)
+    @ExceptionHandler({ DataPersistantException.class })
+    public Mono<ResponseEntity<ErrorResponse>> handleServerException(RuntimeException ex) {
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        ErrorResponse error = ErrorResponse.builder()
+                .message(SystemErrorMessages.INTERNAL_SERVER_ERROR.getTitle())
+                .details(Optional.ofNullable(ex.getMessage())
+                        .orElseGet(() -> SystemErrorMessages.INTERNAL_SERVER_ERROR.getDefaultDetails()))
+                .status(status.value())
+                .build();
+        return Mono.just(ResponseEntity.status(status).body(error));
     }
 
     // Xử lý lỗi chung (Internal Server Error)
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ErrorResponse>> handleGenericException(Exception ex) {
-        ErrorResponse error = new ErrorResponse(
-                "Internal Server Error",
-                "An unexpected error occurred",
-                HttpStatus.INTERNAL_SERVER_ERROR.value());
-        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error));
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        ErrorResponse error = ErrorResponse.builder()
+                .message(SystemErrorMessages.INTERNAL_SERVER_ERROR.getTitle())
+                .details(Optional.ofNullable(ex.getMessage())
+                        .orElseGet(() -> SystemErrorMessages.INTERNAL_SERVER_ERROR.getDefaultDetails()))
+                .status(status.value())
+                .build();
+        return Mono.just(ResponseEntity.status(status).body(error));
     }
 
     // Xử lý TimeoutException trong reactive
     @ExceptionHandler(java.util.concurrent.TimeoutException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleTimeoutException(java.util.concurrent.TimeoutException ex) {
-        ErrorResponse error = new ErrorResponse(
-                "Request Timeout",
-                "The operation timed out",
-                HttpStatus.REQUEST_TIMEOUT.value());
-        return Mono.just(ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).body(error));
+        HttpStatus status = HttpStatus.REQUEST_TIMEOUT;
+        ErrorResponse error = ErrorResponse.builder()
+                .message(SystemErrorMessages.REQUEST_TIMEOUT.getTitle())
+                .details(Optional.ofNullable(ex.getMessage())
+                        .orElseGet(() -> SystemErrorMessages.REQUEST_TIMEOUT.getDefaultDetails()))
+                .status(status.value())
+                .build();
+        return Mono.just(ResponseEntity.status(status).body(error));
     }
 }

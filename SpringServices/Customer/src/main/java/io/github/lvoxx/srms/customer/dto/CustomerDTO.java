@@ -1,6 +1,7 @@
 package io.github.lvoxx.srms.customer.dto;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -46,7 +47,7 @@ public abstract class CustomerDTO {
     @AllArgsConstructor
     @Builder(toBuilder = true)
     public static class Response {
-        private String id;
+        private UUID id;
         private String firstName;
         private String lastName;
         private String phoneNumber;

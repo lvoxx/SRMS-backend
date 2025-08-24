@@ -19,6 +19,10 @@ public interface CustomerRepository extends R2dbcRepository<Customer, UUID> {
         Flux<Customer> findAllByShowDeleted(@Param("showDeleted") boolean showDeleted);
 
         // Find by email excluding deleted
+        @Query("SELECT * FROM Customer c WHERE c.id = :id AND c.deleted_at IS NULL")
+        Mono<Customer> findActiveById(@Param("id") UUID id);
+
+        // Find by email excluding deleted
         @Query("SELECT * FROM Customer c WHERE c.email = :email AND " +
                         "((:showDeleted = true AND c.deleted_at IS NOT NULL) OR (:showDeleted = false AND c.deleted_at IS NULL))")
         Mono<Customer> findActiveByEmailAndShowDeleted(@Param("email") String email,
@@ -51,4 +55,17 @@ public interface CustomerRepository extends R2dbcRepository<Customer, UUID> {
         @Query("SELECT * FROM Customer c WHERE " +
                         "((:showDeleted = true AND c.deleted_at IS NOT NULL) OR (:showDeleted = false AND c.deleted_at IS NULL))")
         Flux<Customer> findPageByShowDeleted(Pageable pageable, @Param("showDeleted") boolean showDeleted);
+
+        // -------------------------------------------------------------------
+
+        // FOR INTERNAL CALL ONLY
+        @Query("SELECT c FROM Customer c " +
+                        "WHERE CONCAT(c.first_name, ' ', c.last_name) LIKE %:fullName%")
+        Flux<Customer> findAlikeFullname(@Param("fullName") String fullName);
+
+        @Query("SELECT * FROM Customer c WHERE c.email = :email")
+        Mono<Customer> findByEmail(@Param("email") String email);
+
+        @Query("SELECT * FROM Customer c WHERE c.phone_number = :phoneNumber")
+        Mono<Customer> findByPhoneNumber(@Param("phonenumber") String phoneNumber);
 }
