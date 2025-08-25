@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -217,7 +218,8 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.firstName").isEqualTo("First name cannot be empty");
+                                .jsonPath("$.errors[?(@.field == 'firstName')].error")
+                                .isEqualTo("First name cannot be empty");
         }
 
         @Test
@@ -234,7 +236,8 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.lastName").isEqualTo("Last name cannot be empty");
+                                .jsonPath("$.errors[?(@.field == 'lastName')].error")
+                                .isEqualTo("Last name cannot be empty");
         }
 
         @Test
@@ -251,7 +254,8 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.firstName").isEqualTo("First name must not exceed 50 characters");
+                                .jsonPath("$.errors[?(@.field == 'firstName')].error")
+                                .isEqualTo("First name must not exceed 50 characters");
         }
 
         @Test
@@ -268,7 +272,17 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.phoneNumber").isEqualTo("Phone number cannot be empty");
+                                .consumeWith(res -> {
+                                        printPrettyLog(log, res);
+                                })
+                                .jsonPath("$.message").isEqualTo("Validation Failure")
+                                .jsonPath("$.status").isEqualTo(400)
+                                .jsonPath("$.errors").isArray()
+                                .jsonPath("$.errors.length()").isEqualTo(2) // Kiểm tra có đúng 2 lỗi
+                                .jsonPath("$.errors[?(@.field == 'phoneNumber')].error").value(
+                                                Matchers.containsInAnyOrder(
+                                                                "Phone number cannot be empty",
+                                                                "Invalid phone number format"));
         }
 
         @ParameterizedTest
@@ -286,7 +300,8 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.phoneNumber").isEqualTo("Invalid phone number format");
+                                .jsonPath("$.errors[?(@.field == 'phoneNumber')].error")
+                                .isEqualTo("Invalid phone number format");
         }
 
         @ParameterizedTest
@@ -323,7 +338,7 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.email").isEqualTo("Invalid email format");
+                                .jsonPath("$.errors[?(@.field == 'email')].error").isEqualTo("Invalid email format");
         }
 
         @Test
@@ -348,7 +363,7 @@ public class CustomerControllerValidationTest {
         @DisplayName("Should return 400 when email exceeds 100 characters")
         void shouldReturn400WhenEmailExceeds100Characters() {
                 CustomerDTO.Request invalidRequest = validRequest.toBuilder()
-                                .email("a".repeat(90) + "@test.com") // 101 characters
+                                .email("a".repeat(92) + "@test.com") // 101 characters
                                 .build();
 
                 webTestClient.post()
@@ -358,7 +373,11 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.email").isEqualTo("Email must not exceed 100 characters");
+                                .consumeWith(res -> {
+                                        printPrettyLog(log, res);
+                                })
+                                .jsonPath("$.errors[?(@.field == 'email')].error")
+                                .isEqualTo("Email must not exceed 100 characters");
         }
 
         @Test
@@ -387,9 +406,9 @@ public class CustomerControllerValidationTest {
                                 .jsonPath("$.errors.length()").isEqualTo(4) // Kiểm tra số lượng lỗi
                                 .jsonPath("$.errors[?(@.field == 'lastName')].error")
                                 .isEqualTo("Last name must not exceed 50 characters")
-                                .jsonPath("$.errors[?(@.field == 'email')].error").isEqualTo("Invalid email format")
                                 .jsonPath("$.errors[?(@.field == 'firstName')].error")
                                 .isEqualTo("First name cannot be empty")
+                                .jsonPath("$.errors[?(@.field == 'email')].error").isEqualTo("Invalid email format")
                                 .jsonPath("$.errors[?(@.field == 'phoneNumber')].error")
                                 .isEqualTo("Invalid phone number format");
         }
@@ -439,7 +458,8 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.firstName").isEqualTo("First name cannot be empty");
+                                .jsonPath("$.errors[?(@.field == 'firstName')].error")
+                                .isEqualTo("First name cannot be empty");
         }
 
         @Test
