@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -23,8 +24,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.lvoxx.srms.common.dto.PageDTO;
@@ -32,6 +37,7 @@ import io.github.lvoxx.srms.common.exception.controller.GlobalExceptionHandler;
 import io.github.lvoxx.srms.common.exception.controller.ValidationExceptionHandler;
 import io.github.lvoxx.srms.customer.config.TestControllerConfig;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
+import io.github.lvoxx.srms.customer.dto.CustomerDTO.Response;
 import io.github.lvoxx.srms.customer.services.CustomerService;
 import reactor.core.publisher.Mono;
 
@@ -54,7 +60,7 @@ public class CustomerControllerValidationTest {
         private WebTestClient webTestClient;
 
         @Autowired
-        private ObjectMapper objectMapper;
+        private ObjectMapper mapper;
 
         @MockitoBean
         private CustomerService customerService;
@@ -106,7 +112,7 @@ public class CustomerControllerValidationTest {
                                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                                 .expectBody(CustomerDTO.Response.class)
                                 .consumeWith(res -> {
-                                        log.info("Response: " + res.getResponseBody());
+                                        printPrettyDTOLog(log, res);
                                 })
                                 .isEqualTo(validResponse);
         }
@@ -372,10 +378,20 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.firstName").exists()
-                                .jsonPath("$.lastName").exists()
-                                .jsonPath("$.phoneNumber").exists()
-                                .jsonPath("$.email").exists();
+                                .consumeWith(res -> {
+                                        printPrettyLog(log, res);
+                                })
+                                .jsonPath("$.message").isEqualTo("Validation Failure")
+                                .jsonPath("$.status").isEqualTo(400)
+                                .jsonPath("$.errors").isArray()
+                                .jsonPath("$.errors.length()").isEqualTo(4) // Kiểm tra số lượng lỗi
+                                .jsonPath("$.errors[?(@.field == 'lastName')].error")
+                                .isEqualTo("Last name must not exceed 50 characters")
+                                .jsonPath("$.errors[?(@.field == 'email')].error").isEqualTo("Invalid email format")
+                                .jsonPath("$.errors[?(@.field == 'firstName')].error")
+                                .isEqualTo("First name cannot be empty")
+                                .jsonPath("$.errors[?(@.field == 'phoneNumber')].error")
+                                .isEqualTo("Invalid phone number format");
         }
 
         @Test
@@ -463,5 +479,30 @@ public class CustomerControllerValidationTest {
                                 .uri("/customers/{id}/restore", testId)
                                 .exchange()
                                 .expectStatus().isNotFound();
+        }
+
+        private void printPrettyLog(Logger log, EntityExchangeResult<byte[]> res) {
+                try {
+                        Object json = mapper.readValue(res.getResponseBody(), Object.class);
+                        log.debug("Response:\n{}", mapper.writerWithDefaultPrettyPrinter()
+                                        .writeValueAsString(json));
+                } catch (StreamReadException e) {
+                        e.printStackTrace();
+                } catch (DatabindException e) {
+                        e.printStackTrace();
+                } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                } catch (IOException e) {
+                        e.printStackTrace();
+                }
+        }
+
+        private void printPrettyDTOLog(Logger log, EntityExchangeResult<Response> res) {
+                try {
+                        log.debug("Response:\n{}", mapper.writerWithDefaultPrettyPrinter()
+                                        .writeValueAsString(res));
+                } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                }
         }
 }
