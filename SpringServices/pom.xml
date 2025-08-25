@@ -54,7 +54,8 @@
 		<!-- VERSIONING START -->
 		<application.version>1.0.0</application.version>
 		<java.version>21</java.version>
-		<spring-context.version>7.0.0-M8</spring-context.version>
+		<spring-context.version>6.2.10</spring-context.version>
+		<spring-aop.version>6.2.10</spring-aop.version>
 		<spring-boot.version>3.5.3</spring-boot.version>
 		<spring-cloud.version>4.3.0</spring-cloud.version>
 		<spring-cloud.kubernetes.version>3.3.0</spring-cloud.kubernetes.version>
@@ -159,6 +160,11 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-webflux</artifactId>
 				<version>${spring-boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-aop</artifactId>
+				<version>${spring-aop.version}</version>
 			</dependency>
 			<!-- SPRING BOOT -->
 
@@ -287,6 +293,15 @@
 				<scope>test</scope>
 			</dependency>
 			<!-- TEST -->
+
+			<!-- Spring Boot BOM to ensure consistent versions -->
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${spring-boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

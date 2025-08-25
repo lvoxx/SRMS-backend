@@ -4,8 +4,11 @@ import java.util.List;
 
 import org.springframework.lang.Nullable;
 
+import lombok.Builder;
+
 public abstract class PageDTO {
 
+    @Builder
     public record PageRequestDTO(
             int page,
             int size,
@@ -20,6 +23,7 @@ public abstract class PageDTO {
         }
     }
 
+    @Builder
     public record PageResponseDTO<T>(
             List<T> content,
             int page,

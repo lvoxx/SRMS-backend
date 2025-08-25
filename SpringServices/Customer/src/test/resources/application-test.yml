@@ -1,0 +1,8 @@
+spring:
+  main:
+    web-application-type: reactive
+
+logging:
+  level:
+    io.github.lvoxx.srms: DEBUG
+    org.springframework.web: DEBUG
