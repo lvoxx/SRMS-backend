@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
@@ -28,7 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.lvoxx.srms.common.dto.PageDTO;
 import io.github.lvoxx.srms.common.exception.controller.GlobalExceptionHandler;
 import io.github.lvoxx.srms.common.exception.controller.ValidationExceptionHandler;
-import io.github.lvoxx.srms.customer.config.TestConfig;
+import io.github.lvoxx.srms.customer.config.TestControllerConfig;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
 import io.github.lvoxx.srms.customer.services.CustomerService;
 import reactor.core.publisher.Mono;
@@ -38,13 +40,15 @@ import reactor.core.publisher.Mono;
                 @Tag("Controller"), @Tag("Validation"), @Tag("Mock")
 })
 @WebFluxTest(controllers = CustomerController.class)
-@Import(TestConfig.class)
+@Import(TestControllerConfig.class)
 @ContextConfiguration(classes = {
                 GlobalExceptionHandler.class, // Class của ControllerAdvice trong module Common
                 ValidationExceptionHandler.class
 })
 @ActiveProfiles("test")
 public class CustomerControllerValidationTest {
+
+        private static final Logger log = LoggerFactory.getLogger(CustomerControllerValidationTest.class);
 
         @Autowired
         private WebTestClient webTestClient;
@@ -101,6 +105,9 @@ public class CustomerControllerValidationTest {
                                 .expectStatus().isOk()
                                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                                 .expectBody(CustomerDTO.Response.class)
+                                .consumeWith(res -> {
+                                        log.info("Response: " + res.getResponseBody());
+                                })
                                 .isEqualTo(validResponse);
         }
 

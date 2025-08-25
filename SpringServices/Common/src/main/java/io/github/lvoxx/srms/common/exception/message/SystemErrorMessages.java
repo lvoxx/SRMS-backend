@@ -1,7 +1,7 @@
 package io.github.lvoxx.srms.common.exception.message;
 
 public enum SystemErrorMessages {
-    RESOURCE_NOT_FOUND("Resource Not Found", "The requested resource was not found on the server"),
+    NOT_FOUND("Not Found", "The requested data was not found on the server"),
     BAD_REQUEST("Bad Request", "The request could not be understood or was missing required parameters"),
     CONFLICT("Conflict", "A conflict occurred, such as a duplicate resource"),
     VALIDATION_FAILED("Validation Failed", "The provided data did not pass validation"),

@@ -9,7 +9,7 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 @SpringBootApplication
 @EnableWebFlux
 @EnableR2dbcRepositories
-@ComponentScan("io.github.lvoxx")
+@ComponentScan("io.github.lvoxx.srms")
 public class CustomerApplication {
 
 	public static void main(String[] args) {

@@ -1,6 +1,14 @@
 spring:
+  webflux:
+    base-path: ""
   main:
     web-application-type: reactive
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      adjust-dates-to-context-time-zone: false
+    time-zone: Asia/Ho_Chi_Minh
 
 logging:
   level:

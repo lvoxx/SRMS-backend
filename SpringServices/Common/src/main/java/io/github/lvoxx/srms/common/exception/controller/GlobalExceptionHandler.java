@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.github.lvoxx.srms.common.exception.ErrorResponse;
 import io.github.lvoxx.srms.common.exception.message.SystemErrorMessages;
@@ -24,9 +25,9 @@ public class GlobalExceptionHandler {
     public Mono<ResponseEntity<ErrorResponse>> handleNotFoundException(RuntimeException ex) {
         HttpStatus status = HttpStatus.NOT_FOUND;
         ErrorResponse error = ErrorResponse.builder()
-                .message(SystemErrorMessages.RESOURCE_NOT_FOUND.getTitle())
+                .message(SystemErrorMessages.NOT_FOUND.getTitle())
                 .details(Optional.ofNullable(ex.getMessage())
-                        .orElseGet(() -> SystemErrorMessages.RESOURCE_NOT_FOUND.getDefaultDetails()))
+                        .orElseGet(() -> SystemErrorMessages.NOT_FOUND.getDefaultDetails()))
                 .status(status.value())
                 .build();
         return Mono.just(ResponseEntity.status(status).body(error));
@@ -82,6 +83,18 @@ public class GlobalExceptionHandler {
                 .status(status.value())
                 .build();
         return Mono.just(ResponseEntity.status(status).body(error));
+    }
+
+    // Xử lý lỗi 404 (Route Not Found)
+    @ExceptionHandler(ResponseStatusException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleResponseStatusException(ResponseStatusException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .message(ex.getReason() != null ? ex.getReason() : "Route Not Found")
+                .details(ex.getMessage())
+                .status(ex.getStatusCode().value())
+                .build();
+
+        return Mono.just(ResponseEntity.status(ex.getStatusCode()).body(error));
     }
 
     // Xử lý lỗi chung (Internal Server Error)
