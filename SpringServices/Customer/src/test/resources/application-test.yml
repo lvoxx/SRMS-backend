@@ -14,3 +14,6 @@ logging:
   level:
     io.github.lvoxx.srms: DEBUG
     org.springframework.web: DEBUG
+    org.springframework.validation: DEBUG
+    org.springframework.context.support: DEBUG
+    org.springframework.boot.autoconfigure.validation: DEBUG

@@ -17,21 +17,21 @@ public abstract class CustomerDTO {
     @AllArgsConstructor
     @Builder(toBuilder = true)
     public static class Request {
-        @NotBlank(message = "First name cannot be empty")
-        @Size(max = 50, message = "First name must not exceed 50 characters")
+        @NotBlank(message = "{error.validation.firstName.notBlank}")
+        @Size(max = 50, message = "{error.validation.firstName.size}")
         private String firstName;
 
-        @NotBlank(message = "Last name cannot be empty")
-        @Size(max = 50, message = "Last name must not exceed 50 characters")
+        @NotBlank(message = "{error.validation.lastName.notBlank}")
+        @Size(max = 50, message = "{error.validation.lastName.size}")
         private String lastName;
 
-        @NotBlank(message = "Phone number cannot be empty")
-        @Size(max = 20, message = "Phone number must not exceed 20 characters")
-        @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid phone number format")
+        @NotBlank(message = "{error.validation.phoneNumber.notBlank}")
+        @Size(max = 20, message = "{error.validation.phoneNumber.size}")
+        @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "{error.validation.phoneNumber.pattern}")
         private String phoneNumber;
 
-        @Size(max = 100, message = "Email must not exceed 100 characters")
-        @Pattern(regexp = "^(?:[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}|)$", message = "Invalid email format")
+        @Size(max = 100, message = "{error.validation.email.size}")
+        @Pattern(regexp = "^(?:[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}|)$", message = "{error.validation.email.pattern}")
         private String email;
 
         private String[] dietaryRestrictions;

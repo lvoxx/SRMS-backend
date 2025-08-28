@@ -6,6 +6,9 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.Enumeration;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.UUID;
 
 import org.hamcrest.Matchers;
@@ -98,6 +101,18 @@ public class CustomerControllerValidationTest {
                                 .createdAt(OffsetDateTime.now())
                                 .updatedAt(OffsetDateTime.now())
                                 .build();
+        }
+
+        @Test
+        void testLoadMessages() {
+                // Nếu muốn list all, nhưng không direct, có thể load properties thủ công
+                ResourceBundle bundle = ResourceBundle.getBundle("messages", Locale.getDefault()); // Giả sử
+                                                                                                   // basename="messages"
+                Enumeration<String> keys = bundle.getKeys();
+                while (keys.hasMoreElements()) {
+                        String key = keys.nextElement();
+                        log.info(key + " = " + bundle.getString(key));
+                }
         }
 
         @Test
