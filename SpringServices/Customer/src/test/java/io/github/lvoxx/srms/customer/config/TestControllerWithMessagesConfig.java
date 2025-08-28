@@ -33,5 +33,5 @@ import io.github.lvoxx.srms.common.config.MessageConfig;
         @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*CacheManager.*"),
         @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*CacheConfig.*")
 })
-public class TestControllerConfig {
+public class TestControllerWithMessagesConfig {
 }

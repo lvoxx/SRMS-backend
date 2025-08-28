@@ -1,5 +1,5 @@
 package io.github.lvoxx.srms.customer.controllers;
 
 
-public class CustomerControllerExceptionTest {
+public class CustomerControllerEndpointTest {
 }

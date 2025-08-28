@@ -39,7 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.lvoxx.srms.common.dto.PageDTO;
 import io.github.lvoxx.srms.common.exception.controller.GlobalExceptionHandler;
 import io.github.lvoxx.srms.common.exception.controller.ValidationExceptionHandler;
-import io.github.lvoxx.srms.customer.config.TestControllerConfig;
+import io.github.lvoxx.srms.customer.config.TestControllerWithMessagesConfig;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO.Response;
 import io.github.lvoxx.srms.customer.services.CustomerService;
@@ -50,7 +50,7 @@ import reactor.core.publisher.Mono;
                 @Tag("Controller"), @Tag("Validation"), @Tag("Mock")
 })
 @WebFluxTest(controllers = CustomerController.class)
-@Import(TestControllerConfig.class)
+@Import(TestControllerWithMessagesConfig.class)
 @ContextConfiguration(classes = {
                 GlobalExceptionHandler.class, // Class của ControllerAdvice trong module Common
                 ValidationExceptionHandler.class
