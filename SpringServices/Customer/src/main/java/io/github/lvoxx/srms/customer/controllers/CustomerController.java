@@ -1,7 +1,9 @@
 package io.github.lvoxx.srms.customer.controllers;
 
+import java.util.List;
 import java.util.UUID;
 
+import org.springframework.hateoas.server.reactive.WebFluxLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.lvoxx.srms.common.dto.PageDTO;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
+import io.github.lvoxx.srms.customer.hateos.CustomerResource;
 import io.github.lvoxx.srms.customer.services.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +33,10 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<CustomerDTO.Response>> findById(@PathVariable UUID id) {
+    public Mono<ResponseEntity<CustomerResource>> findById(@PathVariable UUID id) {
         return customerService.findById(id)
-                .map(ResponseEntity::ok)
+                .flatMap(dto -> toResource(dto)
+                        .map(ResponseEntity::ok))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
@@ -49,15 +53,19 @@ public class CustomerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<CustomerDTO.Response> create(@Valid @RequestBody CustomerDTO.Request request) {
-        return customerService.create(request);
+    public Mono<ResponseEntity<CustomerResource>> create(@Valid @RequestBody CustomerDTO.Request request) {
+        return customerService.create(request)
+                .flatMap(dto -> toResource(dto)
+                        .map(resource -> ResponseEntity.created(
+                                resource.getRequiredLink("self").toUri()).body(resource)));
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<CustomerDTO.Response>> update(@PathVariable UUID id,
+    public Mono<ResponseEntity<CustomerResource>> update(@PathVariable UUID id,
             @Valid @RequestBody CustomerDTO.Request request) {
         return customerService.update(id, request)
-                .map(ResponseEntity::ok)
+                .flatMap(dto -> toResource(dto)
+                        .map(ResponseEntity::ok))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
@@ -68,9 +76,44 @@ public class CustomerController {
     }
 
     @PatchMapping("/{id}/restore")
-    public Mono<ResponseEntity<CustomerDTO.Response>> restore(@PathVariable UUID id) {
+    public Mono<ResponseEntity<CustomerResource>> restore(@PathVariable UUID id) {
         return customerService.restore(id)
-                .map(ResponseEntity::ok)
+                .flatMap(dto -> toResource(dto)
+                        .map(ResponseEntity::ok))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    private Mono<CustomerResource> toResource(CustomerDTO.Response dto) {
+        CustomerResource resource = new CustomerResource();
+        resource.setId(dto.getId());
+        resource.setFirstName(dto.getFirstName());
+        resource.setLastName(dto.getLastName());
+        resource.setPhoneNumber(dto.getPhoneNumber());
+        resource.setEmail(dto.getEmail());
+        resource.setDietaryRestrictions(List.of(dto.getDietaryRestrictions()));
+        resource.setAllergies(List.of(dto.getAllergies()));
+        resource.setRegular(dto.isRegular());
+        resource.setNotes(dto.getNotes());
+        resource.setCreatedAt(dto.getCreatedAt());
+        resource.setUpdatedAt(dto.getUpdatedAt());
+        resource.setDeletedAt(dto.getDeletedAt());
+
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(CustomerController.class).findById(dto.getId()))
+                .withSelfRel()
+                .toMono()
+                .map(selfLink -> {
+                    resource.add(selfLink);
+                    return resource;
+                })
+                .flatMap(res -> WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(CustomerController.class)
+                                .findAllPaged(0, 10, "createdAt", "desc", false))
+                        .withRel("all-customers")
+                        .toMono()
+                        .map(allCustomersLink -> {
+                            res.add(allCustomersLink);
+                            return res;
+                        }));
     }
 }
