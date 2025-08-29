@@ -10,10 +10,10 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 @EnableWebFlux
 @EnableR2dbcRepositories
 @ComponentScan("io.github.lvoxx.srms")
-public class ContactApplication {
+public class ContactorApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ContactApplication.class, args);
+		SpringApplication.run(ContactorApplication.class, args);
 	}
 
 }

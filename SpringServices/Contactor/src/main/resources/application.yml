@@ -2,5 +2,7 @@ server:
   port: @service.port@
 
 spring:
-    application:
-        name: contact
+  application:
+    name: contactor-service
+  profiles:
+    active: docker

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property name="DEV_HOME" value="./contact-service/logs" />
-    <property name="APP_NAME" value="contact-service" />
+    <property name="DEV_HOME" value="./contactor-service/logs" />
+    <property name="APP_NAME" value="contactor-service" />
 
     <include resource="logback-common.xml" />
 

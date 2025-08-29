@@ -29,7 +29,7 @@ import reactor.test.StepVerifier;
 @ActiveProfiles("test")
 @DisplayName("Customer Repository Tests")
 @Tags({
-        @Tag("Repository"), @Tag("Mock")
+        @Tag("Repository")
 })
 @DataR2dbcTest
 public class CustomerRepositoryTest extends AbstractDatabaseTestContainer{

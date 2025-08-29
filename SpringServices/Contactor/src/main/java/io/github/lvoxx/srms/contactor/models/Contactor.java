@@ -28,11 +28,8 @@ public class Contactor extends AbstractEntity {
     @Column("organization_name")
     private String organizationName;
 
-    @Column("first_name")
-    private String firstName;
-
-    @Column("last_name")
-    private String lastName;
+    @Column("fullname")
+    private String fullname;
 
     @Column("phone_number")
     private String phoneNumber;
