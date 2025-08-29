@@ -15,7 +15,7 @@ import io.github.lvoxx.srms.contactor.AbstractDatabaseTestContainer;
 @ActiveProfiles("test")
 @DisplayName("Contactor Repository Tests")
 @Tags({
-                @Tag("Repository"), @Tag("Mock")
+                @Tag("Repository"), @Tag("NoMock")
 })
 @DataR2dbcTest
 public class ContactorRepositoryTest extends AbstractDatabaseTestContainer {
