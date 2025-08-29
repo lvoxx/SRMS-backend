@@ -15,8 +15,8 @@ public class TestGatewayConfig {
                 return route()
                                 .GET("/fallback/services/customer",
                                                 req -> ServerResponse.ok().bodyValue("Customer service unavailable"))
-                                .GET("/fallback/services/contact",
-                                                req -> ServerResponse.ok().bodyValue("Contact service unavailable"))
+                                .GET("/fallback/services/contactor",
+                                                req -> ServerResponse.ok().bodyValue("Contactor service unavailable"))
                                 .build();
         }
 }

@@ -1,4 +1,4 @@
-CREATE TYPE contact_type AS ENUM (
+CREATE TYPE contactor_type AS ENUM (
     'customer',
     'supplier',
     'deliverer',
@@ -6,9 +6,9 @@ CREATE TYPE contact_type AS ENUM (
     'other'
 );
 
-CREATE TABLE contact (
-    contact_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    contact_type contact_type NOT NULL,
+CREATE TABLE contactor (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contactor_type contactor_type NOT NULL,
     organization_name VARCHAR(100),
     first_name VARCHAR(50),
     last_name VARCHAR(50),
@@ -22,17 +22,17 @@ CREATE TABLE contact (
     attributes JSONB,
     
     -- Common metadata
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE
 );
 
 -- Add indexes for quick lookups
-CREATE INDEX idx_contact_type ON contact(contact_type);
-CREATE INDEX idx_contact_phone ON contact(phone_number);
-CREATE INDEX idx_contact_organization ON contact(organization_name) WHERE organization_name IS NOT NULL;
-CREATE INDEX idx_contact_name ON contact(last_name, first_name) WHERE last_name IS NOT NULL;
+CREATE INDEX idx_contactor_type ON contactor(contactor_type);
+CREATE INDEX idx_contactor_phone ON contactor(phone_number);
+CREATE INDEX idx_contactor_organization ON contactor(organization_name) WHERE organization_name IS NOT NULL;
+CREATE INDEX idx_contactor_name ON contactor(last_name, first_name) WHERE last_name IS NOT NULL;
 
 -- Update trigger
 CREATE OR REPLACE FUNCTION update_modified_column()
@@ -43,14 +43,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_contact_modtime
-BEFORE UPDATE ON contact
+CREATE TRIGGER update_contactor_modtime
+BEFORE UPDATE ON contactor
 FOR EACH ROW
 EXECUTE FUNCTION update_modified_column();
 
 -- Insert suppliers
-INSERT INTO contact (
-    contact_type, organization_name, first_name, last_name, 
+INSERT INTO contactor (
+    contactor_type, organization_name, first_name, last_name, 
     phone_number, email, address, attributes
 ) VALUES
 -- Food suppliers
@@ -87,7 +87,7 @@ INSERT INTO contact (
     '{"vehicle_type": "cargo bikes", "rush_hours": ["11:00-13:00", "17:00-19:00"]}');
 
 -- Additional Suppliers (8 records)
-INSERT INTO contact (contact_type, organization_name, phone_number, email, address, attributes) VALUES
+INSERT INTO contactor (contactor_type, organization_name, phone_number, email, address, attributes) VALUES
 ('supplier', 'Golden Grains Bakery', '+18005552101', 'orders@goldengrains.com', 
  '{"street": "101 Flour Mill Rd", "city": "Bakerville", "state": "CA", "zip": "90216"}', 
  '{"product_categories": ["bread", "pastries"], "delivery_days": ["mon", "wed", "fri"]}'),
@@ -96,7 +96,7 @@ INSERT INTO contact (contact_type, organization_name, phone_number, email, addre
  '{"street": "202 Creamery Lane", "city": "Milkton", "state": "CA", "zip": "90217"}', 
  '{"product_categories": ["milk", "cheese", "yogurt"], "organic": true}'),
 
-('supplier', 'Pasta Primo', '+18005552103', 'contact@pastaprimo.com', 
+('supplier', 'Pasta Primo', '+18005552103', 'contactor@pastaprimo.com', 
  '{"street": "303 Noodle Blvd", "city": "Carbville", "state": "CA", "zip": "90218"}', 
  '{"product_categories": ["pasta", "risotto"], "imported": true}'),
 
@@ -125,7 +125,7 @@ INSERT INTO contact (contact_type, organization_name, phone_number, email, addre
  '{"street": "909 Express Lane", "city": "Quicktown", "state": "CA", "zip": "90224"}', 
  '{"vehicle_type": "vans", "service_hours": "6am-10pm"}'),
 
-('deliverer', 'Eco-Friendly Couriers', '+18005552110', 'contact@ecocouriers.com', 
+('deliverer', 'Eco-Friendly Couriers', '+18005552110', 'contactor@ecocouriers.com', 
  '{"street": "1010 Green Way", "city": "Eco City", "state": "CA", "zip": "90225"}', 
  '{"vehicle_type": "electric bikes", "carbon_neutral": true}'),
 
@@ -158,7 +158,7 @@ INSERT INTO contact (contact_type, organization_name, phone_number, email, addre
  '{"street": "1717 Fancy Blvd", "city": "Upscale", "state": "CA", "zip": "90232"}', 
  '{"specialty": "imported foods", "tasting_samples": true}'),
 
-('grocery', 'Budget Foods', '+18005552118', 'contact@budgetfoods.com', 
+('grocery', 'Budget Foods', '+18005552118', 'contactor@budgetfoods.com', 
  '{"street": "1818 Savings St", "city": "Thrifty", "state": "CA", "zip": "90233"}', 
  '{"specialty": "bulk purchases", "case_discounts": true}'),
 

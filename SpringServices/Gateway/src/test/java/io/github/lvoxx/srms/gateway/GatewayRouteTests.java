@@ -94,14 +94,14 @@ public class GatewayRouteTests extends AbstractKeycloakAndTestContainers {
         @Test
         void testRoutingToContactService() {
                 contactClient.when(request().withMethod("GET").withPath(Api2Test.SubPath.TEST.getPath()))
-                                .respond(response().withStatusCode(200).withBody("Contact response"));
+                                .respond(response().withStatusCode(200).withBody("Contactor response"));
 
                 webTestClient.get()
                                 .uri(Api2Test.CONTACTORS.with(Api2Test.SubPath.TEST))
                                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken)
                                 .exchange()
                                 .expectStatus().isOk()
-                                .expectBody(String.class).isEqualTo("Contact response");
+                                .expectBody(String.class).isEqualTo("Contactor response");
         }
 
         @Test
@@ -159,7 +159,7 @@ public class GatewayRouteTests extends AbstractKeycloakAndTestContainers {
         @Test
         void testAccessControlWithRoles_staffrolesCanGainAccessToContactorService() {
                 contactClient.when(request().withMethod("GET").withPath(Api2Test.SubPath.TEST.getPath()))
-                                .respond(response().withStatusCode(200).withBody("Contact response"));
+                                .respond(response().withStatusCode(200).withBody("Contactor response"));
 
                 // Staff
                 webTestClient.get()
@@ -172,7 +172,7 @@ public class GatewayRouteTests extends AbstractKeycloakAndTestContainers {
         @Test
         void testAccessControlWithRoles_managerroleCanGainAccessToContactorService() {
                 contactClient.when(request().withMethod("GET").withPath(Api2Test.SubPath.TEST.getPath()))
-                                .respond(response().withStatusCode(200).withBody("Contact response"));
+                                .respond(response().withStatusCode(200).withBody("Contactor response"));
 
                 // Manager
                 webTestClient.get()
@@ -185,7 +185,7 @@ public class GatewayRouteTests extends AbstractKeycloakAndTestContainers {
         @Test
         void testAccessControlWithRoles_adminroleCanGainAccessToContactorService() {
                 contactClient.when(request().withMethod("GET").withPath(Api2Test.SubPath.TEST.getPath()))
-                                .respond(response().withStatusCode(200).withBody("Contact response"));
+                                .respond(response().withStatusCode(200).withBody("Contactor response"));
 
                 // Admin
                 webTestClient.get()

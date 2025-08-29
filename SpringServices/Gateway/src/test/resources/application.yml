@@ -45,7 +45,7 @@ spring:
                   args:
                     name: customerCircuitBreaker
                     fallbackUri: forward:/fallback/services/customer
-            - id: contact-service
+            - id: contactor-service
               uri: ${contactServiceUri}
               predicates:
                 - Path=/contactors/**
@@ -63,7 +63,7 @@ spring:
                 - name: CircuitBreaker
                   args:
                     name: contactCircuitBreaker
-                    fallbackUri: forward:/fallback/services/contact
+                    fallbackUri: forward:/fallback/services/contactor
 ---
 # Kubernetes discovery
 spring:
