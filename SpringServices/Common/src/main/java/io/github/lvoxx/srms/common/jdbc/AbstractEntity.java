@@ -10,6 +10,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
+import lombok.Builder.Default;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder(toBuilder = true)
@@ -17,13 +19,15 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Getter
 @Setter
+@ToString
 public abstract class AbstractEntity {
     @Id
     @Column("id")
     private UUID id;
 
     @Column("created_at")
-    private OffsetDateTime createdAt;
+    @Default
+    private OffsetDateTime createdAt = OffsetDateTime.now();
 
     @Column("updated_at")
     private OffsetDateTime updatedAt;

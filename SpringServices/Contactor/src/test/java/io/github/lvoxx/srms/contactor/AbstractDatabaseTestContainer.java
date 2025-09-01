@@ -16,7 +16,7 @@ public abstract class AbstractDatabaseTestContainer {
             .withDatabaseName("test")
             .withUsername("root")
             .withPassword("Te3tP4ssW@r$")
-            .withInitScript("customer_test.sql");
+            .withInitScript("contactor_test.sql");
 
     @DynamicPropertySource
     static void configureR2dbc(DynamicPropertyRegistry registry) {
