@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
@@ -30,7 +29,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@AutoConfigureTestDatabase(replace = Replace.NONE) // Dont load String datasource autoconfig
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // Dont load String datasource autoconfig
 @ActiveProfiles("test")
 @DisplayName("Contactor Repository Tests")
 @Tags({

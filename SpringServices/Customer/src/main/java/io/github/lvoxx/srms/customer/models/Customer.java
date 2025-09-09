@@ -20,7 +20,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString
+@ToString(callSuper = true)
 @Table("customer")
 public class Customer extends AbstractEntity {
 
@@ -50,7 +50,8 @@ public class Customer extends AbstractEntity {
     private String notes;
 
     @Column("deleted_at")
-    private OffsetDateTime deletedAt;
+    @Default
+    private OffsetDateTime deletedAt = null;
 
     // Soft delete method
     public void markAsDeleted() {
