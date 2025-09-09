@@ -43,7 +43,6 @@ public interface CustomerRepository extends R2dbcRepository<Customer, UUID> {
         // -------------------------------------------------------------------
 
         // Lấy các record đã bị soft delete
-        @Modifying
         @Query("SELECT * FROM customer WHERE deleted_at IS NOT NULL")
         Flux<Customer> findDeleted();
 

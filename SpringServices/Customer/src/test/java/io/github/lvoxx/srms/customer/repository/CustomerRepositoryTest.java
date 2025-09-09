@@ -463,15 +463,15 @@ public class CustomerRepositoryTest extends AbstractDatabaseTestContainer {
                         Mono<Customer> customersByType = repository
                                         .findActiveByEmailAndShowDeleted(additionalCustomer.getEmail(), false);
                         StepVerifier.create(customersByType)
-                                        .expectNextCount(1) // testCustomer + additionalCustomer
+                                        .expectNextCount(1)
                                         .verifyComplete();
 
-                        // Test finding by organization name
+                        // Test finding by phone number
                         Mono<Customer> companiesByName = repository
                                         .findActiveByPhoneNumberAndShowDeleted(additionalCustomer.getPhoneNumber(),
                                                         false);
                         StepVerifier.create(companiesByName)
-                                        .expectNextCount(2) // Both contain "Test"
+                                        .expectNextCount(1)
                                         .verifyComplete();
 
                         // Test specific email lookup
