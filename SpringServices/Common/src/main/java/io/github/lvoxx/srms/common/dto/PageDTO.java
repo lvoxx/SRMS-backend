@@ -2,6 +2,10 @@ package io.github.lvoxx.srms.common.dto;
 
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import lombok.Builder;
@@ -30,5 +34,15 @@ public abstract class PageDTO {
             int size,
             long totalElements,
             int totalPages) {
+    }
+
+    @SuppressWarnings("null")
+    public static Pageable toPagable(@NonNull PageRequestDTO dto) {
+        return PageRequest.of(
+                dto.page(),
+                dto.size(),
+                Sort.by(dto.sortDirection().equalsIgnoreCase("ASC") ? Sort.Direction.ASC
+                        : Sort.Direction.DESC,
+                        dto.sortBy()));
     }
 }

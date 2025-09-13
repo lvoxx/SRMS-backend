@@ -4,7 +4,16 @@ import lombok.experimental.FieldNameConstants;
 
 @FieldNameConstants(onlyExplicitlyIncluded = true)
 public enum CacheValue {
-    // Products
     @FieldNameConstants.Include
-    CUSTOMERS
+    CUSTOMERS,
+    @FieldNameConstants.Include
+    CONTACTOR,
+    @FieldNameConstants.Include
+    CONTACTOR_PAGE,
+    @FieldNameConstants.Include
+    CONTACTOR_TYPE,
+    @FieldNameConstants.Include
+    CONTACTOR_SEARCH,
+    @FieldNameConstants.Include
+    CONTACTOR_EMAIL
 }

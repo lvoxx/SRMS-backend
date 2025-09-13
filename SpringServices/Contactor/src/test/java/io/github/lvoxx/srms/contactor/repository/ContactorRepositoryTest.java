@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.Map;
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,25 +17,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
 import io.github.lvoxx.srms.contactor.AbstractDatabaseTestContainer;
+import io.github.lvoxx.srms.contactor.dto.Rating;
 import io.github.lvoxx.srms.contactor.models.Contactor;
 import io.github.lvoxx.srms.contactor.models.ContactorType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // Dont load String datasource autoconfig
-@ActiveProfiles("test")
+@DataR2dbcTest
+@ActiveProfiles("repo")
 @DisplayName("Contactor Repository Tests")
 @Tags({
                 @Tag("Repository"), @Tag("Integration")
 })
-@DataR2dbcTest
 public class ContactorRepositoryTest extends AbstractDatabaseTestContainer {
 
         private static final Logger log = LoggerFactory.getLogger(ContactorRepositoryTest.class);
@@ -49,16 +48,14 @@ public class ContactorRepositoryTest extends AbstractDatabaseTestContainer {
 
         @BeforeEach
         void setUp() {
-                repository.deleteAll().block();
-
                 testCustomer = Contactor.builder()
                                 .contactorType(ContactorType.CUSTOMER.name())
                                 .organizationName("Test Company Ltd")
                                 .fullname("John Doe")
                                 .phoneNumber("+1234567890")
                                 .email("john@testcompany.com")
-                                .address(Map.of("street", "123 Main St", "city", "Test City"))
-                                .attributes(Map.of("priority", "high"))
+                                .address("123 Main St, Test City")
+                                .rating(Rating.HIGH.getRate())
                                 .notes("Important customer")
                                 .build();
 
@@ -68,8 +65,8 @@ public class ContactorRepositoryTest extends AbstractDatabaseTestContainer {
                                 .fullname("Jane Smith")
                                 .phoneNumber("+0987654321")
                                 .email("jane@supplier.com")
-                                .address(Map.of("street", "456 Oak Ave", "city", "Supply City"))
-                                .attributes(Map.of("rating", "A"))
+                                .address("456 Oak Ave St, Supply City")
+                                .rating(Rating.HIGH.getRate())
                                 .notes("Reliable supplier")
                                 .build();
 
@@ -79,7 +76,7 @@ public class ContactorRepositoryTest extends AbstractDatabaseTestContainer {
                                 .fullname("Bob Wilson")
                                 .phoneNumber("+1122334455")
                                 .email("bob@deleted.com")
-                                .address(Map.of("street", "789 Pine St", "city", "Old City"))
+                                .address("789 Pine Stm, Old City")
                                 .deletedAt(OffsetDateTime.now())
                                 .build();
 
@@ -96,6 +93,14 @@ public class ContactorRepositoryTest extends AbstractDatabaseTestContainer {
                 assertThat(testDeletedContactor.getDeletedAt()).isNotNull();
         }
 
+        @AfterEach
+        void tearDown() {
+                repository.deleteAll().block();
+                testCustomer = null;
+                testSupplier = null;
+                testDeletedContactor = null;
+        }
+
         @Nested
         @DisplayName("CRUD Operations Tests")
         class CrudOperationsTests {
@@ -109,7 +114,7 @@ public class ContactorRepositoryTest extends AbstractDatabaseTestContainer {
                                         .fullname("Alice Johnson")
                                         .phoneNumber("+1555666777")
                                         .email("alice@grocery.com")
-                                        .address(Map.of("street", "321 Elm St", "city", "Grocery City"))
+                                        .address("321 Elm St, Grocery City")
                                         .notes("New grocery partner")
                                         .build();
 

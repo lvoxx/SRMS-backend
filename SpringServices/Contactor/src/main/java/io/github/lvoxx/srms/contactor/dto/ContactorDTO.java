@@ -39,9 +39,10 @@ public abstract class ContactorDTO {
         @Size(max = 100, message = "{contactor.email.size}")
         private String email;
 
-        private String address; // JSONB as String
-
-        private String attributes; // JSONB as String
+        @Size(max = 200, message = "{contactor.address.size}")
+        private String address;
+        @Size(max = 10, message = "{contactor.rating.size}")
+        private Rating rating;
 
         private String notes;
     }

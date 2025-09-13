@@ -19,7 +19,6 @@ import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import io.github.lvoxx.srms.customer.AbstractDatabaseTestContainer;
 import io.github.lvoxx.srms.customer.models.Customer;
@@ -28,7 +27,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @DataR2dbcTest
-@Testcontainers
 @ActiveProfiles("repo")
 @DisplayName("Customer Repository Tests")
 @Tags({

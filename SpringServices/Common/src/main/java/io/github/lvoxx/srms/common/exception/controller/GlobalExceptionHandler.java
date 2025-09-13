@@ -1,5 +1,6 @@
 package io.github.lvoxx.srms.common.exception.controller;
 
+import java.net.UnknownServiceException;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -97,6 +98,19 @@ public class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.status(ex.getStatusCode()).body(error));
     }
 
+    // Xử lý lỗi chung đã biết vị trí  (Internal Server Error)
+    @ExceptionHandler(UnknownServiceException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleUnknownException(UnknownServiceException ex) {
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        ErrorResponse error = ErrorResponse.builder()
+                .message(SystemErrorMessages.INTERNAL_SERVER_ERROR.getTitle())
+                .details(Optional.ofNullable(ex.getMessage())
+                        .orElseGet(() -> SystemErrorMessages.INTERNAL_SERVER_ERROR.getDefaultDetails()))
+                .status(status.value())
+                .build();
+        return Mono.just(ResponseEntity.status(status).body(error));
+    }
+    
     // Xử lý lỗi chung (Internal Server Error)
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ErrorResponse>> handleGenericException(Exception ex) {

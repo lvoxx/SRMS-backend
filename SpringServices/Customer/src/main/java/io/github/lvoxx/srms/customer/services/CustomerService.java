@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import io.github.lvoxx.srms.common.dto.PageDTO;
 import io.github.lvoxx.srms.common.exception.model.ConflictException;
@@ -29,6 +30,7 @@ import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CustomerService {
         private final CustomerRepository customerRepository;
         private final CustomerMapper customerMapper;
@@ -99,7 +101,7 @@ public class CustomerService {
                                 });
         }
 
-        @CachePut(value = CacheValue.Fields.CUSTOMERS, key = "#result.id")
+        @CachePut(value = CacheValue.Fields.CUSTOMERS, key = "#result.block().id", condition = "#result != null")
         public Mono<CustomerDTO.Response> create(CustomerDTO.Request request) {
                 // Check for null
                 if (!Optional.ofNullable(request).isPresent()) {
@@ -234,7 +236,7 @@ public class CustomerService {
                                         if (exists) {
                                                 return Mono.error(new ConflictException(
                                                                 messageUtils.getMessage(
-                                                                                "error.resource_already_existed.email",
+                                                                                "error.update.conflicted",
                                                                                 new Object[] { email })));
                                         }
                                         return Mono.empty(); // Hoặc xử lý logic khi không tồn tại

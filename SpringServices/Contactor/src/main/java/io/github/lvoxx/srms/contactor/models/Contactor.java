@@ -1,8 +1,6 @@
 package io.github.lvoxx.srms.contactor.models;
 
 import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -39,11 +37,12 @@ public class Contactor extends AbstractEntity {
 
     private String email;
 
-    @Default
-    private Map<String, Object> address = new HashMap<>();
+   @Column("address")
+    private String address;
 
-    @Default
-    private Map<String, Object> attributes = new HashMap<>();
+    @Column("rating")
+    private String rating;
+
     private String notes;
 
     @Column("deleted_at")
