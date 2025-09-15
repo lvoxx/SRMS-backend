@@ -23,7 +23,7 @@ public abstract class ContactorDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder(toBuilder = true)
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class Request {
 
         @NotNull(message = "{contactor.contactType.notnull}")
@@ -55,7 +55,7 @@ public abstract class ContactorDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder(toBuilder = true)
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class Response {
 
         private UUID id;

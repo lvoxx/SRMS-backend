@@ -22,7 +22,7 @@ spring:
   main:
     web-application-type: reactive
   jackson:
-    property-naming-strategy: SNAKE_CASE
+    property-naming-strategy: KEBAB_CASE
     serialization:
       write-dates-as-timestamps: false
     deserialization:
