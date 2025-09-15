@@ -348,7 +348,7 @@ public class CustomerServiceTest {
                 @DisplayName("Should return paged customers successfully")
                 void shouldReturnPagedCustomersSuccessfully() {
                         // Given
-                        PageDTO.PageRequestDTO pageRequest = new PageDTO.PageRequestDTO(0, 10, "firstName", "ASC");
+                        PageDTO.Request pageRequest = new PageDTO.Request(0, 10, "firstName", "ASC");
                         List<Customer> customers = Arrays.asList(mockCustomer);
 
                         when(repository.findPageByShowDeleted(any(Pageable.class), eq(false)))
@@ -376,7 +376,7 @@ public class CustomerServiceTest {
                 @DisplayName("Should handle pagination with deleted customers")
                 void shouldHandlePaginationWithDeletedCustomers() {
                         // Given
-                        PageDTO.PageRequestDTO pageRequest = new PageDTO.PageRequestDTO(0, 10, "firstName", "DESC");
+                        PageDTO.Request pageRequest = new PageDTO.Request(0, 10, "firstName", "DESC");
                         Customer deletedCustomer = Customer.builder()
                                         .id(UUID.randomUUID())
                                         .firstName("Deleted")
@@ -916,7 +916,7 @@ public class CustomerServiceTest {
                 @DisplayName("Should handle empty page request correctly")
                 void shouldHandleEmptyPageRequestCorrectly() {
                         // Given
-                        PageDTO.PageRequestDTO pageRequest = new PageDTO.PageRequestDTO(0, 0, "firstName", "ASC");
+                        PageDTO.Request pageRequest = new PageDTO.Request(0, 0, "firstName", "ASC");
 
                         when(repository.findPageByShowDeleted(any(Pageable.class), eq(false)))
                                         .thenReturn(Flux.empty());
@@ -936,7 +936,7 @@ public class CustomerServiceTest {
                 @DisplayName("Should handle very large page size")
                 void shouldHandleVeryLargePageSize() {
                         // Given
-                        PageDTO.PageRequestDTO pageRequest = new PageDTO.PageRequestDTO(0, Integer.MAX_VALUE,
+                        PageDTO.Request pageRequest = new PageDTO.Request(0, Integer.MAX_VALUE,
                                         "firstName", "ASC");
 
                         when(repository.findPageByShowDeleted(any(Pageable.class), eq(false)))

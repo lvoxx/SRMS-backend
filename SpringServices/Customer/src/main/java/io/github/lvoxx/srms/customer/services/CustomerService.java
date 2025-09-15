@@ -65,8 +65,8 @@ public class CustomerService {
         }
 
         @SuppressWarnings("null") // Just skip it, PageDTO record already check null
-        public Mono<PageDTO.PageResponseDTO<CustomerDTO.Response>> findAllPaged(
-                        PageDTO.PageRequestDTO pageRequest, boolean showDeleted) {
+        public Mono<PageDTO.Response<CustomerDTO.Response>> findAllPaged(
+                        PageDTO.Request pageRequest, boolean showDeleted) {
                 Pageable pageable = PageRequest.of(
                                 pageRequest.page(),
                                 pageRequest.size(),
@@ -92,7 +92,7 @@ public class CustomerService {
                                         List<CustomerDTO.Response> content = tuple.getT1();
                                         long totalElements = tuple.getT2();
                                         int totalPages = (int) Math.ceil((double) totalElements / pageRequest.size());
-                                        return new PageDTO.PageResponseDTO<>(
+                                        return new PageDTO.Response<>(
                                                         content,
                                                         pageRequest.page(),
                                                         pageRequest.size(),

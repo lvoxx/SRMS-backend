@@ -13,13 +13,13 @@ import lombok.Builder;
 public abstract class PageDTO {
 
     @Builder
-    public record PageRequestDTO(
+    public record Request(
             int page,
             int size,
             @Nullable String sortBy,
             @Nullable String sortDirection // "ASC" or "DESC"
     ) {
-        public PageRequestDTO {
+        public Request {
             page = page < 0 ? 0 : page; // Ensure non-negative page
             size = size <= 0 ? 10 : Math.min(size, 100); // Default size 10, max 100
             sortBy = sortBy != null ? sortBy : "created_at"; // Default sort by created_at
@@ -28,7 +28,7 @@ public abstract class PageDTO {
     }
 
     @Builder
-    public record PageResponseDTO<T>(
+    public record Response<T>(
             List<T> content,
             int page,
             int size,
@@ -37,7 +37,7 @@ public abstract class PageDTO {
     }
 
     @SuppressWarnings("null")
-    public static Pageable toPagable(@NonNull PageRequestDTO dto) {
+    public static Pageable toPagable(@NonNull Request dto) {
         return PageRequest.of(
                 dto.page(),
                 dto.size(),

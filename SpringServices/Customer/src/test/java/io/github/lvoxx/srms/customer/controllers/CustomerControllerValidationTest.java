@@ -158,7 +158,7 @@ public class CustomerControllerValidationTest {
         @Test
         @DisplayName("Should return paged customers with default parameters")
         void shouldReturnPagedCustomersWithDefaultParameters() {
-                PageDTO.PageResponseDTO<CustomerDTO.Response> pageResponse = PageDTO.PageResponseDTO.<CustomerDTO.Response>builder()
+                PageDTO.Response<CustomerDTO.Response> pageResponse = PageDTO.Response.<CustomerDTO.Response>builder()
                                 .content(java.util.List.of(validResponse))
                                 .page(0)
                                 .size(10)
@@ -166,7 +166,7 @@ public class CustomerControllerValidationTest {
                                 .totalPages(1)
                                 .build();
 
-                when(customerService.findAllPaged(any(PageDTO.PageRequestDTO.class), eq(false)))
+                when(customerService.findAllPaged(any(PageDTO.Request.class), eq(false)))
                                 .thenReturn(Mono.just(pageResponse));
 
                 webTestClient.get()
@@ -184,7 +184,7 @@ public class CustomerControllerValidationTest {
         @Test
         @DisplayName("Should handle custom pagination parameters")
         void shouldHandleCustomPaginationParameters() {
-                PageDTO.PageResponseDTO<CustomerDTO.Response> pageResponse = PageDTO.PageResponseDTO.<CustomerDTO.Response>builder()
+                PageDTO.Response<CustomerDTO.Response> pageResponse = PageDTO.Response.<CustomerDTO.Response>builder()
                                 .content(java.util.List.of())
                                 .page(1)
                                 .size(5)
@@ -192,7 +192,7 @@ public class CustomerControllerValidationTest {
                                 .totalPages(0)
                                 .build();
 
-                when(customerService.findAllPaged(any(PageDTO.PageRequestDTO.class), eq(true)))
+                when(customerService.findAllPaged(any(PageDTO.Request.class), eq(true)))
                                 .thenReturn(Mono.just(pageResponse));
 
                 webTestClient.get()

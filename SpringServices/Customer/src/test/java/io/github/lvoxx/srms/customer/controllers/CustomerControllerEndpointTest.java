@@ -160,8 +160,8 @@ public class CustomerControllerEndpointTest {
         @DisplayName("Should return paginated customers")
         void shouldReturnPaginatedCustomers() {
             // Given
-            PageDTO.PageRequestDTO pageRequest = new PageDTO.PageRequestDTO(0, 10, "created_by", "desc");
-            PageDTO.PageResponseDTO<CustomerDTO.Response> pageResponse = PageDTO.PageResponseDTO.<CustomerDTO.Response>builder()
+            PageDTO.Request pageRequest = new PageDTO.Request(0, 10, "created_by", "desc");
+            PageDTO.Response<CustomerDTO.Response> pageResponse = PageDTO.Response.<CustomerDTO.Response>builder()
                     .content(java.util.List.of(createSampleCustomerResponse()))
                     .page(0)
                     .size(10)
@@ -169,7 +169,7 @@ public class CustomerControllerEndpointTest {
                     .totalPages(1)
                     .build();
 
-            when(customerService.findAllPaged(any(PageDTO.PageRequestDTO.class), eq(false)))
+            when(customerService.findAllPaged(any(PageDTO.Request.class), eq(false)))
                     .thenReturn(Mono.just(pageResponse));
 
             // When & Then

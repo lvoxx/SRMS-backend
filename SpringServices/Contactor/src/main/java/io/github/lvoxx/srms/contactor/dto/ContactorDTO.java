@@ -59,9 +59,8 @@ public abstract class ContactorDTO {
 
         private String organizationName;
 
-        private String firstName;
+        private String fullName;
 
-        private String lastName;
 
         private String phoneNumber;
 
@@ -69,7 +68,7 @@ public abstract class ContactorDTO {
 
         private String address;
 
-        private String attributes;
+        private Rating rating;
 
         private String notes;
 

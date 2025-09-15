@@ -176,8 +176,8 @@ public class ContactorService {
         }
 
         @Cacheable(value = CacheValue.Fields.CONTACTOR_PAGE, key = "#pageable.pageNumber + ':' + #pageable.pageSize + ':' + #showDeleted")
-        public Mono<PageDTO.PageResponseDTO<ContactorDTO.Response>> findAllContactors(
-                        @NonNull PageDTO.PageRequestDTO pageRequest,
+        public Mono<PageDTO.Response<ContactorDTO.Response>> findAllContactors(
+                        @NonNull PageDTO.Request pageRequest,
                         boolean showDeleted) {
                 Pageable pageable = PageDTO.toPagable(pageRequest);
 
@@ -202,7 +202,7 @@ public class ContactorService {
                                         List<ContactorDTO.Response> content = tuple.getT1();
                                         long totalElements = tuple.getT2();
                                         int totalPages = (int) Math.ceil((double) totalElements / pageRequest.size());
-                                        return new PageDTO.PageResponseDTO<>(
+                                        return new PageDTO.Response<>(
                                                         content,
                                                         pageRequest.page(),
                                                         pageRequest.size(),
