@@ -41,7 +41,7 @@ public abstract class ContactorDTO {
 
         @Size(max = 200, message = "{contactor.address.size}")
         private String address;
-        @Size(max = 10, message = "{contactor.rating.size}")
+        @NotNull(message = "{contactor.rating.notnull}")
         private Rating rating;
 
         private String notes;
@@ -60,7 +60,6 @@ public abstract class ContactorDTO {
         private String organizationName;
 
         private String fullName;
-
 
         private String phoneNumber;
 
