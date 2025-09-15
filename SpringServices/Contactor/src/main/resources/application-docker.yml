@@ -1,6 +1,6 @@
 spring:
   cache:
-    type: none 
+    type: redis 
   data:
     r2dbc:
       repositories:
@@ -17,3 +17,14 @@ spring:
           max-idle: 8
           min-idle: 0
       timeout: 2000ms  # Connection timeout
+  webflux:
+    base-path: ""
+  main:
+    web-application-type: reactive
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      adjust-dates-to-context-time-zone: false
+    time-zone: Asia/Ho_Chi_Minh

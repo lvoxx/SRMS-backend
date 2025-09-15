@@ -3,6 +3,9 @@ package io.github.lvoxx.srms.contactor.dto;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
 import io.github.lvoxx.srms.contactor.models.ContactorType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -20,6 +23,7 @@ public abstract class ContactorDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder(toBuilder = true)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Request {
 
         @NotNull(message = "{contactor.contactType.notnull}")
@@ -51,6 +55,7 @@ public abstract class ContactorDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder(toBuilder = true)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Response {
 
         private UUID id;
