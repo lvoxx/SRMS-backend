@@ -557,7 +557,7 @@ public class CustomerServiceTest {
                         when(repository.save(any(Customer.class))).thenReturn(Mono.just(mockCustomer));
 
                         // When & Then
-                        StepVerifier.create(service.softDelete(customerId))
+                        StepVerifier.create(service.deleteCustomer(customerId))
                                         .verifyComplete();
 
                         verify(repository).findActiveById(customerId);
@@ -576,7 +576,7 @@ public class CustomerServiceTest {
                         when(repository.findActiveById(customerId)).thenReturn(Mono.empty());
 
                         // When & Then
-                        StepVerifier.create(service.softDelete(customerId))
+                        StepVerifier.create(service.deleteCustomer(customerId))
                                         .expectErrorMatches(throwable -> throwable instanceof NotFoundException &&
                                                         throwable.getMessage().equals("Customer not found with id "
                                                                         + customerId + ". Or already deleted."))
@@ -595,7 +595,7 @@ public class CustomerServiceTest {
                                         .thenReturn(Mono.error(new RuntimeException("Database error")));
 
                         // When & Then
-                        StepVerifier.create(service.softDelete(customerId))
+                        StepVerifier.create(service.deleteCustomer(customerId))
                                         .expectErrorMatches(throwable -> throwable instanceof DataPersistantException &&
                                                         throwable.getMessage()
                                                                         .equals("Failed to delete customer with id "
@@ -803,7 +803,7 @@ public class CustomerServiceTest {
                                         .thenReturn(Mono.error(new RuntimeException("Database error")));
 
                         // When & Then
-                        StepVerifier.create(service.softDelete(customerId))
+                        StepVerifier.create(service.deleteCustomer(customerId))
                                         .expectErrorMatches(throwable -> throwable instanceof DataPersistantException &&
                                                         throwable.getMessage()
                                                                         .equals("Failed to delete customer with id "
@@ -1044,7 +1044,7 @@ public class CustomerServiceTest {
                                         .verifyComplete();
 
                         // When - Soft delete customer
-                        StepVerifier.create(service.softDelete(customerId))
+                        StepVerifier.create(service.deleteCustomer(customerId))
                                         .verifyComplete();
 
                         // Given - Restore setup

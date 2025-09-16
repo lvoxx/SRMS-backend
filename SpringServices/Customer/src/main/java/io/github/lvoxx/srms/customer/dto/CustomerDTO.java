@@ -3,6 +3,9 @@ package io.github.lvoxx.srms.customer.dto;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -10,12 +13,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Builder.Default;
 
 public abstract class CustomerDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder(toBuilder = true)
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class Request {
         @NotBlank(message = "{error.validation.firstName.notBlank}")
         @Size(max = 50, message = "{error.validation.firstName.size}")
@@ -37,7 +42,8 @@ public abstract class CustomerDTO {
         private String[] dietaryRestrictions;
         private String[] allergies;
 
-        private boolean isRegular;
+        @Default
+        private boolean isRegular = false;
 
         private String notes;
     }
@@ -46,6 +52,7 @@ public abstract class CustomerDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder(toBuilder = true)
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class Response {
         private UUID id;
         private String firstName;

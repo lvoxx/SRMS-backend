@@ -89,12 +89,13 @@ public class ContactorService {
                 return internalAndNotShowDeletedFindById(id)
                                 .flatMap(contactor -> contactorRepository.softDeleteById(id)
                                                 .map(count -> count > 0))
-                                .onErrorMap(ex -> !(ex instanceof NotFoundException), ex -> {
-                                        log.error("Error deleting contactor: {}", id, ex);
-                                        return new DataPersistantException(messageUtils.getMessage(
-                                                        "error.update.failed_to_delete",
-                                                        new Object[] { id }));
-                                });
+                                .onErrorMap(ex -> !(ex instanceof NotFoundException),
+                                                ex -> {
+                                                        log.error("Error deleting contactor: {}", id, ex);
+                                                        return new DataPersistantException(messageUtils.getMessage(
+                                                                        "error.update.failed_to_delete",
+                                                                        new Object[] { id }));
+                                                });
         }
 
         @CacheEvict(value = CacheValue.Fields.CONTACTOR, key = "#id")
@@ -192,10 +193,9 @@ public class ContactorService {
                                                         if (showDeleted) {
                                                                 return count; // Count all
                                                         }
-                                                        return count - contactorRepository.findDeleted().count()
-                                                                        .block(); // Count
-                                                                                  // active
-                                                                                  // only
+                                                        return count - contactorRepository.findDeleted()
+                                                                        .count()
+                                                                        .block(); // Count active only
                                                 }))
                                 // Map to page response
                                 .map(tuple -> {
