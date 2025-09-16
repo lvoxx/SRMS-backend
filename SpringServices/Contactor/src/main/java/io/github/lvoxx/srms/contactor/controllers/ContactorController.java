@@ -84,7 +84,7 @@ public class ContactorController {
     public Mono<ResponseEntity<ContactorResource>> update(
             @PathVariable UUID id,
             @Valid @RequestBody ContactorDTO.Request request) {
-        return contactorService.updateContactor(id, request)
+        return contactorService.update(id, request)
                 .flatMap(this::toResource)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
@@ -96,7 +96,7 @@ public class ContactorController {
      */
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Void>> softDelete(@PathVariable UUID id) {
-        return contactorService.deleteContactor(id)
+        return contactorService.softDelete(id)
                 .then(Mono.just(ResponseEntity.noContent().<Void>build()))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
@@ -107,7 +107,7 @@ public class ContactorController {
      */
     @PatchMapping("/{id}/restore")
     public Mono<ResponseEntity<Void>> restore(@PathVariable UUID id) {
-        return contactorService.restoreContactor(id)
+        return contactorService.restore(id)
                 .then(Mono.just(ResponseEntity.noContent().<Void>build()))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }

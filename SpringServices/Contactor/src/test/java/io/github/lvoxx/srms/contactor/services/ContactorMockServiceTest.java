@@ -168,7 +168,7 @@ class ContactorMockServiceTest {
         when(contactorMapper.toResponse(testContactor)).thenReturn(testResponse);
 
         // When & Then
-        StepVerifier.create(contactorService.updateContactor(testId, testRequest))
+        StepVerifier.create(contactorService.update(testId, testRequest))
                 .expectNext(testResponse)
                 .verifyComplete();
 
@@ -187,7 +187,7 @@ class ContactorMockServiceTest {
                 .thenReturn("Contactor not found");
 
         // When & Then
-        StepVerifier.create(contactorService.updateContactor(testId, testRequest))
+        StepVerifier.create(contactorService.update(testId, testRequest))
                 .expectError(NotFoundException.class)
                 .verify();
 
@@ -205,7 +205,7 @@ class ContactorMockServiceTest {
                 .thenReturn("Contactor not found");
 
         // When & Then
-        StepVerifier.create(contactorService.updateContactor(testId, testRequest))
+        StepVerifier.create(contactorService.update(testId, testRequest))
                 .expectError(NotFoundException.class)
                 .verify();
 
@@ -217,13 +217,13 @@ class ContactorMockServiceTest {
 
     @Test
     @DisplayName("Should delete contactor successfully")
-    void testDeleteContactorSuccess() {
+    void testsoftDeleteSuccess() {
         // Given
         when(contactorRepository.findById(testId)).thenReturn(Mono.just(testContactor));
         when(contactorRepository.softDeleteById(testId)).thenReturn(Mono.just(1));
 
         // When & Then
-        StepVerifier.create(contactorService.deleteContactor(testId))
+        StepVerifier.create(contactorService.softDelete(testId))
                 .expectNext(true)
                 .verifyComplete();
 
@@ -233,13 +233,13 @@ class ContactorMockServiceTest {
 
     @Test
     @DisplayName("Should return false when delete affects no rows")
-    void testDeleteContactorNoRows() {
+    void testsoftDeleteNoRows() {
         // Given
         when(contactorRepository.findById(testId)).thenReturn(Mono.just(testContactor));
         when(contactorRepository.softDeleteById(testId)).thenReturn(Mono.just(0));
 
         // When & Then
-        StepVerifier.create(contactorService.deleteContactor(testId))
+        StepVerifier.create(contactorService.softDelete(testId))
                 .expectNext(false)
                 .verifyComplete();
 
@@ -258,7 +258,7 @@ class ContactorMockServiceTest {
         when(contactorRepository.restoreById(testId)).thenReturn(Mono.just(1));
 
         // When & Then
-        StepVerifier.create(contactorService.restoreContactor(testId))
+        StepVerifier.create(contactorService.restore(testId))
                 .expectNext(true)
                 .verifyComplete();
 
@@ -275,7 +275,7 @@ class ContactorMockServiceTest {
                 .thenReturn("Contactor is already active");
 
         // When & Then
-        StepVerifier.create(contactorService.restoreContactor(testId))
+        StepVerifier.create(contactorService.restore(testId))
                 .expectError(InUsedException.class)
                 .verify();
 

@@ -66,7 +66,7 @@ public class ContactorService {
         }
 
         @CachePut(value = CacheValue.Fields.CONTACTOR, key = "#id", condition = "#result != null")
-        public Mono<ContactorDTO.Response> updateContactor(@NonNull UUID id, @NonNull ContactorDTO.Request request) {
+        public Mono<ContactorDTO.Response> update(@NonNull UUID id, @NonNull ContactorDTO.Request request) {
                 log.debug("Updating contactor: {}", id);
 
                 return internalAndNotShowDeletedFindById(id)
@@ -83,7 +83,7 @@ public class ContactorService {
         }
 
         @CacheEvict(value = CacheValue.Fields.CONTACTOR, key = "#id")
-        public Mono<Boolean> deleteContactor(@NonNull UUID id) {
+        public Mono<Boolean> softDelete(@NonNull UUID id) {
                 log.debug("Deleting contactor: {}", id);
 
                 return internalAndNotShowDeletedFindById(id)
@@ -98,7 +98,7 @@ public class ContactorService {
         }
 
         @CacheEvict(value = CacheValue.Fields.CONTACTOR, key = "#id")
-        public Mono<Boolean> restoreContactor(@NonNull UUID id) {
+        public Mono<Boolean> restore(@NonNull UUID id) {
                 log.debug("Restoring contactor: {}", id);
 
                 return internalFindByIdForRestoring(id)
