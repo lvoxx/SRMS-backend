@@ -65,22 +65,22 @@ public class CustomerController {
         public Mono<ResponseEntity<CustomerResource>> update(@PathVariable UUID id,
                         @Valid @RequestBody CustomerDTO.Request request) {
                 return customerService.update(id, request)
-                                .flatMap(dto -> toResource(dto)
-                                                .map(ResponseEntity::ok))
+                                .flatMap(dto -> toResource(dto))
+                                .map(ResponseEntity::ok)
                                 .defaultIfEmpty(ResponseEntity.notFound().build());
         }
 
         @DeleteMapping("/{id}")
         public Mono<ResponseEntity<Void>> softDelete(@PathVariable UUID id) {
                 return customerService.softDelete(id)
-                                .then(Mono.just(ResponseEntity.noContent().build()));
+                                .then(Mono.just(ResponseEntity.noContent().<Void>build()))
+                                .defaultIfEmpty(ResponseEntity.notFound().build());
         }
 
         @PatchMapping("/{id}/restore")
-        public Mono<ResponseEntity<CustomerResource>> restore(@PathVariable UUID id) {
+        public Mono<ResponseEntity<Void>> restore(@PathVariable UUID id) {
                 return customerService.restore(id)
-                                .flatMap(dto -> toResource(dto)
-                                                .map(ResponseEntity::ok))
+                                .then(Mono.just(ResponseEntity.noContent().<Void>build()))
                                 .defaultIfEmpty(ResponseEntity.notFound().build());
         }
 
