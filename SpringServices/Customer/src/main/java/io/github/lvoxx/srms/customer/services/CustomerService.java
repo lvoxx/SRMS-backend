@@ -112,7 +112,9 @@ public class CustomerService {
                                 .then(Mono.defer(() -> {
                                         Customer customer = customerMapper.toCustomer(request);
                                         return customerRepository.save(customer)
-                                                        .switchIfEmpty(Mono.error(new DataPersistantException()))
+                                                        .switchIfEmpty(Mono.error(
+                                                                        new DataPersistantException("__empty__"))) // dummy
+                                                                                                                   // marker
                                                         .map(customerMapper::toResponse)
                                                         .onErrorMap(ex -> !(ex instanceof ConflictException),
                                                                         ex -> new DataPersistantException(
@@ -130,6 +132,7 @@ public class CustomerService {
                 return internalFindActiveById(id)
                                 .doOnNext(existing -> customerMapper.updateCustomerFromRequest(request, existing))
                                 .flatMap(customerRepository::save)
+                                .switchIfEmpty(Mono.error(new DataPersistantException("__empty__"))) // dummy marker
                                 .map(customerMapper::toResponse)
                                 .onErrorMap(ex -> !(ex instanceof NotFoundException),
                                                 ex -> {
@@ -148,7 +151,13 @@ public class CustomerService {
 
                 return internalFindActiveById(id)
                                 .flatMap(customer -> customerRepository.softDeleteById(id)
-                                                .map(count -> count > 0))
+                                                .flatMap(count -> {
+                                                        if (count == 0) {
+                                                                return Mono.error(new DataPersistantException(
+                                                                                "__empty__")); // dummy marker
+                                                        }
+                                                        return Mono.just(true);
+                                                }))
                                 // Filter to not consume NotFoundException
                                 .onErrorMap(ex -> !(ex instanceof NotFoundException),
                                                 ex -> {
@@ -166,9 +175,15 @@ public class CustomerService {
 
                 return internalFindByIdForRestoring(id)
                                 .flatMap(c -> customerRepository.restoreById(id)
-                                                .map(count -> count > 0))
-                                .onErrorMap(ex -> !(ex instanceof InUsedException)
-                                                && !(ex instanceof NotFoundException), ex -> {
+                                                .flatMap(count -> {
+                                                        if (count == 0) {
+                                                                return Mono.error(new DataPersistantException(
+                                                                                "__empty__")); // dummy marker
+                                                        }
+                                                        return Mono.just(true);
+                                                }))
+                                .onErrorMap(ex -> (!(ex instanceof InUsedException)
+                                                && !(ex instanceof NotFoundException)), ex -> {
                                                         log.error("Error restoring contactor: {}", id, ex);
                                                         return new DataPersistantException(messageUtils.getMessage(
                                                                         "error.update.failed_to_restore",

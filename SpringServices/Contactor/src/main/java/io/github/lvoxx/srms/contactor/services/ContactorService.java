@@ -50,7 +50,9 @@ public class ContactorService {
                                 .then(Mono.defer(() -> {
                                         Contactor contactor = contactorMapper.toEntity(request);
                                         return contactorRepository.save(contactor)
-                                                        .switchIfEmpty(Mono.error(new DataPersistantException()))
+                                                        .switchIfEmpty(Mono.error(
+                                                                        new DataPersistantException("__empty__"))) // dummy
+                                                                                                                   // marker
                                                         .map(contactorMapper::toResponse)
                                                         .onErrorMap(ex -> !(ex instanceof ConflictException),
                                                                         ex -> {
@@ -72,6 +74,7 @@ public class ContactorService {
                 return internalAndNotShowDeletedFindById(id)
                                 .doOnNext(existing -> contactorMapper.updateEntityFromRequest(request, existing))
                                 .flatMap(contactorRepository::save)
+                                .switchIfEmpty(Mono.error(new DataPersistantException("__empty__"))) // dummy marker
                                 .map(contactorMapper::toResponse)
                                 .onErrorMap(ex -> !(ex instanceof NotFoundException), ex -> {
                                         log.error("Error updating contactor: {}", id, ex);
@@ -88,7 +91,13 @@ public class ContactorService {
 
                 return internalAndNotShowDeletedFindById(id)
                                 .flatMap(contactor -> contactorRepository.softDeleteById(id)
-                                                .map(count -> count > 0))
+                                                .flatMap(count -> {
+                                                        if (count == 0) {
+                                                                return Mono.error(new DataPersistantException(
+                                                                                "__empty__")); // dummy marker
+                                                        }
+                                                        return Mono.just(true);
+                                                }))
                                 .onErrorMap(ex -> !(ex instanceof NotFoundException),
                                                 ex -> {
                                                         log.error("Error deleting contactor: {}", id, ex);
@@ -104,7 +113,13 @@ public class ContactorService {
 
                 return internalFindByIdForRestoring(id)
                                 .flatMap(c -> contactorRepository.restoreById(id)
-                                                .map(count -> count > 0))
+                                                .flatMap(count -> {
+                                                        if (count == 0) {
+                                                                return Mono.error(new DataPersistantException(
+                                                                                "__empty__")); // dummy marker
+                                                        }
+                                                        return Mono.just(true);
+                                                }))
                                 .onErrorMap(ex -> !(ex instanceof InUsedException)
                                                 && !(ex instanceof NotFoundException), ex -> {
                                                         log.error("Error restoring contactor: {}", id, ex);

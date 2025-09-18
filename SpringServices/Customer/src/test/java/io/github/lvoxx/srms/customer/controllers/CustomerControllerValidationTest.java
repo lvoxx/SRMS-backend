@@ -493,7 +493,7 @@ public class CustomerControllerValidationTest {
         @DisplayName("Should restore customer")
         void shouldRestoreCustomer() {
                 when(customerService.restore(testId))
-                                .thenReturn(Mono.just(validResponse));
+                                .thenReturn(Mono.just(true));
 
                 webTestClient.patch()
                                 .uri("/customers/{id}/restore", testId)
