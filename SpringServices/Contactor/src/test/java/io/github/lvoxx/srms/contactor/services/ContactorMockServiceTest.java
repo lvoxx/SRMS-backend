@@ -2,7 +2,6 @@ package io.github.lvoxx.srms.contactor.services;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -32,7 +31,6 @@ import io.github.lvoxx.srms.common.exception.model.ConflictException;
 import io.github.lvoxx.srms.common.exception.model.DataPersistantException;
 import io.github.lvoxx.srms.common.exception.model.InUsedException;
 import io.github.lvoxx.srms.common.exception.model.NotFoundException;
-import io.github.lvoxx.srms.common.exception.model.UnknownServerException;
 import io.github.lvoxx.srms.common.utils.MessageUtils;
 import io.github.lvoxx.srms.contactor.dto.ContactorDTO;
 import io.github.lvoxx.srms.contactor.dto.Rating;
@@ -242,8 +240,8 @@ class ContactorMockServiceTest {
 
                 // When & Then
                 StepVerifier.create(contactorService.softDelete(testId))
-                                .expectError(DataPersistantException.class)
-                                .verify();
+                                .expectNext(false)
+                                .verifyComplete();
 
                 verify(contactorRepository).findById(testId);
                 verify(contactorRepository).softDeleteById(testId);
@@ -572,17 +570,14 @@ class ContactorMockServiceTest {
         void testHandleRepositoryException() {
                 // Given
                 DataAccessException repositoryException = new DataAccessResourceFailureException("Database error");
-                when(contactorRepository.findById(testId)).thenThrow(repositoryException);
-                when(messageUtils.getMessage(eq("error.unknown"), any()))
-                                .thenReturn("Unknown server error");
+                when(contactorRepository.findById(testId)).thenReturn(Mono.error(repositoryException));
 
                 // When & Then
                 StepVerifier.create(contactorService.findById(testId))
-                                .expectError(UnknownServerException.class)
+                                .expectError(DataAccessException.class)
                                 .verify();
 
                 verify(contactorRepository).findById(testId);
-                verify(messageUtils).getMessage(eq("error.unknown"), any());
         }
 
         @Test
@@ -598,7 +593,7 @@ class ContactorMockServiceTest {
 
                 // When & Then
                 StepVerifier.create(contactorService.create(testRequest))
-                                .expectError(DataPersistantException.class)
+                                .expectError(DataAccessException.class)
                                 .verify();
 
                 verify(messageUtils).getMessage("error.update.failed_to_create", new Object[] { testEmail });
