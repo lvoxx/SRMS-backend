@@ -34,6 +34,9 @@ import org.mockito.stubbing.Answer;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -458,14 +461,16 @@ public class CustomerServiceTest {
                 @DisplayName("Should handle repository error during create")
                 void shouldHandleRepositoryErrorDuringCreate() {
                         // Given
+                        DataAccessException repositoryException = new DataAccessResourceFailureException(
+                                        "Database error");
                         when(repository.findByEmail(mockRequest.getEmail())).thenReturn(Mono.empty());
                         when(mapper.toCustomer(mockRequest)).thenReturn(mockCustomer);
                         when(repository.save(mockCustomer))
-                                        .thenReturn(Mono.error(new RuntimeException("Database error")));
+                                        .thenReturn(Mono.error(repositoryException));
 
                         // When & Then
                         StepVerifier.create(service.create(mockRequest))
-                                        .expectError(DataPersistantException.class)
+                                        .expectError(DataAccessException.class)
                                         .verify();
                 }
         }
@@ -558,13 +563,15 @@ public class CustomerServiceTest {
                 @DisplayName("Should handle repository error during delete")
                 void shouldHandleRepositoryErrorDuringDelete() {
                         // Given
+                        DataAccessException repositoryException = new DataAccessResourceFailureException(
+                                        "Database error");
                         when(repository.findActiveById(customerId)).thenReturn(Mono.just(mockCustomer));
-                        when(repository.save(any(Customer.class)))
-                                        .thenReturn(Mono.error(new RuntimeException("Database error")));
+                        when(repository.softDeleteById(any(UUID.class)))
+                                        .thenReturn(Mono.error(repositoryException));
 
                         // When & Then
                         StepVerifier.create(service.softDelete(customerId))
-                                        .expectError(DataPersistantException.class)
+                                        .expectError(DataAccessException.class)
                                         .verify();
                 }
         }
@@ -601,8 +608,8 @@ public class CustomerServiceTest {
 
                         // When & Then
                         StepVerifier.create(service.restore(customerId))
-                                        .expectError(DataPersistantException.class)
-                                        .verify();
+                                        .expectNext(false)
+                                        .verifyComplete();
 
                         verify(repository).restoreById(customerId);
                         verify(repository, never()).findById(any(UUID.class));
@@ -618,8 +625,8 @@ public class CustomerServiceTest {
 
                         // When & Then
                         StepVerifier.create(service.restore(customerId))
-                                        .expectError(DataPersistantException.class)
-                                        .verify();
+                                        .expectNext(false)
+                                        .verifyComplete();
 
                         verify(repository).restoreById(customerId);
                 }
@@ -744,16 +751,20 @@ public class CustomerServiceTest {
                 @DisplayName("Should return correct message for failed delete")
                 void shouldReturnCorrectMessageForFailedDelete() {
                         // Given
+                        DataAccessException repositoryException = new DataAccessResourceFailureException(
+                                        "Database error");
+
                         when(repository.findActiveById(customerId)).thenReturn(Mono.just(mockCustomer));
-                        when(repository.save(any(Customer.class)))
-                                        .thenReturn(Mono.error(new RuntimeException("Database error")));
+                        when(repository.softDeleteById(customerId))
+                                        .thenReturn(Mono.error(repositoryException));
 
                         // When & Then
                         StepVerifier.create(service.softDelete(customerId))
-                                        .expectError(DataPersistantException.class)
+                                        .expectError(DataAccessException.class)
                                         .verify();
 
-                        verify(messageUtils).getMessage(eq("error.update.failed_to_delete"),
+                        verify(messageUtils).getMessage(
+                                        eq("error.update.failed_to_delete"),
                                         eq(new Object[] { customerId }));
                 }
 
@@ -767,8 +778,8 @@ public class CustomerServiceTest {
 
                         // When & Then
                         StepVerifier.create(service.restore(customerId))
-                                        .expectError(DataPersistantException.class)
-                                        .verify();
+                                        .expectNext(false)
+                                        .verifyComplete();
 
                         verify(messageUtils).getMessage(eq("error.update.failed_to_restore"),
                                         eq(new Object[] { customerId }));
@@ -837,13 +848,14 @@ public class CustomerServiceTest {
                 @DisplayName("Should handle concurrent modification during update")
                 void shouldHandleConcurrentModificationDuringUpdate() {
                         // Given
+                        ConcurrencyFailureException ex = new ConcurrencyFailureException("Optimistic locking failure");
                         when(repository.findActiveById(customerId)).thenReturn(Mono.just(mockCustomer));
                         when(repository.save(mockCustomer))
-                                        .thenReturn(Mono.error(new RuntimeException("Optimistic locking failure")));
+                                        .thenReturn(Mono.error(ex));
 
                         // When & Then
                         StepVerifier.create(service.update(customerId, mockRequest))
-                                        .expectError(DataPersistantException.class)
+                                        .expectError(ConcurrencyFailureException.class)
                                         .verify();
                 }
 
@@ -1007,8 +1019,10 @@ public class CustomerServiceTest {
                 @DisplayName("Should handle cascading failures properly")
                 void shouldHandleCascadingFailuresProperly() {
                         // Given - First operation fails
+                        DataAccessException repositoryException = new DataAccessResourceFailureException(
+                                        "Database error");
                         when(repository.findById(customerId))
-                                        .thenReturn(Mono.error(new RuntimeException("Database connection lost")));
+                                        .thenReturn(Mono.error(repositoryException));
 
                         // When & Then - Should propagate error without causing system failure
                         StepVerifier.create(service.findById(customerId))

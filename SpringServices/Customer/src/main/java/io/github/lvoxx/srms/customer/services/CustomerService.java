@@ -16,7 +16,6 @@ import io.github.lvoxx.srms.common.exception.model.ConflictException;
 import io.github.lvoxx.srms.common.exception.model.DataPersistantException;
 import io.github.lvoxx.srms.common.exception.model.InUsedException;
 import io.github.lvoxx.srms.common.exception.model.NotFoundException;
-import io.github.lvoxx.srms.common.exception.model.UnknownServerException;
 import io.github.lvoxx.srms.common.utils.CacheValue;
 import io.github.lvoxx.srms.common.utils.MessageUtils;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
@@ -57,11 +56,7 @@ public class CustomerService {
 
         @Cacheable(value = CacheValue.Fields.CUSTOMERS, key = "#phoneNumber", unless = "#result == null")
         public Mono<CustomerDTO.Response> findByPhoneNumber(String phoneNumber) {
-                return customerRepository.findByPhoneNumber(phoneNumber)
-                                .switchIfEmpty(Mono.error(
-                                                new NotFoundException(messageUtils.getMessage(
-                                                                "error.resource_not_found.phone_number",
-                                                                new Object[] { phoneNumber }))))
+                return internalFindPhoneNumber(phoneNumber)
                                 .map(customerMapper::toResponse);
         }
 
@@ -93,13 +88,6 @@ public class CustomerService {
                                                         pageRequest.size(),
                                                         totalElements,
                                                         totalPages);
-                                })
-                                .onErrorMap(ex -> {
-                                        log.error("Error getting all contactors", ex);
-                                        return new UnknownServerException(messageUtils.getMessage(
-                                                        "error.unknown",
-                                                        new Object[] { ex.getMessage(),
-                                                                        ex.getStackTrace().toString() }));
                                 });
         }
 
@@ -113,15 +101,12 @@ public class CustomerService {
                                         Customer customer = customerMapper.toCustomer(request);
                                         return customerRepository.save(customer)
                                                         .switchIfEmpty(Mono.error(
-                                                                        new DataPersistantException("__empty__"))) // dummy
-                                                                                                                   // marker
-                                                        .map(customerMapper::toResponse)
-                                                        .onErrorMap(ex -> !(ex instanceof ConflictException),
-                                                                        ex -> new DataPersistantException(
+                                                                        new DataPersistantException(
                                                                                         messageUtils.getMessage(
                                                                                                         "error.update.failed_to_create",
                                                                                                         new Object[] { request
-                                                                                                                        .getEmail() })));
+                                                                                                                        .getEmail() }))))
+                                                        .map(customerMapper::toResponse);
                                 }));
         }
 
@@ -132,17 +117,12 @@ public class CustomerService {
                 return internalFindActiveById(id)
                                 .doOnNext(existing -> customerMapper.updateCustomerFromRequest(request, existing))
                                 .flatMap(customerRepository::save)
-                                .switchIfEmpty(Mono.error(new DataPersistantException("__empty__"))) // dummy marker
-                                .map(customerMapper::toResponse)
-                                .onErrorMap(ex -> !(ex instanceof NotFoundException),
-                                                ex -> {
-                                                        log.error("Error updating customer: {}", id, ex);
-                                                        return new DataPersistantException(
-                                                                        messageUtils.getMessage(
-                                                                                        "error.update.failed_to_update",
-                                                                                        new Object[] { request
-                                                                                                        .getEmail() }));
-                                                });
+                                .switchIfEmpty(Mono.error(new DataPersistantException(
+                                                messageUtils.getMessage(
+                                                                "error.update.failed_to_update",
+                                                                new Object[] { request
+                                                                                .getEmail() }))))
+                                .map(customerMapper::toResponse);
         }
 
         @CacheEvict(value = CacheValue.Fields.CUSTOMERS, key = "#id")
@@ -150,23 +130,11 @@ public class CustomerService {
                 log.debug("Deleting customer: {}", id);
 
                 return internalFindActiveById(id)
-                                .flatMap(customer -> customerRepository.softDeleteById(id)
-                                                .flatMap(count -> {
-                                                        if (count == 0) {
-                                                                return Mono.error(new DataPersistantException(
-                                                                                "__empty__")); // dummy marker
-                                                        }
-                                                        return Mono.just(true);
-                                                }))
-                                // Filter to not consume NotFoundException
-                                .onErrorMap(ex -> !(ex instanceof NotFoundException),
-                                                ex -> {
-                                                        log.error("Error deleting customer: {}", id, ex);
-                                                        return new DataPersistantException(
-                                                                        messageUtils.getMessage(
-                                                                                        "error.update.failed_to_delete",
-                                                                                        new Object[] { id }));
-                                                });
+                                .flatMap(customer -> customerRepository.softDeleteById(customer.getId()))
+                                .switchIfEmpty(Mono.error(new DataPersistantException(
+                                                messageUtils.getMessage("error.update.failed_to_delete",
+                                                                new Object[] { id }))))
+                                .map(count -> count > 0);
         }
 
         @CachePut(value = CacheValue.Fields.CUSTOMERS, key = "#id")
@@ -174,21 +142,11 @@ public class CustomerService {
                 log.debug("Restoring customer: {}", id);
 
                 return internalFindByIdForRestoring(id)
-                                .flatMap(c -> customerRepository.restoreById(id)
-                                                .flatMap(count -> {
-                                                        if (count == 0) {
-                                                                return Mono.error(new DataPersistantException(
-                                                                                "__empty__")); // dummy marker
-                                                        }
-                                                        return Mono.just(true);
-                                                }))
-                                .onErrorMap(ex -> (!(ex instanceof InUsedException)
-                                                && !(ex instanceof NotFoundException)), ex -> {
-                                                        log.error("Error restoring contactor: {}", id, ex);
-                                                        return new DataPersistantException(messageUtils.getMessage(
-                                                                        "error.update.failed_to_restore",
-                                                                        new Object[] { id }));
-                                                });
+                                .flatMap(c -> customerRepository.restoreById(id))
+                                .switchIfEmpty(Mono.error(new DataPersistantException(
+                                                messageUtils.getMessage("error.update.failed_to_restore",
+                                                                new Object[] { id }))))
+                                .map(count -> count > 0);
         }
 
         // For performance issue, restrict to use this. Use paging instead.
@@ -270,5 +228,13 @@ public class CustomerService {
 
         private Flux<Customer> internalFindAlikeFullName(String fullName) {
                 return customerRepository.findAlikeFullname(fullName);
+        }
+
+        private Mono<Customer> internalFindPhoneNumber(String phoneNumber) {
+                return customerRepository.findByPhoneNumber(phoneNumber)
+                                .switchIfEmpty(Mono.error(
+                                                new NotFoundException(messageUtils.getMessage(
+                                                                "error.resource_not_found.phone_number",
+                                                                new Object[] { phoneNumber }))));
         }
 }

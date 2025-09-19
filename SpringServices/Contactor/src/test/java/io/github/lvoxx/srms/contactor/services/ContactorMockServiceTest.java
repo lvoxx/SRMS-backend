@@ -25,6 +25,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 import io.github.lvoxx.srms.common.exception.model.ConflictException;
 import io.github.lvoxx.srms.common.exception.model.DataPersistantException;
@@ -569,8 +571,8 @@ class ContactorMockServiceTest {
         @DisplayName("Should handle repository exceptions with UnknownServerException")
         void testHandleRepositoryException() {
                 // Given
-                RuntimeException repositoryException = new RuntimeException("Database error");
-                when(contactorRepository.findById(testId)).thenReturn(Mono.error(repositoryException));
+                DataAccessException repositoryException = new DataAccessResourceFailureException("Database error");
+                when(contactorRepository.findById(testId)).thenThrow(repositoryException);
                 when(messageUtils.getMessage(eq("error.unknown"), any()))
                                 .thenReturn("Unknown server error");
 
@@ -587,10 +589,10 @@ class ContactorMockServiceTest {
         @DisplayName("Should handle error in create operation")
         void testCreateHandleError() {
                 // Given
-                RuntimeException saveException = new RuntimeException("Save failed");
+                DataAccessException repositoryException = new DataAccessResourceFailureException("Saved failure");
                 when(contactorRepository.findByEmail(testEmail, true)).thenReturn(Mono.empty());
                 when(contactorMapper.toEntity(testRequest)).thenReturn(testContactor);
-                when(contactorRepository.save(testContactor)).thenReturn(Mono.error(saveException));
+                when(contactorRepository.save(testContactor)).thenReturn(Mono.error(repositoryException));
                 when(messageUtils.getMessage("error.update.failed_to_create", new Object[] { testEmail }))
                                 .thenReturn("Failed to create contactor");
 
