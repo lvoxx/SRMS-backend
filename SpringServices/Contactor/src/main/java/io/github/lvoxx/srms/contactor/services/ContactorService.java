@@ -16,7 +16,6 @@ import io.github.lvoxx.srms.common.exception.model.ConflictException;
 import io.github.lvoxx.srms.common.exception.model.DataPersistantException;
 import io.github.lvoxx.srms.common.exception.model.InUsedException;
 import io.github.lvoxx.srms.common.exception.model.NotFoundException;
-import io.github.lvoxx.srms.common.exception.model.UnknownServerException;
 import io.github.lvoxx.srms.common.utils.CacheValue;
 import io.github.lvoxx.srms.common.utils.MessageUtils;
 import io.github.lvoxx.srms.contactor.dto.ContactorDTO;
@@ -51,19 +50,12 @@ public class ContactorService {
                                         Contactor contactor = contactorMapper.toEntity(request);
                                         return contactorRepository.save(contactor)
                                                         .switchIfEmpty(Mono.error(
-                                                                        new DataPersistantException("__empty__"))) // dummy
-                                                                                                                   // marker
-                                                        .map(contactorMapper::toResponse)
-                                                        .onErrorMap(ex -> !(ex instanceof ConflictException),
-                                                                        ex -> {
-                                                                                log.error("Error creating contactor",
-                                                                                                ex);
-                                                                                return new DataPersistantException(
-                                                                                                messageUtils.getMessage(
-                                                                                                                "error.update.failed_to_create",
-                                                                                                                new Object[] { request
-                                                                                                                                .getEmail() }));
-                                                                        });
+                                                                        new DataPersistantException(
+                                                                                        messageUtils.getMessage(
+                                                                                                        "error.update.failed_to_create",
+                                                                                                        new Object[] { request
+                                                                                                                        .getEmail() }))))
+                                                        .map(contactorMapper::toResponse);
                                 }));
         }
 
@@ -74,15 +66,11 @@ public class ContactorService {
                 return internalAndNotShowDeletedFindById(id)
                                 .doOnNext(existing -> contactorMapper.updateEntityFromRequest(request, existing))
                                 .flatMap(contactorRepository::save)
-                                .switchIfEmpty(Mono.error(new DataPersistantException("__empty__"))) // dummy marker
-                                .map(contactorMapper::toResponse)
-                                .onErrorMap(ex -> !(ex instanceof NotFoundException), ex -> {
-                                        log.error("Error updating contactor: {}", id, ex);
-                                        return new DataPersistantException(messageUtils.getMessage(
-                                                        "error.update.failed_to_update",
-                                                        new Object[] { request
-                                                                        .getEmail() }));
-                                });
+                                .switchIfEmpty(Mono.error(new DataPersistantException(messageUtils.getMessage(
+                                                "error.update.failed_to_update",
+                                                new Object[] { request
+                                                                .getEmail() }))))
+                                .map(contactorMapper::toResponse);
         }
 
         @CacheEvict(value = CacheValue.Fields.CONTACTOR, key = "#id")
@@ -90,21 +78,12 @@ public class ContactorService {
                 log.debug("Deleting contactor: {}", id);
 
                 return internalAndNotShowDeletedFindById(id)
-                                .flatMap(contactor -> contactorRepository.softDeleteById(id)
-                                                .flatMap(count -> {
-                                                        if (count == 0) {
-                                                                return Mono.error(new DataPersistantException(
-                                                                                "__empty__")); // dummy marker
-                                                        }
-                                                        return Mono.just(true);
-                                                }))
-                                .onErrorMap(ex -> !(ex instanceof NotFoundException),
-                                                ex -> {
-                                                        log.error("Error deleting contactor: {}", id, ex);
-                                                        return new DataPersistantException(messageUtils.getMessage(
-                                                                        "error.update.failed_to_delete",
-                                                                        new Object[] { id }));
-                                                });
+                                .flatMap(contactor -> contactorRepository.softDeleteById(id))
+                                .switchIfEmpty(Mono.error(new DataPersistantException(
+                                                messageUtils.getMessage(
+                                                                "error.update.failed_to_delete",
+                                                                new Object[] { id }))))
+                                .map(count -> count > 0);
         }
 
         @CacheEvict(value = CacheValue.Fields.CONTACTOR, key = "#id")
@@ -112,21 +91,11 @@ public class ContactorService {
                 log.debug("Restoring contactor: {}", id);
 
                 return internalFindByIdForRestoring(id)
-                                .flatMap(c -> contactorRepository.restoreById(id)
-                                                .flatMap(count -> {
-                                                        if (count == 0) {
-                                                                return Mono.error(new DataPersistantException(
-                                                                                "__empty__")); // dummy marker
-                                                        }
-                                                        return Mono.just(true);
-                                                }))
-                                .onErrorMap(ex -> !(ex instanceof InUsedException)
-                                                && !(ex instanceof NotFoundException), ex -> {
-                                                        log.error("Error restoring contactor: {}", id, ex);
-                                                        return new DataPersistantException(messageUtils.getMessage(
-                                                                        "error.update.failed_to_restore",
-                                                                        new Object[] { id }));
-                                                });
+                                .flatMap(c -> contactorRepository.restoreById(id))
+                                .switchIfEmpty(Mono.error(new DataPersistantException(
+                                                messageUtils.getMessage("error.update.failed_to_restore",
+                                                                new Object[] { id }))))
+                                .map(count -> count > 0);
         }
 
         // ==================== Query Operations ====================
@@ -136,14 +105,7 @@ public class ContactorService {
                 log.debug("Getting contactor with id: {}", id);
 
                 return internalAndNotShowDeletedFindById(id)
-                                .map(contactorMapper::toResponse)
-                                .onErrorMap(ex -> !(ex instanceof NotFoundException), ex -> {
-                                        log.error("Error getting contactor by id: {}", id, ex);
-                                        return new UnknownServerException(messageUtils.getMessage(
-                                                        "error.unknown",
-                                                        new Object[] { ex.getMessage(),
-                                                                        ex.getStackTrace().toString() }));
-                                });
+                                .map(contactorMapper::toResponse);
         }
 
         @Cacheable(value = CacheValue.Fields.CONTACTOR_EMAIL, key = "#email + ':' + #showDeleted")
@@ -151,14 +113,7 @@ public class ContactorService {
                 log.debug("Getting contactor with email: {}", email);
 
                 return internalFindByEmailAndShowingDeleted(email.trim().toLowerCase(), showDeleted)
-                                .map(contactorMapper::toResponse)
-                                .onErrorMap(ex -> !(ex instanceof NotFoundException), ex -> {
-                                        log.error("Error getting contactor by email: {}", email, ex);
-                                        return new UnknownServerException(messageUtils.getMessage(
-                                                        "error.unknown",
-                                                        new Object[] { ex.getMessage(),
-                                                                        ex.getStackTrace().toString() }));
-                                });
+                                .map(contactorMapper::toResponse);
         }
 
         @Cacheable(value = CacheValue.Fields.CONTACTOR_TYPE, key = "#type.name() + ':' + #showDeleted")
@@ -166,14 +121,7 @@ public class ContactorService {
                 log.debug("Getting contactors by type: {}", type);
 
                 return contactorRepository.findByContactTypeAndShowingDeleted(type.name(), showDeleted)
-                                .map(contactorMapper::toResponse)
-                                .onErrorMap(ex -> {
-                                        log.error("Error getting contactors by type: {}", type, ex);
-                                        return new UnknownServerException(messageUtils.getMessage(
-                                                        "error.unknown",
-                                                        new Object[] { ex.getMessage(),
-                                                                        ex.getStackTrace().toString() }));
-                                });
+                                .map(contactorMapper::toResponse);
         }
 
         @Cacheable(value = CacheValue.Fields.CONTACTOR_SEARCH, key = "#name + ':' + #showDeleted")
@@ -181,14 +129,7 @@ public class ContactorService {
                 log.debug("Getting contactors by organization name: {}", name);
 
                 return contactorRepository.findByOrganizationNameContainingAndShowingDeleted(name.trim(), showDeleted)
-                                .map(contactorMapper::toResponse)
-                                .onErrorMap(ex -> {
-                                        log.error("Error searching by organazation name: {}", name, ex);
-                                        return new UnknownServerException(messageUtils.getMessage(
-                                                        "error.unknown",
-                                                        new Object[] { ex.getMessage(),
-                                                                        ex.getStackTrace().toString() }));
-                                });
+                                .map(contactorMapper::toResponse);
         }
 
         @Cacheable(value = CacheValue.Fields.CONTACTOR_PAGE, key = "#pageable.pageNumber + ':' + #pageable.pageSize + ':' + #showDeleted")
@@ -223,13 +164,6 @@ public class ContactorService {
                                                         pageRequest.size(),
                                                         totalElements,
                                                         totalPages);
-                                })
-                                .onErrorMap(ex -> {
-                                        log.error("Error getting all contactors", ex);
-                                        return new UnknownServerException(messageUtils.getMessage(
-                                                        "error.unknown",
-                                                        new Object[] { ex.getMessage(),
-                                                                        ex.getStackTrace().toString() }));
                                 });
         }
 
