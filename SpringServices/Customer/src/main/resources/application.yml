@@ -1,8 +1,14 @@
 server:
   port: @service.port@
+  reactive:
+    session:
+      timeout: 30m
 
 spring:
   application:
     name: customer-service
   profiles:
     active: docker
+  threads:
+    virtual:
+      enabled: true 
