@@ -474,6 +474,7 @@ public class CustomerControllerValidationTest {
                 }
         }
 
+        @SuppressWarnings("unused")
         private void printPrettyDTOLog(Logger log, EntityExchangeResult<Response> res) {
                 try {
                         log.debug("Response:\n{}", mapper.writerWithDefaultPrettyPrinter()

@@ -8,11 +8,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
 import lombok.Builder;
 
 public abstract class PageDTO {
 
     @Builder
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public record Request(
             int page,
             int size,
@@ -28,6 +32,7 @@ public abstract class PageDTO {
     }
 
     @Builder
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public record Response<T>(
             List<T> content,
             int page,

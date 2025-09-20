@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -21,8 +22,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -109,19 +114,19 @@ public class CustomerControllerEndpointTest {
                     .expectHeader().contentType(MediaType.APPLICATION_JSON)
                     .expectBody()
                     .jsonPath("$.id").isEqualTo(customerId.toString())
-                    .jsonPath("$.firstName").isEqualTo("John")
-                    .jsonPath("$.lastName").isEqualTo("Doe")
-                    .jsonPath("$.phoneNumber").isEqualTo("+1234567890")
+                    .jsonPath("$.first-name").isEqualTo("John")
+                    .jsonPath("$.last-name").isEqualTo("Doe")
+                    .jsonPath("$.phone-number").isEqualTo("+1234567890")
                     .jsonPath("$.email").isEqualTo("john.doe@example.com")
-                    .jsonPath("$.dietaryRestrictions[0]").isEqualTo("vegetarian")
-                    .jsonPath("$.dietaryRestrictions[1]").isEqualTo("gluten-free")
+                    .jsonPath("$.dietary-restrictions[0]").isEqualTo("vegetarian")
+                    .jsonPath("$.dietary-restrictions[1]").isEqualTo("gluten-free")
                     .jsonPath("$.allergies[0]").isEqualTo("nuts")
                     .jsonPath("$.allergies[1]").isEqualTo("dairy")
                     .jsonPath("$.regular").isEqualTo(true)
                     .jsonPath("$.notes").isEqualTo("VIP customer")
-                    .jsonPath("$.createdAt").exists()
-                    .jsonPath("$.updatedAt").exists()
-                    .jsonPath("$.deletedAt").isEmpty()
+                    .jsonPath("$.created-at").exists()
+                    .jsonPath("$.updated-at").exists()
+                    .jsonPath("$.deleted-at").isEmpty()
                     // HATEOAS Links
                     .jsonPath("$._links.self.href").exists()
                     .jsonPath("$._links['all-customers'].href").exists()
@@ -186,14 +191,15 @@ public class CustomerControllerEndpointTest {
                     .expectStatus().isOk()
                     .expectHeader().contentType(MediaType.APPLICATION_JSON)
                     .expectBody()
+                    .consumeWith(c -> printPrettyLog(log, c))
                     .jsonPath("$.content").isArray()
                     .jsonPath("$.content[0].id").exists()
-                    .jsonPath("$.content[0].firstName").isEqualTo("John")
-                    .jsonPath("$.content[0].lastName").isEqualTo("Doe")
+                    .jsonPath("$.content[0].first-name").isEqualTo("John")
+                    .jsonPath("$.content[0].last-name").isEqualTo("Doe")
                     .jsonPath("$.page").isEqualTo(0)
                     .jsonPath("$.size").isEqualTo(10)
-                    .jsonPath("$.totalElements").isEqualTo(1)
-                    .jsonPath("$.totalPages").isEqualTo(1)
+                    .jsonPath("$.total-elements").isEqualTo(1)
+                    .jsonPath("$.total-pages").isEqualTo(1)
                     .returnResult()
                     .getResponseBodyContent());
 
@@ -239,17 +245,17 @@ public class CustomerControllerEndpointTest {
                     .expectHeader().exists("Location")
                     .expectBody()
                     .jsonPath("$.id").exists()
-                    .jsonPath("$.firstName").isEqualTo("Jane")
-                    .jsonPath("$.lastName").isEqualTo("Smith")
-                    .jsonPath("$.phoneNumber").isEqualTo("+0987654321")
+                    .jsonPath("$.first-name").isEqualTo("Jane")
+                    .jsonPath("$.last-name").isEqualTo("Smith")
+                    .jsonPath("$.phone-number").isEqualTo("+0987654321")
                     .jsonPath("$.email").isEqualTo("jane.smith@example.com")
-                    .jsonPath("$.dietaryRestrictions[0]").isEqualTo("vegan")
+                    .jsonPath("$.dietary-restrictions[0]").isEqualTo("vegan")
                     .jsonPath("$.allergies[0]").isEqualTo("shellfish")
                     .jsonPath("$.regular").isEqualTo(false)
                     .jsonPath("$.notes").isEqualTo("New customer")
-                    .jsonPath("$.createdAt").exists()
-                    .jsonPath("$.updatedAt").exists()
-                    .jsonPath("$.deletedAt").isEmpty()
+                    .jsonPath("$.created-at").exists()
+                    .jsonPath("$.updated-at").exists()
+                    .jsonPath("$.deleted-at").isEmpty()
                     // HATEOAS Links
                     .jsonPath("$._links.self.href").exists()
                     .jsonPath("$._links['all-customers'].href").exists()
@@ -299,17 +305,17 @@ public class CustomerControllerEndpointTest {
                     .expectHeader().contentType(MediaType.APPLICATION_JSON)
                     .expectBody()
                     .jsonPath("$.id").isEqualTo(customerId.toString())
-                    .jsonPath("$.firstName").isEqualTo("Jane")
-                    .jsonPath("$.lastName").isEqualTo("Smith")
-                    .jsonPath("$.phoneNumber").isEqualTo("+0987654321")
+                    .jsonPath("$.first-name").isEqualTo("Jane")
+                    .jsonPath("$.last-name").isEqualTo("Smith")
+                    .jsonPath("$.phone-number").isEqualTo("+0987654321")
                     .jsonPath("$.email").isEqualTo("jane.smith@example.com")
-                    .jsonPath("$.dietaryRestrictions[0]").isEqualTo("vegan")
+                    .jsonPath("$.dietary-restrictions[0]").isEqualTo("vegan")
                     .jsonPath("$.allergies[0]").isEqualTo("shellfish")
                     .jsonPath("$.regular").isEqualTo(false)
                     .jsonPath("$.notes").isEqualTo("New customer")
-                    .jsonPath("$.createdAt").exists()
-                    .jsonPath("$.updatedAt").exists()
-                    .jsonPath("$.deletedAt").isEmpty()
+                    .jsonPath("$.created-at").exists()
+                    .jsonPath("$.updated-at").exists()
+                    .jsonPath("$.deleted-at").isEmpty()
                     // HATEOAS Links
                     .jsonPath("$._links.self.href").exists()
                     .jsonPath("$._links['all-customers'].href").exists()
@@ -377,4 +383,19 @@ public class CustomerControllerEndpointTest {
         }
     }
 
+    private void printPrettyLog(Logger log, EntityExchangeResult<byte[]> res) {
+        try {
+            Object json = mapper.readValue(res.getResponseBody(), Object.class);
+            log.debug("Response:\n{}", mapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(json));
+        } catch (StreamReadException e) {
+            e.printStackTrace();
+        } catch (DatabindException e) {
+            e.printStackTrace();
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
