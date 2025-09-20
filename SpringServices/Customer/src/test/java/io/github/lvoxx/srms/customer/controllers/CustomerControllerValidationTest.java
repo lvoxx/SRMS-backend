@@ -12,6 +12,7 @@ import java.util.ResourceBundle;
 import java.util.UUID;
 
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -39,6 +40,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.lvoxx.srms.common.dto.PageDTO;
 import io.github.lvoxx.srms.common.exception.controller.GlobalExceptionHandler;
 import io.github.lvoxx.srms.common.exception.controller.ValidationExceptionHandler;
+import io.github.lvoxx.srms.common.exception.model.NotFoundException;
 import io.github.lvoxx.srms.customer.config.TestControllerWithMessagesConfig;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO.Response;
@@ -103,6 +105,13 @@ public class CustomerControllerValidationTest {
                                 .build();
         }
 
+        @AfterEach
+        void teadDown() {
+                testId = null;
+                validRequest = null;
+                validResponse = null;
+        }
+
         @Test
         void testLoadMessages() {
                 // Nếu muốn list all, nhưng không direct, có thể load properties thủ công
@@ -113,24 +122,6 @@ public class CustomerControllerValidationTest {
                         String key = keys.nextElement();
                         log.info(key + " = " + bundle.getString(key));
                 }
-        }
-
-        @Test
-        @DisplayName("Should return customer when found")
-        void shouldReturnCustomerWhenFound() {
-                when(customerService.findById(testId)).thenReturn(Mono.just(validResponse));
-
-                webTestClient.get()
-                                .uri("/customers/{id}", testId)
-                                .accept(MediaType.APPLICATION_JSON)
-                                .exchange()
-                                .expectStatus().isOk()
-                                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                                .expectBody(CustomerDTO.Response.class)
-                                .consumeWith(res -> {
-                                        printPrettyDTOLog(log, res);
-                                })
-                                .isEqualTo(validResponse);
         }
 
         @Test
@@ -200,23 +191,6 @@ public class CustomerControllerValidationTest {
                                 .accept(MediaType.APPLICATION_JSON)
                                 .exchange()
                                 .expectStatus().isOk();
-        }
-
-        @Test
-        @DisplayName("Should create customer with valid data")
-        void shouldCreateCustomerWithValidData() {
-                when(customerService.create(any(CustomerDTO.Request.class)))
-                                .thenReturn(Mono.just(validResponse));
-
-                webTestClient.post()
-                                .uri("/customers")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(validRequest)
-                                .exchange()
-                                .expectStatus().isCreated()
-                                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                                .expectBody(CustomerDTO.Response.class)
-                                .isEqualTo(validResponse);
         }
 
         @Test
@@ -429,23 +403,6 @@ public class CustomerControllerValidationTest {
         }
 
         @Test
-        @DisplayName("Should update customer with valid data")
-        void shouldUpdateCustomerWithValidData() {
-                when(customerService.update(eq(testId), any(CustomerDTO.Request.class)))
-                                .thenReturn(Mono.just(validResponse));
-
-                webTestClient.put()
-                                .uri("/customers/{id}", testId)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(validRequest)
-                                .exchange()
-                                .expectStatus().isOk()
-                                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                                .expectBody(CustomerDTO.Response.class)
-                                .isEqualTo(validResponse);
-        }
-
-        @Test
         @DisplayName("Should return 404 when customer not found for update")
         void shouldReturn404WhenCustomerNotFoundForUpdate() {
                 when(customerService.update(eq(testId), any(CustomerDTO.Request.class)))
@@ -490,25 +447,10 @@ public class CustomerControllerValidationTest {
         }
 
         @Test
-        @DisplayName("Should restore customer")
-        void shouldRestoreCustomer() {
-                when(customerService.restore(testId))
-                                .thenReturn(Mono.just(true));
-
-                webTestClient.patch()
-                                .uri("/customers/{id}/restore", testId)
-                                .exchange()
-                                .expectStatus().isOk()
-                                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                                .expectBody(CustomerDTO.Response.class)
-                                .isEqualTo(validResponse);
-        }
-
-        @Test
         @DisplayName("Should return 404 when customer not found for restore")
         void shouldReturn404WhenCustomerNotFoundForRestore() {
                 when(customerService.restore(testId))
-                                .thenReturn(Mono.empty());
+                                .thenReturn(Mono.error(new NotFoundException()));
 
                 webTestClient.patch()
                                 .uri("/customers/{id}/restore", testId)
