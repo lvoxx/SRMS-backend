@@ -201,3 +201,15 @@ README.html
 .exercism
 
 Docker/data
+
+# Logs
+SpringServices\Contactor\contactor-service
+SpringServices\Customer\customer-service
+SpringServices\Dashboard\dashboard-service
+SpringServices\Gateway\gateway-service
+SpringServices\Kitchen\kitchen-service
+SpringServices\Notification\notification-service
+SpringServices\Order\order-service
+SpringServices\Payment\payment-service
+SpringServices\Reporting\reporting-service
+SpringServices\Warehouse\warehouse-service
