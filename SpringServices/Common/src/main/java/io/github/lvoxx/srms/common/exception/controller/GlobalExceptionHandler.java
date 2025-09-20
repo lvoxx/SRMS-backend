@@ -3,6 +3,8 @@ package io.github.lvoxx.srms.common.exception.controller;
 import java.net.UnknownServiceException;
 import java.util.Optional;
 
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -74,7 +76,7 @@ public class GlobalExceptionHandler {
     }
 
     // Xử lý cụ thể đã biết từ server (Internal Server Error)
-    @ExceptionHandler({ DataPersistantException.class })
+    @ExceptionHandler({ DataPersistantException.class, NullPointerException.class, DataAccessException.class })
     public Mono<ResponseEntity<ErrorResponse>> handleServerException(RuntimeException ex) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         ErrorResponse error = ErrorResponse.builder()
