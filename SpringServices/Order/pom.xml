@@ -107,6 +107,7 @@
 
 
 	<build>
+		<finalName>order</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

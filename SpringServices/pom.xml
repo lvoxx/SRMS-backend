@@ -310,48 +310,25 @@
 		</dependencies>
 	</dependencyManagement>
 
-	<profiles>
-		<profile>
-			<id>docker-build</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>com.spotify</groupId>
-						<artifactId>dockerfile-maven-plugin</artifactId>
-						<version>1.4.13</version>
-						<configuration>
-							<skip>${skip.docker.build}</skip>
-							<repository>${docker.image.prefix}/${project.artifactId}</repository>
-							<tag>${project.version}</tag>
-							<dockerfile>${project.basedir}/../Dockerfile</dockerfile>
-							<buildArgs>
-								<SERVICE_NAME>${project.artifactId}</SERVICE_NAME>
-								<ARTIFACT_NAME>${project.build.finalName}</ARTIFACT_NAME>
-								<EXPOSED_PORT>${service.port}</EXPOSED_PORT>
-							</buildArgs>
-							<contextDirectory>${project.basedir}/..</contextDirectory>
-						</configuration>
-						<executions>
-							<execution>
-								<id>build-docker-image</id>
-								<phase>package</phase>
-								<goals>
-									<goal>build</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
-
 	<build>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
-	</build>
+        <pluginManagement>
+            <plugins>
+                <!-- Plugin maven wrapper, jar, compiler... -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <release>21</release>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>3.3.3</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

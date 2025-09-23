@@ -111,6 +111,7 @@
 
 
 	<build>
+		<finalName>kitchen</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

@@ -1,103 +1,63 @@
 SHELL := /bin/bash
 
-# ===============================
-# Config
-# ===============================
-PROJECT_ROOT := $(shell pwd)
-DOCKER_REGISTRY := your-registry/your-org
-MAVEN_CMD := ./mvnw
+WORKSPACE := SpringServices
+DOCKER_REGISTRY := lvoxx/srms
+VERSION ?= 1.0.0
 
-# Version = Maven version + short Git SHA
-MVN_VERSION := $(shell $(MAVEN_CMD) help:evaluate -Dexpression=project.version -q -DforceStdout)
-GIT_SHA := $(shell git rev-parse --short HEAD)
-VERSION := $(MVN_VERSION)-$(GIT_SHA)
+# Khai báo module/service cố định
+MODULES := contactor customer dashboard gateway kitchen notification order payment reporting warehouse
 
-# Default workspace directory (can be overridden with wkdir=)
-WORKSPACE ?= SpringServices
+.PHONY: all build docker push clean
 
-# Service discovery (các service có pom.xml)
-SERVICE_DIRS := $(wildcard $(WORKSPACE)/*)
-SERVICES := $(foreach dir,$(SERVICE_DIRS),$(if $(wildcard $(dir)/pom.xml),$(notdir $(dir)),))
+all: build docker
 
-# Docker build context
-DOCKER_CMD := docker
-DOCKER_FILE := $(PROJECT_ROOT)/Dockerfile
+## ========================
+## Build tất cả JARs
+## ========================
+build:
+	@echo ">>> Building all modules from root pom..."
+	@cd $(WORKSPACE) && mvn clean package -DskipTests
 
-# ===============================
-# Targets
-# ===============================
-.PHONY: all
-all: build
+## ========================
+## Build Docker images
+## ========================
+docker: $(addprefix docker-,$(MODULES))
 
-.PHONY: build
-build: package docker
+# Rule build Docker cho từng module
+docker-%:
+	@echo ">>> Building Docker image for $*"
+	$(eval ARTIFACT_NAME := $(shell mvn help:evaluate -Dexpression=project.build.finalName -q -DforceStdout -f $(WORKSPACE)/$*/pom.xml))
+	cd $(WORKSPACE)/$* && \
+	docker build -t $(DOCKER_REGISTRY)/$*:$(VERSION) .
 
-.PHONY: package
-package:
-	@echo "📦 Building JAR packages in $(WORKSPACE)..."
-	@cd $(WORKSPACE) && $(MAVEN_CMD) clean package -DskipTests -Dskip.docker.build=true
+## ========================
+## Push images
+## ========================
+push: $(addprefix push-,$(SERVICES))
 
-.PHONY: docker
-docker: $(addprefix docker-,$(SERVICES))
+push-%:
+	@echo ">>> Pushing $(DOCKER_REGISTRY)/$*:$(VERSION)"
+	@docker push $(DOCKER_REGISTRY)/$*:$(VERSION)
 
-.PHONY: $(addprefix docker-,$(SERVICES))
-$(addprefix docker-,$(SERVICES)): docker-%:
-	@echo "🐳 Building Docker image for service: $*"
-	@cd $(WORKSPACE) && \
-	SERVICE_NAME=$* && \
-	ARTIFACT_NAME=$$($(MAVEN_CMD) -f $*/pom.xml help:evaluate -Dexpression=project.build.finalName -q -DforceStdout) && \
-	EXPOSED_PORT=$$($(MAVEN_CMD) -f $*/pom.xml help:evaluate -Dexpression=service.port -q -DforceStdout) && \
-	$(DOCKER_CMD) build \
-		--build-arg SERVICE_NAME=$$SERVICE_NAME \
-		--build-arg ARTIFACT_NAME=$$ARTIFACT_NAME \
-		--build-arg EXPOSED_PORT=$$EXPOSED_PORT \
-		-t $(DOCKER_REGISTRY)/$$SERVICE_NAME:$(VERSION) \
-		-f $(DOCKER_FILE) \
-		.
-
-.PHONY: service
-service:
-ifndef name
-	$(error "❌ Usage: make service name=<service-name> [wkdir=<workspace-dir>]")
-endif
-	@$(MAKE) docker-$(name) WORKSPACE=$(WORKSPACE)
-
-.PHONY: push
-push:
-	@for service in $(SERVICES); do \
-		echo "🚀 Pushing image: $(DOCKER_REGISTRY)/$$service:$(VERSION)"; \
-		$(DOCKER_CMD) push $(DOCKER_REGISTRY)/$$service:$(VERSION); \
-		$(DOCKER_CMD) tag $(DOCKER_REGISTRY)/$$service:$(VERSION) $(DOCKER_REGISTRY)/$$service:latest; \
-		$(DOCKER_CMD) push $(DOCKER_REGISTRY)/$$service:latest; \
-	done
-
-.PHONY: clean
+## ========================
+## Clean
+## ========================
 clean:
-	@echo "🧹 Cleaning workspace: $(WORKSPACE)"
-	@cd $(WORKSPACE) && $(MAVEN_CMD) clean
-	@for service in $(SERVICES); do \
-		echo "🗑️ Removing Docker images for: $$service"; \
-		$(DOCKER_CMD) rmi -f $(DOCKER_REGISTRY)/$$service:$(VERSION) || true; \
-		$(DOCKER_CMD) rmi -f $(DOCKER_REGISTRY)/$$service:latest || true; \
-	done
+	@echo ">>> Cleaning root project"
+	@cd $(WORKSPACE) && mvn clean
 
+
+## ========================
+## Help
+## ========================
 .PHONY: help
 help:
-	@echo "🔧 Multi-Service Build System"
-	@echo "Usage: make [target] [wkdir=<workspace-dir>]"
+	@echo "Usage: make <target>"
 	@echo ""
 	@echo "Targets:"
-	@echo "  all       Build JARs + Docker images for all services"
-	@echo "  build     Same as 'all'"
-	@echo "  package   Build JAR packages only"
-	@echo "  docker    Build Docker images for all services"
-	@echo "  service   Build one service (make service name=<service>)"
-	@echo "  push      Push all images to registry"
-	@echo "  clean     Clean Maven + remove Docker images"
-	@echo "  help      Show this help"
-	@echo ""
-	@echo "Current version tag: $(VERSION)"
-	@echo "Current workspace ($(WORKSPACE)) services:"
-	@for service in $(SERVICES); do \
-		echo "  - $$service"; \
-	done
+	@echo "  build         Build JARs for all services"
+	@echo "  build-<svc>   Build JAR for one service"
+	@echo "  docker        Build Docker images for all services"
+	@echo "  docker-<svc>  Build Docker image for one service"
+	@echo "  push          Push all Docker images to registry"
+	@echo "  clean         Clean all services"

@@ -1,0 +1,19 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk21
+    container_name: jenkins-CI
+    user: root
+    ports:
+      - 8080:8080
+      - 50000:50000
+    volumes:
+      - /jenkins/jenkins_home:/var/jenkins_home
+      - /jenkins/var/run/docker.sock:/var/run/docker.sock
+      - /jenkins/usr/bin/docker:/usr/bin/docker
+      - /jenkins/usr/libexec/docker:/usr/libexec/docker
+    environment:
+      - JAVA_OPTS=-Djenkins.model.JenkinsLocationConfiguration.xml=/var/jenkins_home/jenkins.model.JenkinsLocationConfiguration.xml
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
