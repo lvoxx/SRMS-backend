@@ -1,34 +1,27 @@
-# Makefile with workspace directory and Docker Compose support
 SHELL := /bin/bash
 
-# Configuration
+# ===============================
+# Config
+# ===============================
 PROJECT_ROOT := $(shell pwd)
 DOCKER_REGISTRY := your-registry/your-org
 MAVEN_CMD := ./mvnw
 VERSION := $(shell $(MAVEN_CMD) help:evaluate -Dexpression=project.version -q -DforceStdout)
 
-# Default workspace directory (can be overridden with -wd or --wkdir)
+# Default workspace directory (can be overridden with wkdir=)
 WORKSPACE ?= SpringServices
 
-# Service discovery
+# Service discovery (các service có pom.xml)
 SERVICE_DIRS := $(wildcard $(WORKSPACE)/*)
 SERVICES := $(foreach dir,$(SERVICE_DIRS),$(if $(wildcard $(dir)/pom.xml),$(notdir $(dir)),))
 
-# Docker settings
+# Docker build context
 DOCKER_CMD := docker
 DOCKER_FILE := $(PROJECT_ROOT)/Dockerfile
-DOCKER_CONTEXT := $(PROJECT_ROOT)
-DOCKER_COMPOSE_DIR := ./Docker
-DOCKER_COMPOSE_CMD := docker-compose
 
-# Build flags
-BUILD_ARGS := --build-arg JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
-
-# Docker Compose files
-COMPOSE_COMMON := -f $(DOCKER_COMPOSE_DIR)/docker-compose.common.yml
-COMPOSE_FILES := $(wildcard $(DOCKER_COMPOSE_DIR)/docker-compose.*.yml)
-COMPOSE_EXCLUDE_COMMON := $(filter-out $(DOCKER_COMPOSE_DIR)/docker-compose.common.yml,$(COMPOSE_FILES))
-
+# ===============================
+# Targets
+# ===============================
 .PHONY: all
 all: build
 
@@ -37,7 +30,7 @@ build: package docker
 
 .PHONY: package
 package:
-	@echo "Building JAR packages in $(WORKSPACE)..."
+	@echo "📦 Building JAR packages in $(WORKSPACE)..."
 	@cd $(WORKSPACE) && $(MAVEN_CMD) clean package -DskipTests -Dskip.docker.build=true
 
 .PHONY: docker
@@ -45,7 +38,7 @@ docker: $(addprefix docker-,$(SERVICES))
 
 .PHONY: $(addprefix docker-,$(SERVICES))
 $(addprefix docker-,$(SERVICES)): docker-%:
-	@echo "Building $* with custom port..."
+	@echo "🐳 Building Docker image for service: $*"
 	@cd $(WORKSPACE) && \
 	SERVICE_NAME=$* && \
 	ARTIFACT_NAME=$$($(MAVEN_CMD) -f $*/pom.xml help:evaluate -Dexpression=project.build.finalName -q -DforceStdout) && \
@@ -58,116 +51,48 @@ $(addprefix docker-,$(SERVICES)): docker-%:
 		-f $(DOCKER_FILE) \
 		.
 
-# Docker Compose targets
-.PHONY: compose-up
-compose-up: compose-up-all
-
-.PHONY: compose-up-all
-compose-up-all:
-	@echo "Starting all services with docker-compose..."
-	@$(DOCKER_COMPOSE_CMD) $(COMPOSE_COMMON) $(foreach file,$(COMPOSE_EXCLUDE_COMMON),-f $(file)) up -d
-
-.PHONY: compose-up-%
-compose-up-%:
-	@if [ -f "$(DOCKER_COMPOSE_DIR)/docker-compose.$*.yml" ]; then \
-		echo "Starting $* service with docker-compose..."; \
-		$(DOCKER_COMPOSE_CMD) $(COMPOSE_COMMON) -f $(DOCKER_COMPOSE_DIR)/docker-compose.$*.yml up -d; \
-	else \
-		echo "docker-compose.$*.yml not found in $(DOCKER_COMPOSE_DIR)"; \
-		exit 1; \
-	fi
-
-.PHONY: compose-down
-compose-down:
-	@echo "Stopping all docker-compose services..."
-	@$(DOCKER_COMPOSE_CMD) $(COMPOSE_COMMON) $(foreach file,$(COMPOSE_EXCLUDE_COMMON),-f $(file)) down
-
-.PHONY: compose-down-%
-compose-down-%:
-	@if [ -f "$(DOCKER_COMPOSE_DIR)/docker-compose.$*.yml" ]; then \
-		echo "Stopping $* service with docker-compose..."; \
-		$(DOCKER_COMPOSE_CMD) $(COMPOSE_COMMON) -f $(DOCKER_COMPOSE_DIR)/docker-compose.$*.yml down; \
-	else \
-		echo "docker-compose.$*.yml not found in $(DOCKER_COMPOSE_DIR)"; \
-		exit 1; \
-	fi
-
-.PHONY: compose-logs
-compose-logs:
-	@$(DOCKER_COMPOSE_CMD) $(COMPOSE_COMMON) $(foreach file,$(COMPOSE_EXCLUDE_COMMON),-f $(file)) logs -f
-
-.PHONY: compose-logs-%
-compose-logs-%:
-	@if [ -f "$(DOCKER_COMPOSE_DIR)/docker-compose.$*.yml" ]; then \
-		$(DOCKER_COMPOSE_CMD) $(COMPOSE_COMMON) -f $(DOCKER_COMPOSE_DIR)/docker-compose.$*.yml logs -f; \
-	else \
-		echo "docker-compose.$*.yml not found in $(DOCKER_COMPOSE_DIR)"; \
-		exit 1; \
-	fi
-
 .PHONY: service
 service:
 ifndef name
-	$(error "Usage: make service name=<service-name> [wkdir=<workspace-dir>]")
+	$(error "❌ Usage: make service name=<service-name> [wkdir=<workspace-dir>]")
 endif
 	@$(MAKE) docker-$(name) WORKSPACE=$(WORKSPACE)
 
 .PHONY: push
 push:
 	@for service in $(SERVICES); do \
-		echo "Pushing image: $(DOCKER_REGISTRY)/$$service:$(VERSION)"; \
+		echo "🚀 Pushing image: $(DOCKER_REGISTRY)/$$service:$(VERSION)"; \
 		$(DOCKER_CMD) push $(DOCKER_REGISTRY)/$$service:$(VERSION); \
+		$(DOCKER_CMD) tag $(DOCKER_REGISTRY)/$$service:$(VERSION) $(DOCKER_REGISTRY)/$$service:latest; \
 		$(DOCKER_CMD) push $(DOCKER_REGISTRY)/$$service:latest; \
 	done
 
 .PHONY: clean
 clean:
-	@echo "Cleaning workspace: $(WORKSPACE)"
+	@echo "🧹 Cleaning workspace: $(WORKSPACE)"
 	@cd $(WORKSPACE) && $(MAVEN_CMD) clean
 	@for service in $(SERVICES); do \
-		echo "Removing Docker images for: $$service"; \
+		echo "🗑️ Removing Docker images for: $$service"; \
 		$(DOCKER_CMD) rmi -f $(DOCKER_REGISTRY)/$$service:$(VERSION) || true; \
 		$(DOCKER_CMD) rmi -f $(DOCKER_REGISTRY)/$$service:latest || true; \
 	done
 
 .PHONY: help
 help:
-	@echo "Multi-Workspace Docker Build and Compose System"
+	@echo "🔧 Multi-Service Build System"
 	@echo "Usage: make [target] [wkdir=<workspace-dir>]"
 	@echo ""
-	@echo "Build Targets:"
-	@echo "  all          Build all services (default)"
-	@echo "  build        Build JARs and Docker images for all services"
-	@echo "  package      Build JAR packages only"
-	@echo "  docker       Build Docker images for all services"
-	@echo "  service      Build single service (requires name=service-name)"
-	@echo "  push         Push all images to registry"
-	@echo "  clean        Clean project and remove Docker images"
+	@echo "Targets:"
+	@echo "  all       Build JARs + Docker images for all services"
+	@echo "  build     Same as 'all'"
+	@echo "  package   Build JAR packages only"
+	@echo "  docker    Build Docker images for all services"
+	@echo "  service   Build one service (make service name=<service>)"
+	@echo "  push      Push all images to registry"
+	@echo "  clean     Clean Maven + remove Docker images"
+	@echo "  help      Show this help"
 	@echo ""
-	@echo "Docker Compose Targets:"
-	@echo "  compose-up           Start all services with docker-compose"
-	@echo "  compose-up-<service> Start specific service (e.g., compose-up-kafka)"
-	@echo "  compose-down         Stop all services"
-	@echo "  compose-down-<service> Stop specific service"
-	@echo "  compose-logs         Show logs for all services"
-	@echo "  compose-logs-<service> Show logs for specific service"
-	@echo "  help                 Show this help"
-	@echo ""
-	@echo "Options:"
-	@echo "  wkdir=<dir>  Specify workspace directory (default: SpringServices)"
-	@echo ""
-	@echo "Available workspaces:"
-	@echo "  - SpringServices"
-	@echo "  - PythonServices"
-	@echo "  - Docker"
-	@echo ""
-	@echo "Current workspace services ($(WORKSPACE)):"
+	@echo "Current workspace ($(WORKSPACE)) services:"
 	@for service in $(SERVICES); do \
-		echo "  - $$service"; \
-	done
-	@echo ""
-	@echo "Available Docker Compose services:"
-	@for file in $(COMPOSE_EXCLUDE_COMMON); do \
-		service=$$(basename $$file | sed 's/docker-compose.\(.*\).yml/\1/'); \
 		echo "  - $$service"; \
 	done
