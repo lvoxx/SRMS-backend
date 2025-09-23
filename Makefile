@@ -6,7 +6,11 @@ SHELL := /bin/bash
 PROJECT_ROOT := $(shell pwd)
 DOCKER_REGISTRY := your-registry/your-org
 MAVEN_CMD := ./mvnw
-VERSION := $(shell $(MAVEN_CMD) help:evaluate -Dexpression=project.version -q -DforceStdout)
+
+# Version = Maven version + short Git SHA
+MVN_VERSION := $(shell $(MAVEN_CMD) help:evaluate -Dexpression=project.version -q -DforceStdout)
+GIT_SHA := $(shell git rev-parse --short HEAD)
+VERSION := $(MVN_VERSION)-$(GIT_SHA)
 
 # Default workspace directory (can be overridden with wkdir=)
 WORKSPACE ?= SpringServices
@@ -92,6 +96,7 @@ help:
 	@echo "  clean     Clean Maven + remove Docker images"
 	@echo "  help      Show this help"
 	@echo ""
+	@echo "Current version tag: $(VERSION)"
 	@echo "Current workspace ($(WORKSPACE)) services:"
 	@for service in $(SERVICES); do \
 		echo "  - $$service"; \
