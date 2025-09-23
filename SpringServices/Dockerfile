@@ -1,11 +1,11 @@
+# Stage 1: Build with Maven (optimized caching)
+FROM eclipse-temurin:21-jdk-alpine AS builder
+
+WORKDIR /app
+
 ARG SERVICE_NAME
 ARG EXPOSED_PORT
 ARG ARTIFACT_NAME
-
-# Stage 1: Build with Maven (optimized caching)
-FROM eclipse-temurin:21-jdk-jammy as builder
-
-WORKDIR /app
 
 # 1. Copy only POM files first for dependency caching
 COPY pom.xml .
@@ -24,15 +24,27 @@ RUN mvn package -pl ${SERVICE_NAME} -am -DskipTests && \
     --destination /app/${SERVICE_NAME}/target/extracted
 
 # Stage 2: Runtime image
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
+
+ARG SERVICE_NAME
+ARG EXPOSED_PORT
+ARG ARTIFACT_NAME
 
 COPY --from=builder /app/${SERVICE_NAME}/target/extracted/dependencies/ ./
 COPY --from=builder /app/${SERVICE_NAME}/target/extracted/spring-boot-loader/ ./
 COPY --from=builder /app/${SERVICE_NAME}/target/extracted/snapshot-dependencies/ ./
 COPY --from=builder /app/${SERVICE_NAME}/target/extracted/application/ ./
 
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
+ENV JAVA_OPTS="\
+-XX:+UseContainerSupport \
+-XX:InitialRAMPercentage=50 \
+-XX:MinRAMPercentage=50 \
+-XX:MaxRAMPercentage=75 \
+-XX:+UseG1GC \
+-XX:ActiveProcessorCount=2 \
+-Xlog:gc*,gc+heap=debug:file=/logs/gc.log:time,uptime,level,tags"
+
 EXPOSE ${EXPOSED_PORT}
-ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} org.springframework.boot.loader.JarLauncher"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS org.springframework.boot.loader.JarLauncher"]
