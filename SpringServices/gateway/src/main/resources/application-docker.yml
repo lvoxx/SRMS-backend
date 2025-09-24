@@ -1,0 +1,134 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/auth/realms/srms # LOCAL DEV
+---
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+          default-filters:
+            - name: Retry
+              args:
+                name: serviceRetry
+                retries: 3
+                statuses: SERVICE_UNAVAILABLE
+                methods: GET,POST
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 500ms
+                  factor: 2
+                  basedOnPreviousValue: true
+          routes:
+            - id: customer-service
+              uri: lb://customer-service
+              predicates:
+                - Path=/customers/**
+              filters:
+                - StripPrefix=1
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@apiKeyResolver}"
+                    redis-rate-limiter.replenishRate: 5
+                    redis-rate-limiter.burstCapacity: 10
+                    redis-rate-limiter.requestedTokens: 1
+                    status-code: TOO_MANY_REQUESTS
+                - name: CircuitBreaker
+                  args:
+                    name: customerCircuitBreaker
+                    fallbackUri: forward:/fallback/services/customer
+            - id: contact-service
+              uri: lb://contact-service
+              predicates:
+                - Path=/contactors/**
+              filters:
+                - StripPrefix=1
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@apiKeyResolver}"
+                    redis-rate-limiter:
+                      replenishRate: 10
+                      burstCapacity: 20
+                      requestedTokens: 1
+                    status-code: TOO_MANY_REQUESTS
+                    deny-empty-key: false
+                - name: CircuitBreaker
+                  args:
+                    name: contactCircuitBreaker
+                    fallbackUri: forward:/fallback/services/contact
+---
+# Kubernetes discovery
+spring:
+  cloud:
+    kubernetes:
+      discovery:
+        enabled: true
+      reload:
+        enabled: true
+        strategy: refresh # Hoặc restart_context, shutdown
+        mode: event
+      config:
+        enabled: true
+        configMaps:
+          - ${spring.application.name}
+
+---
+# Redis, Tracing & Log Collecting
+spring:
+  data:
+    redis:
+      host: redis
+      port: 6379
+  sleuth:
+    sampler:
+      probability: 1.0 # 100% sampling for tracing
+  zipkin:
+    base-url: http://zipkin-service:9411/ # Tên Kubernetes Service cho Zipkin
+---
+# Use for path matchers in SecurityConfig
+app:
+  cors:
+    allowed-origins: "*" # LOCAL DEV
+
+---
+resilience4j:
+  circuitbreaker:
+    instances:
+      customerCircuitBreaker:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        registerHealthIndicator: true
+        recordExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+  retry:
+    instances:
+      serviceRetry:
+        maxAttempts: 3
+        waitDuration: 100ms
+        retryExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+---
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,gateway,circuitbreakerevents
+      base-path: /management
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    metrics:
+      access: read-only
