@@ -1,18 +1,23 @@
-# Runtime image
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:21-jre-jammy AS builder
 
-WORKDIR /app
+WORKDIR /workspace
 
-# Copy JAR với tên cụ thể
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
 
-# Spring Boot layertools để extract các layer
 RUN java -Djarmode=layertools -jar app.jar extract
 
-# Copy logs folder để chứa GC logs (nếu muốn)
-RUN mkdir -p /logs
+# Runtime distroless image
+FROM gcr.io/distroless/java21-debian12:nonroot
+WORKDIR /app
 
+# Copy các layer đã extract từ builder
+COPY --from=builder /workspace/dependencies/ ./
+COPY --from=builder /workspace/spring-boot-loader/ ./
+COPY --from=builder /workspace/snapshot-dependencies/ ./
+COPY --from=builder /workspace/application/ ./
+
+# GC options
 ENV JAVA_OPTS="\
 -XX:+UseContainerSupport \
 -XX:InitialRAMPercentage=50 \
@@ -23,4 +28,5 @@ ENV JAVA_OPTS="\
 
 EXPOSE 5050
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -cp app org.springframework.boot.loader.launch.JarLauncher"]
+# Distroless không có sh, nên phải chạy trực tiếp java
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-cp", "/app", "org.springframework.boot.loader.launch.JarLauncher"]
