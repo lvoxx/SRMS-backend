@@ -1,0 +1,6 @@
+// Template for Module Test Job
+job('{{jobName}}') {
+    steps {
+        shell('{{testCmd}}')
+    }
+}

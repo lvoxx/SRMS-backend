@@ -1,0 +1,11 @@
+// Template for Dashboard View
+listView('{{viewName}}') {
+    jobs {
+        regex('{{jobRegex}}')
+    }
+    columns {
+        status()
+        name()
+        lastBuild()
+    }
+}
