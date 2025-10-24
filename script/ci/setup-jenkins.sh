@@ -37,7 +37,15 @@ ok "System updated."
 info "Installing Java 21..."
 sudo apt install -y wget apt-transport-https gpg
 wget -O- https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo tee /usr/share/keyrings/adoptium.asc > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/adoptium.list
+# echo "deb [signed-by=/usr/share/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/adoptium.list 
+# README: Uncommand above for Adoptium (Ubuntu 22.04 LTS), below is for “Plucky” (Ubuntu 24.10)
+# START
+DISTRO=$(lsb_release -cs)
+if [[ "$DISTRO" == "plucky" || "$DISTRO" == "noble" ]]; then
+  DISTRO="jammy"
+fi
+echo "deb [signed-by=/usr/share/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $DISTRO main" | sudo tee /etc/apt/sources.list.d/adoptium.list
+# END
 sudo apt update -y
 sudo apt install -y temurin-21-jdk
 ok "Java 21 installed."
