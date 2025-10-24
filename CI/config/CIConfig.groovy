@@ -1,10 +1,10 @@
 // Global CI/CD Configuration
 def jenkinsTools = [
     maven: 'Maven3',  // Tool name in Jenkins
-    jdk: 'JDK17',
+    jdk: 'JDK21',
     python: 'Python3',
     go: 'Go1.21',
-    sonar: 'SonarQubeScanner'  // For future integration
+    sonar: 'SonarQubeScanner'
 ]
 
 def credentials = [
@@ -14,7 +14,7 @@ def credentials = [
     slack: 'slack-webhook'
 ]
 
-def dockerRegistry = 'your-docker-repo/srms'  // e.g., docker.io/lvoxx/srms
+def dockerRegistry = 'lvoxx/srms'
 def notificationChannels = ['email', 'slack']  // Configurable
 
 // Export as map for import

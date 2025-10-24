@@ -41,7 +41,6 @@
 		<module>contactor</module>
 		<module>customer</module>
 		<module>dashboard</module>
-		<module>gateway</module>
 		<module>kitchen</module>
 		<module>notification</module>
 		<module>order</module>
@@ -83,7 +82,6 @@
 		<docker.image.prefix>lvoxx/srms</docker.image.prefix>
 		<skip.docker.build>true</skip.docker.build>
 		<!-- Định nghĩa tất cả ports ở đây -->
-		<port.gateway>8080</port.gateway>
 		<port.contactor>8081</port.contactor>
 		<port.customer>8082</port.customer>
 		<port.order>8083</port.order>
@@ -176,11 +174,6 @@
 			<!-- SPRING CLOUD -->
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
-				<version>${spring-cloud.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
 				<version>${spring-cloud.resilience4j.version}</version>
 			</dependency>
@@ -188,11 +181,6 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-kubernetes-client-all</artifactId>
 				<version>${spring-cloud.kubernetes.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-loadbalancer</artifactId>
-				<version>${spring-cloud.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.kubernetes</groupId>
