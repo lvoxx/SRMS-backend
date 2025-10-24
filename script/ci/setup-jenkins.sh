@@ -1,136 +1,126 @@
 #!/bin/bash
+# ---------------------------------------------------------
+# 🧰 Jenkins Server Setup Script
+# Installs Jenkins + Java 21 + Maven + Docker on Ubuntu
+# ---------------------------------------------------------
 
-# Script to install and configure Jenkins with Java 21, Maven, and Docker on Ubuntu
-# Enhanced with colored and formatted logs
+set -e
 
-# ANSI color codes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# 🎨 Màu sắc
+GREEN="\e[32m"
+YELLOW="\e[33m"
+BLUE="\e[36m"
+RED="\e[31m"
+RESET="\e[0m"
 
-# Log functions
-log_info() {
-    echo -e "${BLUE}[INFO] $1${NC}"
-}
-log_success() {
-    echo -e "${GREEN}[SUCCESS] $1${NC}"
-}
-log_error() {
-    echo -e "${RED}[ERROR] $1${NC}"
-    exit 1
-}
-log_warning() {
-    echo -e "${YELLOW}[WARNING] $1${NC}"
-}
+# ✅ Hàm in log
+function info()   { echo -e "${BLUE}➜ $1${RESET}"; }
+function ok()     { echo -e "${GREEN}✔ $1${RESET}"; }
+function warn()   { echo -e "${YELLOW}⚠ $1${RESET}"; }
+function error()  { echo -e "${RED}✖ $1${RESET}" >&2; }
 
-# Check if script is run with sudo
-if [ "$EUID" -ne 0 ]; then
-    log_error "Please run this script as root (use sudo)"
-fi
+# ---------------------------------------------------------
+# Bắt đầu
+# ---------------------------------------------------------
+info "Starting Jenkins server setup..."
 
-echo -e "\n${BLUE}======================================${NC}"
-echo -e "${BLUE} Starting Jenkins Installation Script ${NC}"
-echo -e "${BLUE}======================================${NC}\n"
+# ---------------------------------------------------------
+# Cập nhật hệ thống
+# ---------------------------------------------------------
+info "Updating package list..."
+sudo apt update -y && sudo apt upgrade -y
+ok "System updated."
 
-# Step 1: Update system
-log_info "Updating system packages..."
-apt update && apt upgrade -y || log_error "Failed to update system packages"
+# ---------------------------------------------------------
+# Cài Java 21 (Temurin)
+# ---------------------------------------------------------
+info "Installing Java 21..."
+sudo apt install -y wget apt-transport-https gpg
+wget -O- https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo tee /usr/share/keyrings/adoptium.asc > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/adoptium.list
+sudo apt update -y
+sudo apt install -y temurin-21-jdk
+ok "Java 21 installed."
 
-# Step 2: Install Java 21
-echo -e "\n${BLUE}=== Installing Java 21 ===${NC}"
-log_info "Installing OpenJDK 21..."
-apt install openjdk-21-jdk -y || log_error "Failed to install OpenJDK 21"
+JAVA_HOME_PATH=$(dirname $(dirname $(readlink -f $(which java))))
 
-# Set JAVA_HOME permanently
-JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
-log_info "Setting JAVA_HOME to $JAVA_HOME"
-if ! grep -q "JAVA_HOME" /etc/environment; then
-    echo "JAVA_HOME=\"$JAVA_HOME\"" >> /etc/environment
-else
-    sed -i "s|JAVA_HOME=.*|JAVA_HOME=\"$JAVA_HOME\"|" /etc/environment
-fi
-source /etc/environment
-java -version && log_success "Java 21 installed and JAVA_HOME set" || log_error "Java 21 installation verification failed"
+# ---------------------------------------------------------
+# Cài Maven
+# ---------------------------------------------------------
+info "Installing Maven..."
+sudo apt install -y maven
+MVN_HOME_PATH=$(dirname $(dirname $(readlink -f $(which mvn))))
+ok "Maven installed."
 
-# Step 3: Install Maven
-echo -e "\n${BLUE}=== Installing Maven ===${NC}"
-log_info "Installing Maven..."
-apt install maven -y || log_error "Failed to install Maven"
+# ---------------------------------------------------------
+# Cài Docker
+# ---------------------------------------------------------
+info "Installing Docker..."
+sudo apt remove -y docker docker-engine docker.io containerd runc || true
+sudo apt update -y
+sudo apt install -y ca-certificates curl gnupg lsb-release
 
-# Set MVN_HOME permanently
-MVN_HOME="/usr/share/maven"
-log_info "Setting MVN_HOME to $MVN_HOME"
-if ! grep -q "MVN_HOME" /etc/environment; then
-    echo "MVN_HOME=\"$MVN_HOME\"" >> /etc/environment
-else
-    sed -i "s|MVN_HOME=.*|MVN_HOME=\"$MVN_HOME\"|" /etc/environment
-fi
-source /etc/environment
-mvn -version && log_success "Maven installed and MVN_HOME set" || log_error "Maven installation verification failed"
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-# Step 4: Install Docker
-echo -e "\n${BLUE}=== Installing Docker ===${NC}"
-log_info "Installing Docker prerequisites..."
-apt install apt-transport-https ca-certificates curl software-properties-common -y || log_error "Failed to install Docker prerequisites"
+sudo apt update -y
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable docker
+sudo systemctl start docker
+ok "Docker installed and running."
 
-log_info "Adding Docker GPG key..."
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg || log_error "Failed to add Docker GPG key"
+# ---------------------------------------------------------
+# Cài Jenkins
+# ---------------------------------------------------------
+info "Installing Jenkins LTS..."
+curl -fsSL https://pkg.jenkins.io/debian/jenkins.io-2023.key | sudo tee \
+  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
 
-log_info "Adding Docker repository..."
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt update || log_error "Failed to update APT with Docker repository"
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
 
-log_info "Installing Docker..."
-apt install docker-ce docker-ce-cli containerd.io -y || log_error "Failed to install Docker"
+sudo apt update -y
+sudo apt install -y jenkins
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+ok "Jenkins installed and started."
 
-systemctl start docker && systemctl enable docker && log_success "Docker started and enabled" || log_error "Failed to start Docker"
-docker --version && log_success "Docker installed successfully"
+# ---------------------------------------------------------
+# Thiết lập JAVA_HOME & MVN_HOME vĩnh viễn
+# ---------------------------------------------------------
+info "Setting JAVA_HOME and MVN_HOME globally..."
 
-# Add current user and Jenkins user to Docker group
-log_info "Adding users to Docker group..."
-usermod -aG docker $SUDO_USER || log_warning "Failed to add current user to Docker group"
-usermod -aG docker jenkins || log_warning "Jenkins user not yet created, skipping Docker group addition"
+sudo sed -i '/JAVA_HOME/d' /etc/environment || true
+sudo sed -i '/MVN_HOME/d' /etc/environment || true
+sudo sed -i '/M2_HOME/d' /etc/environment || true
 
-# Step 5: Install Jenkins
-echo -e "\n${BLUE}=== Installing Jenkins ===${NC}"
-log_info "Adding Jenkins GPG key..."
-curl -fsSL https://pkg.jenkins.io/debian/jenkins.io-2023.key | gpg --dearmor -o /usr/share/keyrings/jenkins-keyring.asc || log_error "Failed to add Jenkins GPG key"
+echo "JAVA_HOME=$JAVA_HOME_PATH" | sudo tee -a /etc/environment
+echo "MVN_HOME=$MVN_HOME_PATH" | sudo tee -a /etc/environment
+echo 'PATH="$PATH:$JAVA_HOME/bin:$MVN_HOME/bin"' | sudo tee -a /etc/environment
 
-log_info "Adding Jenkins repository..."
-echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian binary/" | tee /etc/apt/sources.list.d/jenkins.list || log_error "Failed to add Jenkins repository"
-apt update || log_error "Failed to update APT with Jenkins repository"
+ok "Environment variables set."
 
-log_info "Installing Jenkins..."
-apt install jenkins -y || log_error "Failed to install Jenkins"
+# ---------------------------------------------------------
+# Thêm user Jenkins vào nhóm Docker
+# ---------------------------------------------------------
+info "Adding Jenkins user to Docker group..."
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
+ok "Jenkins can now run Docker containers."
 
-# Start and enable Jenkins
-systemctl start jenkins && systemctl enable jenkins && log_success "Jenkins started and enabled" || log_error "Failed to start Jenkins"
+# ---------------------------------------------------------
+# Hoàn tất
+# ---------------------------------------------------------
+info "Cleaning up..."
+sudo apt autoremove -y
 
-# Step 6: Configure firewall (if UFW is installed)
-echo -e "\n${BLUE}=== Configuring Firewall ===${NC}"
-if command -v ufw >/dev/null; then
-    ufw allow 8080 && log_success "Port 8080 opened for Jenkins" || log_warning "Failed to open port 8080"
-else
-    log_warning "UFW not installed, skipping firewall configuration"
-fi
-
-# Step 7: Display Jenkins initial admin password
-echo -e "\n${BLUE}======================================${NC}"
-echo -e "${GREEN} Jenkins Installation Completed! ${NC}"
-echo -e "${BLUE}======================================${NC}"
-log_info "Access Jenkins at http://<server-ip>:8080"
-log_info "Initial admin password:"
-if [ -f /var/lib/jenkins/secrets/initialAdminPassword ]; then
-    cat /var/lib/jenkins/secrets/initialAdminPassword
-else
-    log_warning "Initial admin password file not found. Check /var/lib/jenkins/secrets/initialAdminPassword later."
-fi
-
-echo -e "\n${BLUE}=== Next Steps ===${NC}"
-echo -e "${GREEN}1. Open http://<server-ip>:8080 in your browser.${NC}"
-echo -e "${GREEN}2. Use the initial admin password above to log in.${NC}"
-echo -e "${GREEN}3. Install recommended plugins and create an admin user.${NC}"
-echo -e "${GREEN}4. Configure JDK 21 and Maven in 'Manage Jenkins' > 'Global Tool Configuration'.${NC}"
-echo -e "${GREEN}5. Add Docker support via the Docker Pipeline plugin.${NC}"
+ok "✅ Jenkins server setup completed successfully!"
+echo -e "${YELLOW}Access Jenkins at: http://$(hostname -I | awk '{print $1}'):8080${RESET}"
+echo -e "${BLUE}Initial admin password:${RESET}"
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+echo
