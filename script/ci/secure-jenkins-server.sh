@@ -111,9 +111,13 @@ ufw status
 echo -e "${YELLOW}[5/13] Configuring Jenkins for HTTPS on port 443...${NC}"
 
 # Allow Jenkins to bind to privileged ports (below 1024)
-if command -v setcap &> /dev/null && [ -f "/usr/bin/java" ]; then
-    setcap 'cap_net_bind_service=+ep' /usr/bin/java
-    echo -e "${GREEN}✓ Java permitted to bind to port 443${NC}"
+JAVA_PATH=$(which java 2>/dev/null || readlink -f /usr/bin/java 2>/dev/null || find /usr/lib/jvm -name java -type f 2>/dev/null | head -1)
+
+if [ -n "$JAVA_PATH" ] && [ -f "$JAVA_PATH" ]; then
+    setcap 'cap_net_bind_service=+ep' "$JAVA_PATH"
+    echo -e "${GREEN}✓ Java at $JAVA_PATH permitted to bind to port 443${NC}"
+else
+    echo -e "${YELLOW}⚠ Java binary not found, will configure after Jenkins installation${NC}"
 fi
 
 # Configure Jenkins systemd service
