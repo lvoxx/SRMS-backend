@@ -1,74 +1,117 @@
 #!/bin/bash
+
+# Ansible Semaphore UI installation script for Ubuntu 25.04 x64
+# Usage: sudo bash install-ansible-semaphore.sh
+
 set -e
 
-# =========================
-# 🌐 Ansible Semaphore Web UI Installer
-# =========================
+echo "=== Starting Ansible Semaphore UI Installation ==="
 
-GREEN="\e[32m"
-YELLOW="\e[33m"
-BLUE="\e[36m"
-RED="\e[31m"
-RESET="\e[0m"
+# Update package list
+echo "Updating package list..."
+apt-get update
 
-echo -e "${BLUE}🚀 Installing Ansible Semaphore Web UI...${RESET}"
+# Install dependencies
+echo "Installing dependencies..."
+apt-get install -y wget git ansible mysql-server
 
-# --- Install dependencies ---
-echo -e "${YELLOW}📦 Installing dependencies...${RESET}"
-sudo apt update -y
-sudo apt install -y wget tar systemctl sqlite3
+# Start MySQL
+echo "Starting MySQL service..."
+systemctl start mysql
+systemctl enable mysql
 
-# --- Download latest Semaphore ---
-echo -e "${BLUE}📥 Downloading Semaphore...${RESET}"
-VERSION=$(curl -s https://api.github.com/repos/ansible-semaphore/semaphore/releases/latest | grep tag_name | cut -d '"' -f 4)
-wget https://github.com/ansible-semaphore/semaphore/releases/download/${VERSION}/semaphore_${VERSION#v}_linux_amd64.tar.gz
+# Create database and user for Semaphore
+echo "Creating database for Semaphore..."
+mysql -e "CREATE DATABASE IF NOT EXISTS semaphore;"
+mysql -e "CREATE USER IF NOT EXISTS 'semaphore'@'localhost' IDENTIFIED BY 'semaphore_password';"
+mysql -e "GRANT ALL PRIVILEGES ON semaphore.* TO 'semaphore'@'localhost';"
+mysql -e "FLUSH PRIVILEGES;"
 
-tar -xzf semaphore_${VERSION#v}_linux_amd64.tar.gz
-sudo mv semaphore /usr/local/bin/semaphore
+# Download Semaphore
+SEMAPHORE_VERSION=$(curl -s https://api.github.com/repos/semaphoreui/semaphore/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
+echo "Downloading Semaphore version ${SEMAPHORE_VERSION}..."
 
-# --- Setup config ---
-echo -e "${YELLOW}⚙️ Setting up config directory...${RESET}"
-sudo mkdir -p /etc/semaphore
-sudo mkdir -p /var/lib/semaphore
+wget -O /tmp/semaphore_${SEMAPHORE_VERSION}_linux_amd64.deb \
+    https://github.com/semaphoreui/semaphore/releases/download/v${SEMAPHORE_VERSION}/semaphore_${SEMAPHORE_VERSION}_linux_amd64.deb
 
-# --- Initialize database (SQLite) ---
-echo -e "${BLUE}🧱 Initializing database...${RESET}"
-sudo semaphore setup --config /etc/semaphore/config.json --db /var/lib/semaphore/semaphore.db <<EOF
-y
-sqlite3
-/var/lib/semaphore/semaphore.db
-127.0.0.1
-admin
-admin
-admin@example.com
+# Install Semaphore
+echo "Installing Semaphore..."
+dpkg -i /tmp/semaphore_${SEMAPHORE_VERSION}_linux_amd64.deb || apt-get install -f -y
+
+# Create configuration directory
+mkdir -p /etc/semaphore
+mkdir -p /var/lib/semaphore
+
+# Create configuration file
+echo "Creating configuration file..."
+cat > /etc/semaphore/config.json << 'EOF'
+{
+  "mysql": {
+    "host": "127.0.0.1:3306",
+    "user": "semaphore",
+    "pass": "semaphore_password",
+    "name": "semaphore"
+  },
+  "port": ":3000",
+  "tmp_path": "/tmp/semaphore",
+  "cookie_hash": "CHANGE_THIS_TO_RANDOM_STRING",
+  "cookie_encryption": "CHANGE_THIS_TO_RANDOM_STRING",
+  "access_key_encryption": "CHANGE_THIS_TO_RANDOM_STRING",
+  "email_secure": false,
+  "web_host": "http://localhost:3000"
+}
 EOF
 
-# --- Create systemd service ---
-echo -e "${YELLOW}🧩 Creating systemd service...${RESET}"
-sudo bash -c 'cat > /etc/systemd/system/semaphore.service <<EOL
+# Create systemd service
+echo "Creating systemd service..."
+cat > /etc/systemd/system/semaphore.service << 'EOF'
 [Unit]
-Description=Ansible Semaphore Web UI
-After=network.target
+Description=Semaphore Ansible UI
+Documentation=https://github.com/semaphoreui/semaphore
+After=network.target mysql.service
 
 [Service]
-ExecStart=/usr/local/bin/semaphore server --config /etc/semaphore/config.json
-Restart=always
+Type=simple
+ExecStart=/usr/bin/semaphore service --config /etc/semaphore/config.json
 User=root
+Group=root
+Restart=on-failure
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
-EOL'
+EOF
 
-# --- Enable & start service ---
-sudo systemctl daemon-reload
-sudo systemctl enable semaphore
-sudo systemctl start semaphore
+# Reload systemd and start service
+echo "Starting Semaphore service..."
+systemctl daemon-reload
+systemctl enable semaphore
+systemctl start semaphore
 
-# --- Verify status ---
-if systemctl is-active --quiet semaphore; then
-  echo -e "${GREEN}✅ Semaphore Web UI is running!${RESET}"
-  echo -e "${BLUE}🌍 Access it at: http://<your-server-ip>:3000${RESET}"
-else
-  echo -e "${RED}❌ Semaphore failed to start.${RESET}"
-  sudo journalctl -u semaphore --no-pager -n 20
-fi
+# Wait for service to start
+sleep 5
+
+# Check status
+systemctl status semaphore --no-pager || true
+
+echo ""
+echo "=== Installation Complete ==="
+echo ""
+echo "Semaphore UI has been successfully installed!"
+echo ""
+echo "Access information:"
+echo "  URL: http://localhost:3000"
+echo "  Or: http://$(hostname -I | awk '{print $1}'):3000"
+echo ""
+echo "On first access, you will need to create an admin account."
+echo ""
+echo "SECURITY NOTES:"
+echo "  1. Change MySQL password in /etc/semaphore/config.json"
+echo "  2. Replace cookie_hash, cookie_encryption, and access_key_encryption values"
+echo "  3. Configure firewall if necessary"
+echo ""
+echo "Service management:"
+echo "  - Start: sudo systemctl start semaphore"
+echo "  - Stop: sudo systemctl stop semaphore"
+echo "  - Restart: sudo systemctl restart semaphore"
+echo "  - View logs: sudo journalctl -u semaphore -f"

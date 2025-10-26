@@ -1,47 +1,47 @@
 #!/bin/bash
+
+# Terraform installation script for Ubuntu 25.04 x64
+# Usage: sudo bash install-terraform.sh
+
 set -e
 
-# =========================
-# 🌍 Terraform Installer
-# Tested on Ubuntu 20.04+ 
-# =========================
+echo "=== Starting Terraform Installation ==="
 
-# --- Color setup ---
-GREEN="\e[32m"
-YELLOW="\e[33m"
-BLUE="\e[36m"
-RED="\e[31m"
-RESET="\e[0m"
+# Update package list
+echo "Updating package list..."
+apt-get update
 
-echo -e "${BLUE}🚀 Starting Terraform installation...${RESET}"
+# Install required dependencies
+echo "Installing dependencies..."
+apt-get install -y gnupg software-properties-common curl
 
-# --- Update packages ---
-echo -e "${YELLOW}🔄 Updating package list...${RESET}"
-sudo apt-get update -y
+# Add HashiCorp GPG key
+echo "Adding HashiCorp GPG key..."
+wget -O- https://apt.releases.hashicorp.com/gpg | \
+gpg --dearmor | \
+tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
 
-# --- Install dependencies ---
-echo -e "${YELLOW}📦 Installing required packages...${RESET}"
-sudo apt-get install -y gnupg software-properties-common curl lsb-release
+# Verify fingerprint
+gpg --no-default-keyring \
+--keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+--fingerprint
 
-# --- Add HashiCorp GPG key ---
-echo -e "${BLUE}🔑 Adding HashiCorp GPG key...${RESET}"
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+# Add HashiCorp repository
+echo "Adding HashiCorp repository..."
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+tee /etc/apt/sources.list.d/hashicorp.list
 
-# --- Add HashiCorp repo ---
-DISTRO=$(lsb_release -cs)
-echo -e "${YELLOW}🧩 Adding HashiCorp repo for ${DISTRO}...${RESET}"
-echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${DISTRO} main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+# Update and install Terraform
+echo "Installing Terraform..."
+apt-get update
+apt-get install -y terraform
 
-# --- Install Terraform ---
-echo -e "${BLUE}📥 Installing Terraform...${RESET}"
-sudo apt-get update -y
-sudo apt-get install -y terraform
+# Check version
+echo ""
+echo "=== Installation Complete ==="
+terraform version
 
-# --- Verify installation ---
-if command -v terraform >/dev/null 2>&1; then
-  echo -e "${GREEN}✅ Terraform installed successfully!${RESET}"
-  terraform -version
-else
-  echo -e "${RED}❌ Terraform installation failed.${RESET}"
-  exit 1
-fi
+echo ""
+echo "Terraform has been successfully installed!"
+echo "Use 'terraform --help' to see available commands."

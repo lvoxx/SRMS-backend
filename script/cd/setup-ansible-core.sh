@@ -1,38 +1,75 @@
 #!/bin/bash
+
+# Ansible Core installation script for Ubuntu 25.04 x64
+# Usage: sudo bash install-ansible-core.sh
+
 set -e
 
-# =========================
-# ⚙️ Ansible Community Installer
-# =========================
+echo "=== Starting Ansible Core Installation ==="
 
-GREEN="\e[32m"
-YELLOW="\e[33m"
-BLUE="\e[36m"
-RED="\e[31m"
-RESET="\e[0m"
+# Update package list
+echo "Updating package list..."
+apt-get update
 
-echo -e "${BLUE}🚀 Starting Ansible Community installation...${RESET}"
+# Install dependencies
+echo "Installing dependencies..."
+apt-get install -y software-properties-common python3 python3-pip python3-venv
 
-# --- Update & install dependencies ---
-echo -e "${YELLOW}🔄 Updating system packages...${RESET}"
-sudo apt update -y && sudo apt upgrade -y
+# Add Ansible PPA repository
+echo "Adding Ansible PPA repository..."
+add-apt-repository --yes --update ppa:ansible/ansible
 
-echo -e "${YELLOW}📦 Installing dependencies...${RESET}"
-sudo apt install -y software-properties-common python3 python3-pip python3-venv sshpass
+# Install Ansible Core
+echo "Installing Ansible Core..."
+apt-get update
+apt-get install -y ansible-core
 
-# --- Add official Ansible PPA ---
-echo -e "${BLUE}🧩 Adding Ansible PPA...${RESET}"
-sudo add-apt-repository --yes --update ppa:ansible/ansible
+# Create configuration directory if not exists
+mkdir -p /etc/ansible
+if [ ! -f /etc/ansible/ansible.cfg ]; then
+    echo "Creating default configuration file..."
+    cat > /etc/ansible/ansible.cfg << 'EOF'
+[defaults]
+inventory = /etc/ansible/hosts
+host_key_checking = False
+retry_files_enabled = False
+deprecation_warnings = False
 
-# --- Install Ansible ---
-echo -e "${BLUE}📥 Installing Ansible...${RESET}"
-sudo apt install -y ansible
-
-# --- Verify installation ---
-if command -v ansible >/dev/null 2>&1; then
-  echo -e "${GREEN}✅ Ansible installed successfully!${RESET}"
-  ansible --version
-else
-  echo -e "${RED}❌ Installation failed.${RESET}"
-  exit 1
+[privilege_escalation]
+become = True
+become_method = sudo
+become_user = root
+become_ask_pass = False
+EOF
 fi
+
+# Create sample inventory file
+if [ ! -f /etc/ansible/hosts ]; then
+    echo "Creating sample inventory file..."
+    cat > /etc/ansible/hosts << 'EOF'
+# Sample inventory file
+# Uncomment and edit according to your environment
+
+# [webservers]
+# web1.example.com
+# web2.example.com
+
+# [databases]
+# db1.example.com
+# db2.example.com
+
+[local]
+localhost ansible_connection=local
+EOF
+fi
+
+# Check version
+echo ""
+echo "=== Installation Complete ==="
+ansible --version
+
+echo ""
+echo "Ansible Core has been successfully installed!"
+echo "Configuration file: /etc/ansible/ansible.cfg"
+echo "Inventory file: /etc/ansible/hosts"
+echo "Use 'ansible --help' to see available commands."
