@@ -44,7 +44,7 @@ else
     fi
     
     # Create user with home directory and bash shell
-    useradd -m -s /bin/bash "$ADMIN_USER"
+    useradd -m -k /etc/skel -s /bin/bash "$ADMIN_USER"
     echo "$ADMIN_USER:$ADMIN_PASS" | chpasswd
     
     # Add to sudo group
