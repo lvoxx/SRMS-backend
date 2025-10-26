@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Ubuntu Server Security Script for Jenkins with Nginx Reverse Proxy (IP-based)
+# Ubuntu Server Security Script for Jenkins with HTTPS (Direct Port 443)
 # Run as root: sudo bash secure_server.sh
 
 set -e
@@ -13,6 +13,7 @@ NC='\033[0m'
 
 echo -e "${GREEN}================================================${NC}"
 echo -e "${GREEN}Ubuntu Server Security Setup for Jenkins${NC}"
+echo -e "${GREEN}with HTTPS (Self-Signed Certificate)${NC}"
 echo -e "${GREEN}================================================${NC}\n"
 
 # Check root privileges
@@ -50,152 +51,152 @@ else
     # Add to sudo group
     usermod -aG sudo "$ADMIN_USER"
     
-    # Allow passwordless sudo for convenience (optional, comment out if not wanted)
-    # echo "$ADMIN_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$ADMIN_USER
-    # chmod 0440 /etc/sudoers.d/$ADMIN_USER
-    
     echo -e "${GREEN}✓ Admin user $ADMIN_USER created successfully${NC}"
 fi
 
 # 1. Update system
-echo -e "${YELLOW}[1/14] Updating system...${NC}"
+echo -e "${YELLOW}[1/13] Updating system...${NC}"
 apt update && apt upgrade -y
 
-# 2. Install Nginx
-echo -e "${YELLOW}[2/14] Installing Nginx...${NC}"
-apt install -y nginx
+# 2. Install Java if not present (required for keytool)
+echo -e "${YELLOW}[2/13] Checking Java installation...${NC}"
+if ! command -v java &> /dev/null; then
+    apt install -y openjdk-17-jdk
+fi
 
-# 3. Configure UFW Firewall
-echo -e "${YELLOW}[3/14] Configuring UFW Firewall...${NC}"
+# 3. Generate SSL certificate and keystore for Jenkins
+echo -e "${YELLOW}[3/13] Generating SSL certificate and keystore...${NC}"
+JENKINS_HOME="/var/lib/jenkins"
+KEYSTORE_DIR="$JENKINS_HOME/keystore"
+KEYSTORE_FILE="$KEYSTORE_DIR/jenkins.jks"
+KEYSTORE_PASS="changeit"
+
+mkdir -p "$KEYSTORE_DIR"
+
+# Generate self-signed certificate in JKS format
+if [ ! -f "$KEYSTORE_FILE" ]; then
+    keytool -genkeypair -alias jenkins -keyalg RSA -keysize 4096 \
+        -keystore "$KEYSTORE_FILE" -storepass "$KEYSTORE_PASS" -keypass "$KEYSTORE_PASS" \
+        -dname "CN=$SERVER_IP, OU=Jenkins, O=Jenkins, L=CanTho, ST=CanTho, C=VN" \
+        -validity 365 -ext san=ip:"$SERVER_IP"
+    
+    echo -e "${GREEN}✓ SSL keystore created${NC}"
+else
+    echo -e "${YELLOW}⚠ Keystore already exists, skipping generation${NC}"
+fi
+
+# Also generate PEM format for backup/reference
+openssl req -x509 -nodes -days 365 -newkey rsa:4096 \
+    -keyout "$KEYSTORE_DIR/jenkins.key" \
+    -out "$KEYSTORE_DIR/jenkins.crt" \
+    -subj "/C=VN/ST=CanTho/L=CanTho/O=Jenkins/CN=$SERVER_IP"
+
+# Set permissions
+chown -R jenkins:jenkins "$KEYSTORE_DIR" 2>/dev/null || true
+chmod 700 "$KEYSTORE_DIR"
+chmod 600 "$KEYSTORE_DIR"/* 2>/dev/null || true
+
+# 4. Configure UFW Firewall
+echo -e "${YELLOW}[4/13] Configuring UFW Firewall...${NC}"
 apt install -y ufw
 ufw default deny incoming
 ufw default allow outgoing
 ufw allow ssh
-ufw allow 'Nginx Full'
+ufw allow 443/tcp
+ufw allow 80/tcp
 echo "y" | ufw enable
 ufw status
 
-# 4. Generate self-signed SSL certificate
-echo -e "${YELLOW}[4/14] Generating self-signed SSL certificate...${NC}"
-mkdir -p /etc/nginx/ssl
-openssl req -x509 -nodes -days 365 -newkey rsa:4096 \
-    -keyout /etc/nginx/ssl/nginx-selfsigned.key \
-    -out /etc/nginx/ssl/nginx-selfsigned.crt \
-    -subj "/C=VN/ST=CanTho/L=CanTho/O=Jenkins/CN=$SERVER_IP"
+# 5. Configure Jenkins to listen on port 443 with HTTPS
+echo -e "${YELLOW}[5/13] Configuring Jenkins for HTTPS on port 443...${NC}"
 
-# Generate Diffie-Hellman parameters for improved security
-openssl dhparam -out /etc/nginx/ssl/dhparam.pem 2048 2>/dev/null
+# Allow Jenkins to bind to privileged ports (below 1024)
+if command -v setcap &> /dev/null && [ -f "/usr/bin/java" ]; then
+    setcap 'cap_net_bind_service=+ep' /usr/bin/java
+    echo -e "${GREEN}✓ Java permitted to bind to port 443${NC}"
+fi
 
-chmod 600 /etc/nginx/ssl/nginx-selfsigned.key
-chmod 644 /etc/nginx/ssl/nginx-selfsigned.crt
-
-# 5. Configure Nginx reverse proxy for Jenkins
-echo -e "${YELLOW}[5/14] Configuring Nginx Reverse Proxy...${NC}"
-
-cat > /etc/nginx/sites-available/jenkins << 'EOF'
-upstream jenkins {
-    keepalive 32;
-    server 127.0.0.1:8080;
-}
-
-# Redirect HTTP to HTTPS
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    
-    return 301 https://$host$request_uri;
-}
-
-server {
-    listen 443 ssl http2 default_server;
-    listen [::]:443 ssl http2 default_server;
-
-    # SSL certificates
-    ssl_certificate /etc/nginx/ssl/nginx-selfsigned.crt;
-    ssl_certificate_key /etc/nginx/ssl/nginx-selfsigned.key;
-    ssl_dhparam /etc/nginx/ssl/dhparam.pem;
-
-    # SSL configuration
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
-    ssl_session_tickets off;
-
-    # Security headers
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "no-referrer-when-downgrade" always;
-
-    # Logging
-    access_log /var/log/nginx/jenkins.access.log;
-    error_log /var/log/nginx/jenkins.error.log;
-
-    # Max upload size
-    client_max_body_size 100M;
-
-    location / {
-        proxy_pass http://jenkins;
-        proxy_redirect off;
-
-        proxy_set_header Host $host:$server_port;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Port $server_port;
-
-        # Jenkins specific settings
-        proxy_http_version 1.1;
-        proxy_request_buffering off;
-        proxy_buffering off;
-        
-        # WebSocket support for Jenkins
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-
-        # Timeouts
-        proxy_connect_timeout 90;
-        proxy_send_timeout 90;
-        proxy_read_timeout 90;
-    }
-}
-EOF
-
-# Enable site
-ln -sf /etc/nginx/sites-available/jenkins /etc/nginx/sites-enabled/
-rm -f /etc/nginx/sites-enabled/default
-
-# Test nginx configuration
-nginx -t
-
-# 6. Configure Jenkins for reverse proxy
-echo -e "${YELLOW}[6/14] Configuring Jenkins for reverse proxy...${NC}"
-
-# Configure Jenkins systemd service to listen only on localhost
+# Configure Jenkins systemd service
 JENKINS_SERVICE="/lib/systemd/system/jenkins.service"
 if [ -f "$JENKINS_SERVICE" ]; then
     mkdir -p /etc/systemd/system/jenkins.service.d/
     
-    cat > /etc/systemd/system/jenkins.service.d/override.conf << 'EOF'
+    cat > /etc/systemd/system/jenkins.service.d/override.conf << EOF
 [Service]
-Environment="JENKINS_LISTEN_ADDRESS=127.0.0.1"
-Environment="JAVA_OPTS=-Djava.awt.headless=true"
+Environment="JENKINS_PORT=-1"
+Environment="JENKINS_HTTPS_PORT=443"
+Environment="JENKINS_HTTPS_KEYSTORE=$KEYSTORE_FILE"
+Environment="JENKINS_HTTPS_KEYSTORE_PASSWORD=$KEYSTORE_PASS"
+Environment="JENKINS_HTTPS_LISTEN_ADDRESS=0.0.0.0"
+Environment="JAVA_OPTS=-Djava.awt.headless=true -Djavax.net.ssl.trustStore=$KEYSTORE_FILE -Djavax.net.ssl.trustStorePassword=$KEYSTORE_PASS"
+AmbientCapabilities=CAP_NET_BIND_SERVICE
 EOF
     
     systemctl daemon-reload
-    echo -e "${GREEN}✓ Jenkins service configured to listen on localhost only${NC}"
+    echo -e "${GREEN}✓ Jenkins service configured for HTTPS on port 443${NC}"
+else
+    echo -e "${YELLOW}⚠ Jenkins not installed yet. Configuration will be applied when Jenkins is installed.${NC}"
 fi
 
+# Create Jenkins configuration file
+mkdir -p /etc/default
+cat > /etc/default/jenkins << EOF
+# Jenkins HTTPS configuration
+HTTP_PORT=-1
+HTTPS_PORT=443
+HTTPS_LISTEN_ADDRESS=0.0.0.0
+HTTPS_KEYSTORE=$KEYSTORE_FILE
+HTTPS_KEYSTORE_PASSWORD=$KEYSTORE_PASS
+JENKINS_ARGS="--httpPort=-1 --httpsPort=443 --httpsListenAddress=0.0.0.0 --httpsKeyStore=$KEYSTORE_FILE --httpsKeyStorePassword=$KEYSTORE_PASS"
+EOF
+
+# 6. Setup HTTP to HTTPS redirect (optional simple redirect page)
+echo -e "${YELLOW}[6/13] Setting up HTTP to HTTPS redirect...${NC}"
+
+# Create a simple redirect script
+cat > /usr/local/bin/http-redirect.sh << 'EOFRED'
+#!/bin/bash
+while true; do
+    echo -e "HTTP/1.1 301 Moved Permanently\r\nLocation: https://$SERVER_IP\r\nConnection: close\r\n\r\n" | nc -l -p 80 -q 1
+done
+EOFRED
+
+chmod +x /usr/local/bin/http-redirect.sh
+
+# Create systemd service for HTTP redirect
+cat > /etc/systemd/system/http-redirect.service << EOF
+[Unit]
+Description=HTTP to HTTPS Redirect
+After=network.target
+
+[Service]
+Type=simple
+Environment="SERVER_IP=$SERVER_IP"
+ExecStart=/usr/local/bin/http-redirect.sh
+Restart=always
+User=nobody
+Group=nogroup
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Install netcat if not present
+apt install -y netcat-openbsd
+
+systemctl daemon-reload
+systemctl enable http-redirect.service
+systemctl start http-redirect.service
+
+echo -e "${GREEN}✓ HTTP to HTTPS redirect configured${NC}"
+
 # 7. Install Fail2Ban
-echo -e "${YELLOW}[7/14] Installing Fail2Ban...${NC}"
+echo -e "${YELLOW}[7/13] Installing Fail2Ban...${NC}"
 apt install -y fail2ban
 systemctl enable fail2ban
 systemctl start fail2ban
 
-# Configure Fail2Ban for SSH, Nginx and Jenkins
+# Configure Fail2Ban for SSH and Jenkins
 cat > /etc/fail2ban/jail.local << EOF
 [DEFAULT]
 bantime = 3600
@@ -211,25 +212,9 @@ logpath = %(sshd_log)s
 maxretry = 3
 bantime = 7200
 
-[nginx-http-auth]
-enabled = true
-port = http,https
-logpath = /var/log/nginx/error.log
-
-[nginx-limit-req]
-enabled = true
-port = http,https
-logpath = /var/log/nginx/error.log
-
-[nginx-botsearch]
-enabled = true
-port = http,https
-logpath = /var/log/nginx/access.log
-maxretry = 2
-
 [jenkins]
 enabled = true
-port = http,https
+port = 443
 filter = jenkins
 logpath = /var/log/jenkins/jenkins.log
 maxretry = 5
@@ -247,7 +232,7 @@ EOF
 systemctl restart fail2ban
 
 # 8. Secure SSH
-echo -e "${YELLOW}[8/14] Securing SSH...${NC}"
+echo -e "${YELLOW}[8/13] Securing SSH...${NC}"
 
 # Backup original SSH config
 cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
@@ -280,7 +265,7 @@ systemctl restart sshd
 echo -e "${GREEN}✓ SSH secured. Only user '$ADMIN_USER' can login${NC}"
 
 # 9. Configure resource limits
-echo -e "${YELLOW}[9/14] Configuring resource limits...${NC}"
+echo -e "${YELLOW}[9/13] Configuring resource limits...${NC}"
 cat >> /etc/security/limits.conf << EOF
 
 # Resource limits
@@ -290,18 +275,16 @@ cat >> /etc/security/limits.conf << EOF
 * hard nproc 65535
 jenkins soft nofile 65535
 jenkins hard nofile 65535
-nginx soft nofile 65535
-nginx hard nofile 65535
 EOF
 
 # 10. Install and configure AppArmor
-echo -e "${YELLOW}[10/14] Configuring AppArmor...${NC}"
+echo -e "${YELLOW}[10/13] Configuring AppArmor...${NC}"
 apt install -y apparmor apparmor-utils
 systemctl enable apparmor
 systemctl start apparmor
 
 # 11. Secure Jenkins directories (if they exist)
-echo -e "${YELLOW}[11/14] Securing Jenkins directories...${NC}"
+echo -e "${YELLOW}[11/13] Securing Jenkins directories...${NC}"
 if [ -d "/var/lib/jenkins" ]; then
     chown -R jenkins:jenkins /var/lib/jenkins
     chmod -R 750 /var/lib/jenkins
@@ -314,7 +297,7 @@ if [ -d "/var/log/jenkins" ]; then
 fi
 
 # 12. Disable unnecessary services
-echo -e "${YELLOW}[12/14] Disabling unnecessary services...${NC}"
+echo -e "${YELLOW}[12/13] Disabling unnecessary services...${NC}"
 services_to_disable=("cups" "avahi-daemon" "bluetooth")
 for service in "${services_to_disable[@]}"; do
     if systemctl list-unit-files | grep -q "$service"; then
@@ -323,8 +306,7 @@ for service in "${services_to_disable[@]}"; do
     fi
 done
 
-# 13. Configure automatic security updates
-echo -e "${YELLOW}[13/14] Configuring automatic security updates...${NC}"
+# Configure automatic security updates
 apt install -y unattended-upgrades
 dpkg-reconfigure -plow unattended-upgrades
 
@@ -339,8 +321,8 @@ Unattended-Upgrade::Remove-Unused-Dependencies "true";
 Unattended-Upgrade::Automatic-Reboot "false";
 EOF
 
-# 14. Configure kernel parameters for security
-echo -e "${YELLOW}[14/14] Configuring kernel parameters...${NC}"
+# 13. Configure kernel parameters for security
+echo -e "${YELLOW}[13/13] Configuring kernel parameters...${NC}"
 cat >> /etc/sysctl.conf << EOF
 
 # Security configurations
@@ -386,13 +368,6 @@ chmod +x /usr/local/bin/backup_jenkins.sh
 # Create cronjob for daily backup at 2 AM
 (crontab -l 2>/dev/null; echo "0 2 * * * /usr/local/bin/backup_jenkins.sh") | crontab -
 
-# Restart services
-echo -e "${YELLOW}Restarting services...${NC}"
-if systemctl is-active --quiet jenkins; then
-    systemctl restart jenkins
-fi
-systemctl restart nginx
-
 # Setup SSH keys directory for admin user
 mkdir -p /home/$ADMIN_USER/.ssh
 chmod 700 /home/$ADMIN_USER/.ssh
@@ -400,39 +375,59 @@ touch /home/$ADMIN_USER/.ssh/authorized_keys
 chmod 600 /home/$ADMIN_USER/.ssh/authorized_keys
 chown -R $ADMIN_USER:$ADMIN_USER /home/$ADMIN_USER/.ssh
 
+# Restart Jenkins if it's running
+echo -e "${YELLOW}Restarting services...${NC}"
+if systemctl is-active --quiet jenkins; then
+    systemctl restart jenkins
+    echo -e "${GREEN}✓ Jenkins restarted${NC}"
+fi
+
 echo -e "\n${GREEN}================================================${NC}"
 echo -e "${GREEN}Security Configuration Complete!${NC}"
 echo -e "${GREEN}================================================${NC}\n"
 
 echo -e "${YELLOW}Summary of implemented measures:${NC}"
 echo "✓ Created admin user: $ADMIN_USER (member of sudo group)"
-echo "✓ System update"
-echo "✓ Nginx Reverse Proxy with HTTPS (self-signed certificate)"
-echo "✓ UFW Firewall (SSH, HTTP, HTTPS)"
-echo "✓ Fail2Ban protection (SSH, Nginx, Jenkins)"
-echo "✓ Disabled root login via SSH"
-echo "✓ SSH access restricted to user: $ADMIN_USER"
-echo "✓ System resource limits configured"
+echo "✓ System updated"
+echo "✓ Self-signed SSL certificate generated"
+echo "✓ Jenkins configured for HTTPS on port 443"
+echo "✓ HTTP (port 80) redirects to HTTPS"
+echo "✓ UFW Firewall configured (SSH, HTTP, HTTPS)"
+echo "✓ Fail2Ban protection (SSH, Jenkins)"
+echo "✓ SSH root login disabled"
+echo "✓ SSH access restricted to: $ADMIN_USER"
+echo "✓ Resource limits configured"
 echo "✓ AppArmor enabled"
 echo "✓ Jenkins directories secured"
 echo "✓ Unnecessary services disabled"
 echo "✓ Automatic security updates enabled"
 echo "✓ Monitoring tools installed"
-echo "✓ Kernel security parameters hardened"
+echo "✓ Kernel security hardened"
 echo "✓ Automatic Jenkins backup configured"
 
 echo -e "\n${BLUE}Jenkins Access Information:${NC}"
-echo "URL: https://$SERVER_IP"
-echo "Jenkins listens only on localhost:8080"
-echo "All traffic goes through Nginx reverse proxy with HTTPS"
+echo "HTTPS URL: https://$SERVER_IP"
+echo "Jenkins listens on port 443 (HTTPS)"
+echo "HTTP (port 80) automatically redirects to HTTPS"
 echo ""
-echo -e "${YELLOW}Note: You will see a certificate warning because we're using a self-signed certificate.${NC}"
-echo -e "${YELLOW}This is expected and safe. Click 'Advanced' and proceed to the site.${NC}"
+echo -e "${YELLOW}SSL Certificate Information:${NC}"
+echo "Keystore location: $KEYSTORE_FILE"
+echo "Keystore password: $KEYSTORE_PASS"
+echo "Certificate files: $KEYSTORE_DIR/jenkins.crt and jenkins.key"
 
 echo -e "\n${BLUE}SSH Access Information:${NC}"
 echo "Admin user: $ADMIN_USER"
 echo "SSH command: ssh $ADMIN_USER@$SERVER_IP"
 echo "Root login is DISABLED"
+
+echo -e "\n${YELLOW}IMPORTANT - Certificate Warning:${NC}"
+echo "⚠  You will see a certificate warning in your browser"
+echo "⚠  This is NORMAL for self-signed certificates"
+echo "⚠  Click 'Advanced' and 'Proceed to site' (safe in this case)"
+echo ""
+echo "To avoid this warning, you need to:"
+echo "1. Use a real domain name (not IP address)"
+echo "2. Get a trusted certificate from Let's Encrypt or a CA"
 
 echo -e "\n${YELLOW}Next steps you should take:${NC}"
 echo "1. Setup SSH key for $ADMIN_USER:"
@@ -445,6 +440,9 @@ echo "   - Change: PasswordAuthentication no"
 echo "   - Restart SSH: sudo systemctl restart sshd"
 echo ""
 echo "3. Configure Jenkins Security:"
+echo "   - Go to https://$SERVER_IP"
+echo "   - Accept certificate warning"
+echo "   - Complete Jenkins setup wizard"
 echo "   - Go to Manage Jenkins > Configure Global Security"
 echo "   - Enable security and create admin user"
 echo ""
@@ -452,30 +450,39 @@ echo "4. Update Jenkins URL:"
 echo "   - Go to Manage Jenkins > System"
 echo "   - Set Jenkins URL: https://$SERVER_IP"
 echo ""
-echo "5. Regular maintenance:"
+echo "5. (Optional) Get trusted SSL certificate:"
+echo "   - Get a domain name and point it to: $SERVER_IP"
+echo "   - Install certbot: sudo apt install certbot"
+echo "   - Get Let's Encrypt certificate"
+echo "   - Import into Jenkins keystore"
+echo ""
+echo "6. Regular maintenance:"
 echo "   - Update Jenkins plugins regularly"
-echo "   - Monitor logs: /var/log/nginx/ and /var/log/jenkins/"
+echo "   - Monitor logs: /var/log/jenkins/"
 echo "   - Check backups: /backup/jenkins/"
+echo "   - Renew SSL certificate annually"
 
 echo -e "\n${RED}IMPORTANT SECURITY NOTES:${NC}"
 echo "⚠  Root login is DISABLED. Use: ssh $ADMIN_USER@$SERVER_IP"
 echo "⚠  Test SSH connection as $ADMIN_USER before logging out!"
 echo "⚠  Jenkins backups saved at: /backup/jenkins/"
-echo "⚠  Port 8080 only accessible from localhost"
-echo "⚠  Self-signed certificate will show browser warning (this is normal)"
+echo "⚠  SSL keystore password: $KEYSTORE_PASS (change in production!)"
+echo "⚠  Certificate valid for 365 days, remember to renew!"
 
 echo -e "\n${BLUE}Services Status:${NC}"
-echo "Nginx: $(systemctl is-active nginx)"
 echo "Fail2Ban: $(systemctl is-active fail2ban)"
 echo "UFW: $(ufw status | grep Status | awk '{print $2}')"
+echo "HTTP Redirect: $(systemctl is-active http-redirect)"
 if systemctl is-active --quiet jenkins; then
     echo "Jenkins: $(systemctl is-active jenkins)"
 else
     echo "Jenkins: not installed yet (run installation script)"
 fi
 
-echo -e "\n${GREEN}Test your SSH access now in a NEW terminal:${NC}"
-echo "ssh $ADMIN_USER@$SERVER_IP"
+echo -e "\n${GREEN}Test your services:${NC}"
+echo "1. SSH access in a NEW terminal: ssh $ADMIN_USER@$SERVER_IP"
+echo "2. Jenkins HTTPS: https://$SERVER_IP"
+echo "3. HTTP redirect: http://$SERVER_IP (should redirect to HTTPS)"
 
-echo -e "\n${YELLOW}After confirming SSH access works, you can optionally reboot:${NC}"
+echo -e "\n${YELLOW}After confirming everything works, you can optionally reboot:${NC}"
 echo "sudo reboot"
