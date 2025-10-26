@@ -109,7 +109,6 @@ sudo sed -i '/M2_HOME/d' /etc/environment || true
 
 echo "JAVA_HOME=$JAVA_HOME_PATH" | sudo tee -a /etc/environment
 echo "MVN_HOME=$MVN_HOME_PATH" | sudo tee -a /etc/environment
-echo 'PATH="$PATH:$JAVA_HOME/bin:$MVN_HOME/bin"' | sudo tee -a /etc/environment
 
 ok "Environment variables set."
 
