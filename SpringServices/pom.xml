@@ -40,7 +40,6 @@
 		<module>common</module>
 		<module>starter/controllerhandler</module>
 		<module>starter/jdbc</module>
-		<module>starter/message</module>
 
 		<module>contactor</module>
 		<module>customer</module>
