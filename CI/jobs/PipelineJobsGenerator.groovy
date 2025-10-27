@@ -11,8 +11,12 @@ services.each { serviceName, serviceData ->
         description("Build and Docker job for ${serviceName}")
         branchSources {
             github {
+                id("${serviceName}-build-source")
                 repoOwner('lvoxx')
                 repository('SRMS-backend')
+
+                // For private repo
+                // credentialsId(globalConfig.creds.github)
             }
         }
         factory {
@@ -27,8 +31,12 @@ services.each { serviceName, serviceData ->
         description("Full CI/CD pipeline for ${serviceName}")
         branchSources {
             github {
+                id("${serviceName}-deploy-source")
                 repoOwner('lvoxx')
                 repository('SRMS-backend')
+
+                // For private repo
+                // credentialsId(globalConfig.creds.github)
             }
         }
         factory {

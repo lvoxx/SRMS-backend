@@ -11,8 +11,12 @@ services.each { serviceName, serviceData ->
             description("Test job for ${serviceName}/${moduleName}")
             branchSources {
                 github {
+                    id("${serviceName}-${moduleName}-test-source")
                     repoOwner('lvoxx')
                     repository('SRMS-backend')
+
+                    // If the repo is private, should add credentialsId below
+                    // credentialsId(globalConfig.creds.github)
                 }
             }
             factory {
