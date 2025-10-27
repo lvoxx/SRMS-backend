@@ -5,7 +5,7 @@ import java.time.OffsetDateTime;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import io.github.lvoxx.srms.common.jdbc.AbstractEntity;
+import io.github.lvoxx.srms.jdbc.AbstractEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder.Default;
 import lombok.Getter;

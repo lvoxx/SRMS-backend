@@ -27,10 +27,10 @@ import org.mockito.quality.Strictness;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 
-import io.github.lvoxx.srms.common.exception.model.ConflictException;
-import io.github.lvoxx.srms.common.exception.model.DataPersistantException;
-import io.github.lvoxx.srms.common.exception.model.InUsedException;
-import io.github.lvoxx.srms.common.exception.model.NotFoundException;
+import io.github.lvoxx.srms.controllerhandler.model.ConflictException;
+import io.github.lvoxx.srms.controllerhandler.model.DataPersistantException;
+import io.github.lvoxx.srms.controllerhandler.model.InUsedException;
+import io.github.lvoxx.srms.controllerhandler.model.NotFoundException;
 import io.github.lvoxx.srms.common.utils.MessageUtils;
 import io.github.lvoxx.srms.contactor.dto.ContactorDTO;
 import io.github.lvoxx.srms.contactor.dto.Rating;

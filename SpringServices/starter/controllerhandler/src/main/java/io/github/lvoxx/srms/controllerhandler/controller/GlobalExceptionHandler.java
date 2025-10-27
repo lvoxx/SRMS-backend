@@ -1,4 +1,4 @@
-package io.github.lvoxx.srms.common.exception.controller;
+package io.github.lvoxx.srms.controllerhandler.controller;
 
 import java.net.UnknownServiceException;
 import java.util.Optional;
@@ -10,13 +10,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
-import io.github.lvoxx.srms.common.exception.ErrorResponse;
-import io.github.lvoxx.srms.common.exception.message.SystemErrorMessages;
-import io.github.lvoxx.srms.common.exception.model.BadRequestException;
-import io.github.lvoxx.srms.common.exception.model.ConflictException;
-import io.github.lvoxx.srms.common.exception.model.DataPersistantException;
-import io.github.lvoxx.srms.common.exception.model.NotFoundException;
-import io.github.lvoxx.srms.common.exception.model.ValidationException;
+import io.github.lvoxx.srms.controllerhandler.ErrorResponse;
+import io.github.lvoxx.srms.controllerhandler.message.SystemErrorMessages;
+import io.github.lvoxx.srms.controllerhandler.model.BadRequestException;
+import io.github.lvoxx.srms.controllerhandler.model.ConflictException;
+import io.github.lvoxx.srms.controllerhandler.model.DataPersistantException;
+import io.github.lvoxx.srms.controllerhandler.model.NotFoundException;
+import io.github.lvoxx.srms.controllerhandler.model.ValidationException;
 import reactor.core.publisher.Mono;
 
 @RestControllerAdvice

@@ -38,6 +38,15 @@
 			<artifactId>common</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>io.github.lvoxx.srms</groupId>
+			<artifactId>controllerhandler</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.github.lvoxx.srms</groupId>
+			<artifactId>jdbc</artifactId>
+		</dependency>
+		
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>

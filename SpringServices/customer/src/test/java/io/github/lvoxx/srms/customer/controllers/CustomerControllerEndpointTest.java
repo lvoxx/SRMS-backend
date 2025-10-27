@@ -32,8 +32,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.lvoxx.srms.common.dto.PageDTO;
-import io.github.lvoxx.srms.common.exception.controller.GlobalExceptionHandler;
-import io.github.lvoxx.srms.common.exception.controller.ValidationExceptionHandler;
+import io.github.lvoxx.srms.controllerhandler.controller.GlobalExceptionHandler;
+import io.github.lvoxx.srms.controllerhandler.controller.ValidationExceptionHandler;
 import io.github.lvoxx.srms.customer.config.TestControllerOnlyEndpointConfig;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
 import io.github.lvoxx.srms.customer.services.CustomerService;

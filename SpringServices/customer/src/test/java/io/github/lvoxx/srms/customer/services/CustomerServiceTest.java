@@ -41,9 +41,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import io.github.lvoxx.srms.common.dto.PageDTO;
-import io.github.lvoxx.srms.common.exception.model.ConflictException;
-import io.github.lvoxx.srms.common.exception.model.DataPersistantException;
-import io.github.lvoxx.srms.common.exception.model.NotFoundException;
+import io.github.lvoxx.srms.controllerhandler.model.ConflictException;
+import io.github.lvoxx.srms.controllerhandler.model.DataPersistantException;
+import io.github.lvoxx.srms.controllerhandler.model.NotFoundException;
 import io.github.lvoxx.srms.common.utils.MessageUtils;
 import io.github.lvoxx.srms.customer.dto.CustomerDTO;
 import io.github.lvoxx.srms.customer.mappers.CustomerMapper;

@@ -1,4 +1,4 @@
-package io.github.lvoxx.srms.common.exception.model;
+package io.github.lvoxx.srms.controllerhandler.model;
 
 public class InUsedException extends RuntimeException {
 

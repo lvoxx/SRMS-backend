@@ -29,11 +29,11 @@ import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.github.lvoxx.srms.common.exception.controller.GlobalExceptionHandler;
-import io.github.lvoxx.srms.common.exception.controller.ValidationExceptionHandler;
-import io.github.lvoxx.srms.common.exception.model.ConflictException;
-import io.github.lvoxx.srms.common.exception.model.DataPersistantException;
-import io.github.lvoxx.srms.common.exception.model.NotFoundException;
+import io.github.lvoxx.srms.controllerhandler.controller.GlobalExceptionHandler;
+import io.github.lvoxx.srms.controllerhandler.controller.ValidationExceptionHandler;
+import io.github.lvoxx.srms.controllerhandler.model.ConflictException;
+import io.github.lvoxx.srms.controllerhandler.model.DataPersistantException;
+import io.github.lvoxx.srms.controllerhandler.model.NotFoundException;
 import io.github.lvoxx.srms.contactor.config.TestControllerWithMessagesConfig;
 import io.github.lvoxx.srms.contactor.dto.ContactorDTO;
 import io.github.lvoxx.srms.contactor.dto.ContactorDTO.Response;

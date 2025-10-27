@@ -1,4 +1,4 @@
-package io.github.lvoxx.srms.common.exception.controller;
+package io.github.lvoxx.srms.controllerhandler.controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
 
-import io.github.lvoxx.srms.common.exception.ValidationErrorResponse;
-import io.github.lvoxx.srms.common.exception.ValidationErrorResponse.FieldValidationError;
+import io.github.lvoxx.srms.controllerhandler.ValidationErrorResponse;
+import io.github.lvoxx.srms.controllerhandler.ValidationErrorResponse.FieldValidationError;
 import jakarta.validation.ConstraintViolationException;
 import reactor.core.publisher.Mono;
 

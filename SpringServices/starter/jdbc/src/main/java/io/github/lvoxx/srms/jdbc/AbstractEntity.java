@@ -1,4 +1,4 @@
-package io.github.lvoxx.srms.common.jdbc;
+package io.github.lvoxx.srms.jdbc;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -7,11 +7,11 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.Builder.Default;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder(toBuilder = true)

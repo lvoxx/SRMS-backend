@@ -1,4 +1,4 @@
-package io.github.lvoxx.srms.common.exception;
+package io.github.lvoxx.srms.controllerhandler;
 
 import java.time.LocalDateTime;
 import java.util.List;

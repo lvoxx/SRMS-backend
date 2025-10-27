@@ -1,4 +1,4 @@
-package io.github.lvoxx.srms.common.exception.message;
+package io.github.lvoxx.srms.controllerhandler.message;
 
 public enum SystemErrorMessages {
     NOT_FOUND("Not Found", "The requested data was not found on the server"),
