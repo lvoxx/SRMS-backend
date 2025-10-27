@@ -1,5 +1,5 @@
 // Seed Job DSL - Main entry point
-println "Loading configs..."
+println "[START] Loading configs..."
 
 // Load configs - DON'T use 'def' so variables are in global scope
 serviceConfigFile = new File("${WORKSPACE}/CI/config/ServiceConfig.groovy")
@@ -8,10 +8,22 @@ services = evaluate(serviceConfigFile.text)
 ciconfigFile = new File("${WORKSPACE}/CI/config/CIConfig.groovy")  
 globalConfig = evaluate(ciconfigFile.text)
 
-println "Configs loaded. Services: ${services.keySet()}"
+println "[FINISHED] Configs loaded. Services: ${services.keySet()}"
+//-------------------------------------------------------------------------------------
+println "[START] Pre-creating top-level folders..."
+folder('SRMS')
 
+services.keySet().each { serviceName ->
+    folder("SRMS/${serviceName}")
+    folder("SRMS/${serviceName}/Build")
+    folder("SRMS/${serviceName}/Deploy")
+    folder("SRMS/${serviceName}/Test")
+}
+
+println "[FINISHED] Top-level folders created."
+//-------------------------------------------------------------------------------------
 // Load generators - they will have access to 'services' and 'globalConfig' variables
-println "Evaluating job generators..."
+println "[START] Evaluating job generators..."
 
 // Note: Do NOT declare 'def' for these variables - they need to be in global scope
 generatorFiles = [
@@ -44,3 +56,5 @@ generatorFiles.each { file ->
     
     script.run()
 }
+println "[FINISHED] Job generators evaluated."
+//-------------------------------------------------------------------------------------
