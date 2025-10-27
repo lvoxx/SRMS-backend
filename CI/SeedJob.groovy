@@ -22,5 +22,25 @@ generatorFiles = [
 
 generatorFiles.each { file ->
     println "Evaluating: ${file}"
-    evaluate(new File(file).text)
+    
+    // Create a GroovyShell with proper binding and delegate
+    def binding = new Binding([
+        'services': services,
+        'globalConfig': globalConfig,
+        'WORKSPACE': WORKSPACE
+    ])
+    
+    def shell = new GroovyShell(this.class.classLoader, binding)
+    def script = shell.parse(new File(file))
+    
+    // Set delegate to 'this' so DSL methods are accessible
+    script.metaClass.methodMissing = { String name, args ->
+        this."$name"(*args)
+    }
+    
+    script.metaClass.propertyMissing = { String name ->
+        this."$name"
+    }
+    
+    script.run()
 }
