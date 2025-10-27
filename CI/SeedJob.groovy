@@ -1,28 +1,26 @@
-// ======================
 // Seed Job DSL - Main entry point
-// ======================
+println "Loading configs..."
 
-// Load configs
-def services = evaluate(new File("${WORKSPACE}/CI/config/ServiceConfig.groovy").text)
-def globalConfig = evaluate(new File("${WORKSPACE}/CI/config/CIConfig.groovy").text)
+// Load configs - DON'T use 'def' so variables are in global scope
+serviceConfigFile = new File("${WORKSPACE}/CI/config/ServiceConfig.groovy")
+services = evaluate(serviceConfigFile.text)
+
+ciconfigFile = new File("${WORKSPACE}/CI/config/CIConfig.groovy")  
+globalConfig = evaluate(ciconfigFile.text)
 
 println "Configs loaded. Services: ${services.keySet()}"
-println "Loading job generators..."
 
-// Use Binding to share variables between scripts
-def binding = new Binding()
-binding.setVariable('services', services)
-binding.setVariable('globalConfig', globalConfig)
-binding.setVariable('WORKSPACE', WORKSPACE)
+// Load generators - they will have access to 'services' and 'globalConfig' variables
+println "Evaluating job generators..."
 
-def shell = new GroovyShell(binding)
+// Note: Do NOT declare 'def' for these variables - they need to be in global scope
+generatorFiles = [
+    "${WORKSPACE}/CI/jobs/PipelineJobsGenerator.groovy",
+    "${WORKSPACE}/CI/jobs/TestJobsGenerator.groovy", 
+    "${WORKSPACE}/CI/jobs/DashboardGenerator.groovy"
+]
 
-// Evaluate each generator file under CI/jobs
-new File("${WORKSPACE}/CI/jobs").eachFileMatch(~/.*\.groovy/) { file ->
-    if (file.name != 'SeedJob.groovy') {
-        println "Evaluating: ${file.name}"
-        shell.evaluate(file)
-    }
+generatorFiles.each { file ->
+    println "Evaluating: ${file}"
+    evaluate(new File(file).text)
 }
-
-println "All job generators executed successfully."
