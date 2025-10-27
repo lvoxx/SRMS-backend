@@ -1,23 +1,29 @@
 // Test Jobs Generator
-def serviceConfig = load('CI/config/ServiceConfig.groovy')
-def globalConfig = load('CI/config/CIConfig.groovy')
+// Load and evaluate config files
+def loadConfig(path) {
+    def file = new File("${WORKSPACE}/${path}")
+    return evaluate(file.text)
+}
 
-serviceConfig.each { serviceName, config ->
+def services = loadConfig('CI/config/ServiceConfig.groovy')
+def config = loadConfig('CI/config/CIConfig.groovy')
+
+services.each { serviceName, serviceData ->
     folder("SRMS/${serviceName}/Test")
-    config.modules.each { moduleName, moduleCfg ->
-        job("SRMS/${serviceName}/Test/${moduleName}") {
-            description("Test for ${moduleName}")
-            multibranchPipelineJob {  // Support feature branches
-                branchSources {
-                    github {
-                        repoOwner('lvoxx')
-                        repository('SRMS-backend')
-                    }
+    
+    serviceData.modules.each { moduleName, moduleCfg ->
+        // Use multibranchPipelineJob directly, not wrapped in job()
+        multibranchPipelineJob("SRMS/${serviceName}/Test/${moduleName}") {
+            description("Test job for ${serviceName}/${moduleName}")
+            branchSources {
+                github {
+                    repoOwner('lvoxx')
+                    repository('SRMS-backend')
                 }
-                factory {
-                    workflowBranchProjectFactory {
-                        scriptPath('CI/pipelines/ModuleTestPipeline.groovy')  // Pass params if needed
-                    }
+            }
+            factory {
+                workflowBranchProjectFactory {
+                    scriptPath("CI/pipelines/ModuleTestPipeline.groovy")
                 }
             }
         }

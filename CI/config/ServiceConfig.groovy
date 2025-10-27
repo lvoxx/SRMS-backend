@@ -1,35 +1,22 @@
-// Service and Module Metadata
+// Service and Module Metadata for SRMS
 def services = [
     SpringServices: [
         language: 'java',
         modules: [
-            customer: [path: 'SpringServices/customer', testCmd: 'mvn test', dockerContext: '.'],
-            order: [path: 'SpringServices/order', testCmd: 'mvn test', dockerContext: '.'],
-            payment: [path: 'SpringServices/payment', testCmd: 'mvn test', dockerContext: '.']
-            // Add more modules here, e.g., inventory: [path: '...']
+            contactor: [path: 'SpringServices/contactor', testCmd: 'mvn test -f SpringServices/contactor', dockerContext: 'SpringServices/contactor'],
+            customer: [path: 'SpringServices/customer', testCmd: 'mvn test -f SpringServices/customer', dockerContext: 'SpringServices/customer'],
+            order: [path: 'SpringServices/order', testCmd: 'mvn test -f SpringServices/order', dockerContext: 'SpringServices/order'],
+            payment: [path: 'SpringServices/payment', testCmd: 'mvn test -f SpringServices/payment', dockerContext: 'SpringServices/payment'],
+            kitchen: [path: 'SpringServices/kitchen', testCmd: 'mvn test -f SpringServices/kitchen', dockerContext: 'SpringServices/kitchen'],
+            warehouse: [path: 'SpringServices/warehouse', testCmd: 'mvn test -f SpringServices/warehouse', dockerContext: 'SpringServices/warehouse'],
+            dashboard: [path: 'SpringServices/dashboard', testCmd: 'mvn test -f SpringServices/dashboard', dockerContext: 'SpringServices/dashboard'],
+            reporting: [path: 'SpringServices/reporting', testCmd: 'mvn test -f SpringServices/reporting', dockerContext: 'SpringServices/reporting'],
+            notification: [path: 'SpringServices/notification', testCmd: 'mvn test -f SpringServices/notification', dockerContext: 'SpringServices/notification']
         ],
-        buildCmd: 'mvn clean package -f pom.xml',  // Root build for all modules
-        dockerBuild: true
-    ],
-    PythonServices: [
-        language: 'python',
-        modules: [:],  // Empty for now, add later e.g., moduleX: [path: '...', testCmd: 'pytest']
-        buildCmd: 'python setup.py build',
-        dockerBuild: false  // Customize per language
-    ],
-    GoServices: [
-        language: 'go',
-        modules: [:],
-        buildCmd: 'go build ./...',
-        dockerBuild: true
-    ],
-    SRMSClient: [
-        language: 'frontend',  // e.g., React/Vue
-        modules: [client: [path: 'SrmsClient', testCmd: 'npm test', dockerContext: '.']],
-        buildCmd: 'npm run build',
+        buildCmd: 'mvn clean package -f SpringServices/pom.xml',
         dockerBuild: true
     ]
-    // Add new services here
+    // Add PythonServices, GoServices, etc. here as needed
 ]
 
 // Export

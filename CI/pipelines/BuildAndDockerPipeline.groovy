@@ -1,11 +1,39 @@
 // Build and Docker Pipeline
-def call(serviceName, serviceConfig, globalConfig) {
-    pipeline {
-        agent any
-        stages {
-            stage('Checkout') { gitUtils.checkoutRepo() }
-            stage('Build & Docker') { buildUtils.buildService(serviceConfig, globalConfig) }
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
         }
-        post { always { notificationUtils.notifyBuildStatus(globalConfig, currentBuild.result) } }
+        
+        stage('Build') {
+            steps {
+                script {
+                    echo "Building service..."
+                    sh 'mvn clean package -f SpringServices/pom.xml -DskipTests'
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                script {
+                    def workspace = env.WORKSPACE
+                    echo "Building Docker image..."
+                    // Docker build will be handled based on module configuration
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            script {
+                echo "Build completed with status: ${currentBuild.result}"
+            }
+        }
     }
 }
