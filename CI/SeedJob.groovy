@@ -1,11 +1,16 @@
-// Load jobs
-new File("${WORKSPACE}/CI/jobs").eachFileMatch(~/.*\.groovy/) { file ->
-    println "Loading job: ${file.name}"
-    evaluate(file.text)
-}
+// Seed Job DSL - Main entry point
+// Load configs in current context
+def services = evaluate(new File("${WORKSPACE}/CI/config/ServiceConfig.groovy").text)
+def globalConfig = evaluate(new File("${WORKSPACE}/CI/config/CIConfig.groovy").text)
 
-// Load configs
-new File("${WORKSPACE}/CI/config").eachFileMatch(~/.*\.groovy/) { file ->
-    println "Loading config: ${file.name}"
-    evaluate(file.text)
+println "Configs loaded. Services: ${services.keySet()}"
+
+// Evaluate job generators in the same context
+println "Loading job generators..."
+
+new File("${WORKSPACE}/CI/jobs").eachFileMatch(~/.*\.groovy/) { file ->
+    if (file.name != 'SeedJob.groovy') {
+        println "Evaluating: ${file.name}"
+        evaluate(file.text)
+    }
 }
