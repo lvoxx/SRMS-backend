@@ -110,6 +110,7 @@ fi
 # ---------------------------------------------------------
 sudo mkdir -p /opt/jenkins
 sudo chown -R jenkins:jenkins /opt/jenkins
+sudo chmod -R 755 /opt/jenkins
 ok "Workspace ready at /opt/jenkins."
 
 # ---------------------------------------------------------
