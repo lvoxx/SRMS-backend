@@ -111,6 +111,7 @@ fi
 sudo mkdir -p /opt/jenkins
 sudo chown -R jenkins:jenkins /opt/jenkins
 sudo chmod -R 755 /opt/jenkins
+sudo mkdir -p /opt/jenkins/remoting
 sudo chown -R jenkins:jenkins /opt/jenkins/remoting
 sudo chmod -R 755 /opt/jenkins/remoting
 ok "Workspace ready at /opt/jenkins."
