@@ -27,8 +27,8 @@ println "[START] Evaluating job generators..."
 
 // Note: Do NOT declare 'def' for these variables - they need to be in global scope
 generatorFiles = [
-    "${WORKSPACE}/CI/jobs/PipelineJobsGenerator.groovy",
     "${WORKSPACE}/CI/jobs/TestJobsGenerator.groovy", 
+    "${WORKSPACE}/CI/jobs/PipelineJobsGenerator.groovy",
     "${WORKSPACE}/CI/jobs/DashboardGenerator.groovy"
 ]
 
