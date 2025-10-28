@@ -11,13 +11,16 @@ globalConfig = evaluate(ciconfigFile.text)
 println "[FINISHED] Configs loaded. Services: ${services.keySet()}"
 //-------------------------------------------------------------------------------------
 println "[START] Pre-creating top-level folders..."
-folder('SRMS')
-
+folder('SRMS')  {
+    description("SRMS Build-Test-Deploy")
+}
+folder("SRMS/Test") {
+    description("Root-level Jenkins test job for SRMS Backend project")
+}
 services.keySet().each { serviceName ->
     folder("SRMS/${serviceName}")
     folder("SRMS/${serviceName}/Build")
     folder("SRMS/${serviceName}/Deploy")
-    folder("SRMS/${serviceName}/Test")
 }
 
 println "[FINISHED] Top-level folders created."
