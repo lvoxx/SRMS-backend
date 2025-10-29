@@ -55,6 +55,6 @@ folder('SRMS/SpringServices') {
 
 // === Load All Jobs ===
 println "\n=== Loading Spring Jobs... ==="
-loadJobsFrom('CI/Spring/Jobs')
+loadJobsFrom('/workspace/SRMS-DSL/CI/Spring/Jobs')
 
 println "\n🎯 Master DSL completed successfully."
