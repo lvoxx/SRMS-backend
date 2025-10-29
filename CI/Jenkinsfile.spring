@@ -1,0 +1,101 @@
+pipeline {
+    agent any
+
+    environment {
+        GITHUB_TOKEN = credentials('github-token')
+        DOCKER_CREDS = credentials('docker-hub-creds')
+        DOCKER_USER = "${DOCKER_CREDS_USR}"
+        DOCKER_PASS = "${DOCKER_CREDS_PSW}"
+        DOCKER_REPO = "lvoxx"   // namespace Docker Hub của bạn
+        COMMIT_HASH = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "🔹 Cloning repository..."
+                git(
+                    url: 'https://github.com/lvoxx/SRMS-backend.git',
+                    branch: 'main',
+                    credentialsId: 'github-token'
+                )
+            }
+        }
+
+        stage('Run Unit Tests') {
+            steps {
+                dir('SpringServices') {
+                    echo "🔹 Running Maven tests from SpringServices root pom.xml"
+                    sh './mvnw clean test -B'
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    dir('SpringServices') {
+                        def modules = sh(
+                            script: "find . -maxdepth 1 -type d | grep -v 'starter' | grep -v 'common' | grep -v '^.$' | sed 's|^./||'",
+                            returnStdout: true
+                        ).trim().split('\n')
+
+                        for (module in modules) {
+                            def modulePath = "SpringServices/${module}"
+                            def imageName = "${DOCKER_REPO}/${module.toLowerCase()}:latest"
+                            def taggedName = "${DOCKER_REPO}/${module.toLowerCase()}:${COMMIT_HASH}"
+
+                            echo "🚧 Building Docker image for ${module}"
+
+                            dir(modulePath) {
+                                sh """
+                                    echo "🔹 Building ${imageName}"
+                                    docker build -t ${imageName} -t ${taggedName} .
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Images') {
+            steps {
+                script {
+                    sh """
+                        echo "🔹 Logging into Docker Hub..."
+                        echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
+                    """
+
+                    dir('SpringServices') {
+                        def modules = sh(
+                            script: "find . -maxdepth 1 -type d | grep -v 'starter' | grep -v 'common' | grep -v '^.$' | sed 's|^./||'",
+                            returnStdout: true
+                        ).trim().split('\n')
+
+                        for (module in modules) {
+                            def imageName = "${DOCKER_REPO}/${module.toLowerCase()}"
+                            echo "📦 Pushing ${imageName}:latest and ${imageName}:${COMMIT_HASH}"
+                            sh """
+                                docker push ${imageName}:latest
+                                docker push ${imageName}:${COMMIT_HASH}
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Build & Push completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check logs for details."
+        }
+        always {
+            sh 'docker logout || true'
+        }
+    }
+}
