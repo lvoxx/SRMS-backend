@@ -22,11 +22,11 @@ pipeline {
             }
         }
 
-        stage('Build File Jar') {
+        stage('Install File Jar') {
             steps {
                 dir('SpringServices') {
-                    echo "🔹 Running Jar build from SpringServices root pom.xml"
-                    sh 'mvn clean build -DskipTests'
+                    echo "🔹 Running Jar installation from SpringServices root pom.xml"
+                    sh 'mvn clean install -DskipTests'
                 }
             }
         }
