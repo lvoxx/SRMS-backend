@@ -1,3 +1,5 @@
+import ci.SharedJobDSL
+
 SharedJobDSL.createJobFromTemplate(this, [
     name: 'Build-Spring-Service',
     stages: [

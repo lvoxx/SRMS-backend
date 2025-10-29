@@ -1,5 +1,4 @@
-// CI/Shared/SharedJobDSL.groovy
-// Pure class – NO top-level code
+package ci
 
 import javaposse.jobdsl.dsl.DslFactory
 

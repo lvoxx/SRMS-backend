@@ -1,3 +1,5 @@
+import ci.SharedJobDSL
+
 SharedJobDSL.createJobFromTemplate(this, [
     name: 'Push-Spring-Docker-Image',
     description: 'Build and push Docker image',
