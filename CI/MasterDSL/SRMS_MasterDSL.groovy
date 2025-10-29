@@ -26,8 +26,9 @@ def loadJobsFrom(String relativePath) {
         // === Load SharedJobDSL first (so it’s visible to the job scripts) ===
         try {
             def sharedScript = readFileFromWorkspace('CI/Shared/SharedJobDSL.groovy')
-            dslLoader.runScript(sharedScript)
-            println "✅ SharedJobDSL loaded successfully."
+            def shell = new GroovyShell(new GroovyClassLoader())
+            shell.evaluate(sharedScript) // Load class vào namespace
+            println "SharedJobDSL class evaluated."
         } catch (e) {
             println "❌ Failed to load SharedJobDSL: ${e.message}"
             return
