@@ -67,7 +67,9 @@ pipeline {
 
                             echo "🚧 Building Docker image for module: ${module}"
 
-                            sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
+                            dir(module.trim()) {
+                                sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
+                            }
                         }
                     }
                 }
