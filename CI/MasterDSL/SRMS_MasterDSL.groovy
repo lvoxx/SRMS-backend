@@ -53,5 +53,8 @@ folder('SRMS/SpringServices') {
     description 'Spring Boot Microservices CI/CD'
 }
 
-// === 3. Load All Jobs ===
-println "\
+// === Load All Jobs ===
+println "\n=== Loading Spring Jobs... ==="
+loadJobsFrom('CI/Spring/Jobs')
+
+println "\n🎯 Master DSL completed successfully."
