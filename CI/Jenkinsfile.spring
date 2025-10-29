@@ -26,7 +26,7 @@ pipeline {
             steps {
                 dir('SpringServices') {
                     echo "🔹 Running Jar build from SpringServices root pom.xml"
-                    sh './mvn clean build -DskipTests'
+                    sh 'mvn clean build -DskipTests'
                 }
             }
         }
@@ -35,7 +35,7 @@ pipeline {
             steps {
                 dir('SpringServices') {
                     echo "🔹 Running Maven tests from SpringServices root pom.xml"
-                    sh './mvn clean test -B'
+                    sh 'mvn clean test -B'
                 }
             }
         }
