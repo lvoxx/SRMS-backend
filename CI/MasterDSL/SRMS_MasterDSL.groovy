@@ -1,52 +1,47 @@
 // CI/MasterDSL/SRMS-MasterDSL.groovy
-// Job DSL Seed Script – DO NOT use pipeline syntax here
+// Job DSL Seed Job – Final working version
 
-// === 1. Load Shared Utilities (from checked-out repo) ===
-def sharedFiles = [
-    'CommonEnv.groovy',
-    'GitUtils.groovy',
-    'MavenUtils.groovy',
-    'DockerUtils.groovy',
-    'BaseJobTemplate.groovy'
-]
+import javaposse.jobdsl.dsl.DslScriptLoader
+import javaposse.jobdsl.plugin.JenkinsJobManagement
 
-sharedFiles.each { fileName ->
-    def path = "CI/Shared/${fileName}"
-    def script = readFileFromWorkspace(path)
-    evaluate(script)
-    println "Loaded shared: ${path}"
-}
-
-// === 2. Helper: Load all .groovy jobs from a folder ===
-// Load shared class
+// === 1. Load SharedJobDSL class (NOT evaluate!) ===
 def sharedScript = readFileFromWorkspace('CI/Shared/SharedJobDSL.groovy')
-evaluate(sharedScript)
 
-// Helper: load jobs
-def loadJobsFrom(String path) {
-    def dir = new File("${WORKSPACE}/${path}")
+// Tạo GroovyClassLoader để compile class
+def classLoader = new GroovyClassLoader(this.class.classLoader)
+def sharedClass = classLoader.parseClass(sharedScript)
+
+// Đưa class vào binding (để job files dùng được)
+binding.setVariable('SharedJobDSL', sharedClass)
+
+// === 2. Helper: Load and run job DSL scripts ===
+def loadJobsFrom(String relativePath) {
+    def dir = new File("${WORKSPACE}/${relativePath}")
+    if (!dir.isDirectory()) {
+        println "WARNING: Directory not found: ${relativePath}"
+        return
+    }
+
     dir.eachFileMatch(~/.*\.groovy$/) { file ->
-        def script = readFileFromWorkspace("${path}/${file.name}")
-        new javaposse.jobdsl.dsl.DslScriptLoader(
-            new javaposse.jobdsl.plugin.JenkinsJobManagement(System.out, [:], new File('.'))
-        ).runScript(script)
+        def scriptPath = "${relativePath}/${file.name}"
+        println "Processing job: ${scriptPath}"
+        def script = readFileFromWorkspace(scriptPath)
+
+        def jobManagement = new JenkinsJobManagement(System.out, [:], new File('.'))
+        new DslScriptLoader(jobManagement).runScript(script)
     }
 }
 
-// === 3. Create Folder Structure ===
+// === 3. Create Jenkins Folders ===
 folder('SRMS') {
-    description 'Root folder for SRMS project'
+    description 'SRMS Project Root'
 }
 
 folder('SRMS/SpringServices') {
-    description 'CI/CD pipelines for Spring Boot microservices'
+    description 'Spring Boot Microservices CI/CD'
 }
 
-// === 4. Load Spring Jobs ===
+// === 4. Load All Jobs ===
 loadJobsFrom('CI/Spring/Jobs')
-
-// Future:
-// loadJobsFrom('CI/Python/Jobs')
-// loadJobsFrom('CI/Go/Jobs')
 
 println "Master DSL completed successfully."

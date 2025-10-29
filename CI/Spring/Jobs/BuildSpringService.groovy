@@ -1,6 +1,3 @@
-// CI/Spring/Jobs/BuildSpringService.groovy
-// Build a specific Spring microservice module
-
 SharedJobDSL.createJobFromTemplate(this, [
     name: 'Build-Spring-Service',
     stages: [

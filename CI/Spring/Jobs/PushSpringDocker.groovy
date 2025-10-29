@@ -1,6 +1,3 @@
-// CI/Spring/Jobs/PushSpringDocker.groovy
-
-// Dùng trực tiếp SharedJobDSL
 SharedJobDSL.createJobFromTemplate(this, [
     name: 'Push-Spring-Docker-Image',
     description: 'Build and push Docker image',

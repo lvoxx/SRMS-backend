@@ -1,14 +1,15 @@
 // CI/Shared/SharedJobDSL.groovy
-// TẬP TRUNG TẤT CẢ HÀM DÙNG CHUNG CHO JOB DSL
+// Pure class – NO top-level code
 
 import javaposse.jobdsl.dsl.DslFactory
 
 class SharedJobDSL {
+
     static void setupEnvironment(DslFactory dsl) {
         dsl.properties([
             parameters([
-                string(name: 'BRANCH', defaultValue: 'main', description: 'Git branch'),
-                string(name: 'SERVICE_NAME', defaultValue: '', description: 'Service name (e.g., customers)')
+                string(name: 'BRANCH', defaultValue: 'main', description: 'Git branch to build'),
+                string(name: 'SERVICE_NAME', defaultValue: '', description: 'Microservice name (e.g., customers)')
             ])
         ])
 
@@ -29,9 +30,7 @@ class SharedJobDSL {
                     credentials('github-token')
                 }
                 branch('${BRANCH}')
-                extensions {
-                    cleanAfterCheckout()
-                }
+                extensions { cleanAfterCheckout() }
             }
         }
     }
@@ -44,6 +43,11 @@ class SharedJobDSL {
 
         dsl.pipelineJob("${folder}/${name}") {
             description description
+
+            // SCM + Params + Env
+            setupEnvironment(delegate)
+            checkoutRepo(delegate)
+
             definition {
                 cps {
                     script("""
@@ -56,15 +60,14 @@ class SharedJobDSL {
                             stages {
                                 ${stages.collect { it() }.join('\n')}
                             }
-                            post { always { cleanWs() } }
+                            post {
+                                always { cleanWs() }
+                            }
                         }
                     """.stripIndent())
                     sandbox(false)
                 }
             }
-            // Áp dụng chung
-            setupEnvironment(delegate)
-            checkoutRepo(delegate)
         }
     }
 }
