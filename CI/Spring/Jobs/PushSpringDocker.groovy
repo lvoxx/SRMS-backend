@@ -1,19 +1,19 @@
 // CI/Spring/Jobs/PushSpringDocker.groovy
-// Build and push Docker image for a service
 
-createJobFromTemplate(
+// Dùng trực tiếp SharedJobDSL
+SharedJobDSL.createJobFromTemplate(this, [
     name: 'Push-Spring-Docker-Image',
-    description: 'Builds and pushes Docker image to Docker Hub',
+    description: 'Build and push Docker image',
     stages: [
         {
             """
-            stage('Validate Service') {
-                when { expression { return params.SERVICE_NAME?.trim() } }
+            stage('Validate') {
+                when { expression { params.SERVICE_NAME } }
                 steps {
                     script {
-                        env.SERVICE_DIR = "${env.CODEBASE_DIR}/${params.SERVICE_NAME}"
-                        if (!fileExists("${env.SERVICE_DIR}/Dockerfile")) {
-                            error "Dockerfile not found in \${env.SERVICE_DIR}"
+                        def dir = "${env.CODEBASE_DIR}/${params.SERVICE_NAME}"
+                        if (!fileExists("${dir}/Dockerfile")) {
+                            error "Dockerfile not found in \${dir}"
                         }
                     }
                 }
@@ -33,11 +33,11 @@ createJobFromTemplate(
         },
         {
             """
-            stage('Build & Push Image') {
+            stage('Build & Push') {
                 steps {
                     script {
                         def image = "${env.DOCKERHUB_USER}/${params.SERVICE_NAME.toLowerCase()}:latest"
-                        dir(env.SERVICE_DIR) {
+                        dir("${env.CODEBASE_DIR}/${params.SERVICE_NAME}") {
                             sh "docker build -t \${image} ."
                             sh "docker push \${image}"
                         }
@@ -47,4 +47,4 @@ createJobFromTemplate(
             """
         }
     ]
-)
+])

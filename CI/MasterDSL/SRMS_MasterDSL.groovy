@@ -18,17 +18,15 @@ sharedFiles.each { fileName ->
 }
 
 // === 2. Helper: Load all .groovy jobs from a folder ===
-def loadJobsFrom(String relativePath) {
-    def dir = new File("${WORKSPACE}/${relativePath}")
-    if (!dir.isDirectory()) {
-        println "WARNING: Job directory not found: ${relativePath}"
-        return
-    }
+// Load shared class
+def sharedScript = readFileFromWorkspace('CI/Shared/SharedJobDSL.groovy')
+evaluate(sharedScript)
 
+// Helper: load jobs
+def loadJobsFrom(String path) {
+    def dir = new File("${WORKSPACE}/${path}")
     dir.eachFileMatch(~/.*\.groovy$/) { file ->
-        def scriptPath = "${relativePath}/${file.name}"
-        println "Processing job: ${scriptPath}"
-        def script = readFileFromWorkspace(scriptPath)
+        def script = readFileFromWorkspace("${path}/${file.name}")
         new javaposse.jobdsl.dsl.DslScriptLoader(
             new javaposse.jobdsl.plugin.JenkinsJobManagement(System.out, [:], new File('.'))
         ).runScript(script)
