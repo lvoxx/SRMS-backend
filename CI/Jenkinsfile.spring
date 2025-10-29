@@ -61,8 +61,8 @@ pipeline {
                             dir(module) {
                                 sh """
                                     set -e
-                                    echo "🔹 Building Dockerfile for $(basename $PWD)"
-                                    docker build -t '"'"'${imageName}'"'"':latest -t '"'"'${imageName}'"'"':${COMMIT_HASH} .
+                                    echo '🔹 Building Dockerfile for ${module}'
+                                    docker build -t ${taggedNameLatest} -t ${taggedNameCommit} .
                                 """
                             }
                         }
