@@ -69,9 +69,10 @@ pipeline {
 
                     dir('SpringServices') {
                         def modules = sh(
-                            script: "find . -maxdepth 1 -type d | grep -v 'starter' | grep -v 'common' | grep -v '^.$' | sed 's|^./||'",
+                            script: 'find . -maxdepth 1 -type d | grep -v "starter" | grep -v "common" | grep -v "^.$" | sed "s|^./||"',
                             returnStdout: true
                         ).trim().split('\n')
+
 
                         for (module in modules) {
                             def imageName = "${DOCKER_REPO}/${module.toLowerCase()}"
