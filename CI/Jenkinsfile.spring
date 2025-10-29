@@ -1,12 +1,27 @@
 pipeline {
     agent any
 
+    /****************************************
+     * 🌟 CONFIGURATION SECTION
+     ****************************************/
     environment {
+        // GitHub & Docker credentials
         GITHUB_TOKEN = credentials('github-token')
         DOCKER_CREDS = credentials('docker-hub-creds')
+
+        // Docker Hub credentials
         DOCKER_USER = "${DOCKER_CREDS_USR}"
         DOCKER_PASS = "${DOCKER_CREDS_PSW}"
-        DOCKER_REPO = "lvoxx"   // namespace Docker Hub của bạn
+
+        // ---- 🔧 General Config ----
+        GIT_REPO_URL = "https://github.com/lvoxx/SRMS-backend.git"
+        GIT_BRANCH = "main"
+        DOCKER_ORG = "srms"        // Docker Hub organization prefix
+
+        // ---- 🧩 Build Targets ----
+        MODULES = "contact,customer,dashboard,kitchen,notification,order,payment,reporting,warehouse"
+
+        // ---- 🏷️ Commit Tag ----
         COMMIT_HASH = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
     }
 
@@ -43,58 +58,40 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 script {
+                    def modules = MODULES.split(',')
                     dir('SpringServices') {
-                        // Tìm tất cả module con, trừ starter & common
-                        def modules = sh(
-                            script: 'find . -maxdepth 1 -type d | grep -v "starter" | grep -v "common" | grep -v "^.$" | sed "s|^./||"',
-                            returnStdout: true
-                        ).trim().split('\n')
-
                         for (module in modules) {
-                            def imageName = "srms/${module.toLowerCase()}"
+                            def imageName = "${DOCKER_ORG}/${module.trim().toLowerCase()}"
                             def taggedNameLatest = "${imageName}:latest"
                             def taggedNameCommit = "${imageName}:${COMMIT_HASH}"
 
                             echo "🚧 Building Docker image for module: ${module}"
-                            echo "🔹 Building ${taggedNameLatest}"
 
-                            dir(module) {
-                                sh """
-                                    set -e
-                                    echo '🔹 Building Dockerfile for ${module}'
-                                    docker build -t ${taggedNameLatest} -t ${taggedNameCommit} .
-                                """
-                            }
+                            sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
                         }
                     }
                 }
             }
         }
 
-
         stage('Push Docker Images') {
             steps {
                 script {
+                    def modules = MODULES.split(',')
+
+                    // Login Docker Hub
                     sh """
                         echo "🔹 Logging into Docker Hub..."
                         echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
                     """
 
-                    dir('SpringServices') {
-                        def modules = sh(
-                            script: 'find . -maxdepth 1 -type d | grep -v "starter" | grep -v "common" | grep -v "^.$" | sed "s|^./||"',
-                            returnStdout: true
-                        ).trim().split('\n')
-
-
-                        for (module in modules) {
-                            def imageName = "${DOCKER_REPO}/${module.toLowerCase()}"
-                            echo "📦 Pushing ${imageName}:latest and ${imageName}:${COMMIT_HASH}"
-                            sh """
-                                docker push ${imageName}:latest
-                                docker push ${imageName}:${COMMIT_HASH}
-                            """
-                        }
+                    for (module in modules) {
+                        def imageName = "${DOCKER_ORG}/${module.trim().toLowerCase()}"
+                        echo "📦 Pushing ${imageName}:latest and ${imageName}:${COMMIT_HASH}"
+                        sh """
+                            docker push ${imageName}:latest
+                            docker push ${imageName}:${COMMIT_HASH}
+                        """
                     }
                 }
             }
