@@ -44,29 +44,33 @@ pipeline {
             steps {
                 script {
                     dir('SpringServices') {
+                        // Tìm tất cả module con, trừ starter & common
                         def modules = sh(
                             script: 'find . -maxdepth 1 -type d | grep -v "starter" | grep -v "common" | grep -v "^.$" | sed "s|^./||"',
                             returnStdout: true
                         ).trim().split('\n')
 
                         for (module in modules) {
-                            def modulePath = "SpringServices/${module}"
-                            def imageName = "${DOCKER_REPO}/${module.toLowerCase()}:latest"
-                            def taggedName = "${DOCKER_REPO}/${module.toLowerCase()}:${COMMIT_HASH}"
+                            def imageName = "srms/${module.toLowerCase()}"
+                            def taggedNameLatest = "${imageName}:latest"
+                            def taggedNameCommit = "${imageName}:${COMMIT_HASH}"
 
-                            echo "🚧 Building Docker image for ${module}"
+                            echo "🚧 Building Docker image for module: ${module}"
+                            echo "🔹 Building ${taggedNameLatest}"
 
-                            dir(modulePath) {
-                                sh """
-                                    echo "🔹 Building ${imageName}"
-                                    docker build -t ${imageName} -t ${taggedName} .
-                                """
+                            dir(module) {
+                                sh '''
+                                    set -e
+                                    echo "🔹 Building Dockerfile for $(basename $PWD)"
+                                    docker build -t '"'"'${imageName}'"'"':latest -t '"'"'${imageName}'"'"':${COMMIT_HASH} .
+                                '''
                             }
                         }
                     }
                 }
             }
         }
+
 
         stage('Push Docker Images') {
             steps {
