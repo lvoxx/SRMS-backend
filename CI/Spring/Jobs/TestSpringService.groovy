@@ -1,5 +1,3 @@
-import ci.SharedJobDSL
-
 SharedJobDSL.createJobFromTemplate(this, [
     name: 'Test-Spring-Services',
     stages: [

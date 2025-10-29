@@ -1,38 +1,50 @@
 // CI/MasterDSL/SRMS-MasterDSL.groovy
-// Job DSL Seed Job – Final working version
+// Master DSL – Load shared helpers and build all job DSLs
 
 import javaposse.jobdsl.dsl.DslScriptLoader
 import javaposse.jobdsl.plugin.JenkinsJobManagement
 
-// === 1. Load SharedJobDSL class (NOT evaluate!) ===
-def sharedScript = readFileFromWorkspace('CI/Shared/SharedJobDSL.groovy')
+println "=== SRMS Master DSL started ==="
 
-// Tạo GroovyClassLoader để compile class
-def classLoader = new GroovyClassLoader(this.class.classLoader)
-def sharedClass = classLoader.parseClass(sharedScript)
-
-// Đưa class vào binding (để job files dùng được)
-binding.setVariable('SharedJobDSL', sharedClass)
-
-// === 2. Helper: Load and run job DSL scripts ===
+// === 1. Helper: Load and run job DSL scripts ===
 def loadJobsFrom(String relativePath) {
-    def dir = new File("${WORKSPACE}/${relativePath}")
+    def workspace = System.getenv('WORKSPACE') ?: new File('.').absolutePath
+    def dir = new File("${workspace}/${relativePath}")
+
     if (!dir.isDirectory()) {
-        println "WARNING: Directory not found: ${relativePath}"
+        println "⚠️  Directory not found: ${relativePath}"
         return
     }
 
     dir.eachFileMatch(~/.*\.groovy$/) { file ->
         def scriptPath = "${relativePath}/${file.name}"
-        println "Processing job: ${scriptPath}"
-        def script = readFileFromWorkspace(scriptPath)
+        println "\n🔹 Processing job: ${scriptPath}"
 
         def jobManagement = new JenkinsJobManagement(System.out, [:], new File('.'))
-        new DslScriptLoader(jobManagement).runScript(script)
+        def dslLoader = new DslScriptLoader(jobManagement)
+
+        // === Load SharedJobDSL first (so it’s visible to the job scripts) ===
+        try {
+            def sharedScript = readFileFromWorkspace('CI/Shared/SharedJobDSL.groovy')
+            dslLoader.runScript(sharedScript)
+            println "✅ SharedJobDSL loaded successfully."
+        } catch (e) {
+            println "❌ Failed to load SharedJobDSL: ${e.message}"
+            return
+        }
+
+        // === Now run the actual job DSL file ===
+        try {
+            def jobScript = readFileFromWorkspace(scriptPath)
+            dslLoader.runScript(jobScript)
+            println "✅ Job created: ${file.name}"
+        } catch (e) {
+            println "❌ Failed to process ${file.name}: ${e.message}"
+        }
     }
 }
 
-// === 3. Create Jenkins Folders ===
+// === 2. Create Jenkins folders ===
 folder('SRMS') {
     description 'SRMS Project Root'
 }
@@ -41,7 +53,5 @@ folder('SRMS/SpringServices') {
     description 'Spring Boot Microservices CI/CD'
 }
 
-// === 4. Load All Jobs ===
-loadJobsFrom('CI/Spring/Jobs')
-
-println "Master DSL completed successfully."
+// === 3. Load All Jobs ===
+println "\
