@@ -8,22 +8,22 @@ println "=== SRMS Master DSL started ==="
 
 // === 1. Helper: Load and run job DSL scripts ===
 def loadJobsFrom(String relativePath) {
-    def workspace = System.getenv('WORKSPACE') ?: new File('.').absolutePath
-    def dir = new File("${workspace}/${relativePath}")
+    def workspace = new File(".").canonicalPath
+    def targetDir = new File("${workspace}/${relativePath}")
 
-    if (!dir.isDirectory()) {
+    println "🔍 Looking for job scripts in: ${targetDir.absolutePath}"
+
+    if (!targetDir.exists() || !targetDir.isDirectory()) {
         println "⚠️  Directory not found: ${relativePath}"
         return
     }
 
-    dir.eachFileMatch(~/.*\.groovy$/) { file ->
-        def scriptPath = "${relativePath}/${file.name}"
-        println "\n🔹 Processing job: ${scriptPath}"
+    targetDir.eachFileMatch(~/.*\.groovy$/) { file ->
+        println "\n🔹 Processing job: ${file.name}"
 
         def jobManagement = new JenkinsJobManagement(System.out, [:], new File('.'))
         def dslLoader = new DslScriptLoader(jobManagement)
 
-        // === Load SharedJobDSL first (so it’s visible to the job scripts) ===
         try {
             def sharedScript = readFileFromWorkspace('CI/Shared/SharedJobDSL.groovy')
             dslLoader.runScript(sharedScript)
@@ -33,9 +33,8 @@ def loadJobsFrom(String relativePath) {
             return
         }
 
-        // === Now run the actual job DSL file ===
         try {
-            def jobScript = readFileFromWorkspace(scriptPath)
+            def jobScript = readFileFromWorkspace("${relativePath}/${file.name}")
             dslLoader.runScript(jobScript)
             println "✅ Job created: ${file.name}"
         } catch (e) {
