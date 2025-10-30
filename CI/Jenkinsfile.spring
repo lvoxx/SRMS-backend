@@ -58,16 +58,16 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 script {
-                    def modules = MODULES.split(',')
-                    for (module in modules) {
-                            def imageName = "${DOCKER_ORG}/${module.trim().toLowerCase()}"
+                    dir("SpringServices") {
+                        def modules = MODULES.split(',')
+                        for (module in modules) {
+                            def imageName = "${DOCKER_ORG}/${module}"
                             def taggedNameLatest = "${imageName}:latest"
                             def taggedNameCommit = "${imageName}:${COMMIT_HASH}"
 
                             echo "🚧 Building Docker image for module: ${module}"
 
-                            def buildDir = 'SpringServices/' + module.trim()
-                            dir(buildDir) {
+                            dir("${module}") {
                                 // Debug: print current workspace
                                 echo "📂 Current working directory for ${mod}:"
                                 sh 'pwd && ls -alh'
@@ -90,6 +90,7 @@ pipeline {
                                 sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
                             }
                         }
+                    }
                 }
             }
         }
