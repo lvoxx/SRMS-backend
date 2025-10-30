@@ -69,7 +69,7 @@ pipeline {
 
                             dir("${module}") {
                                 // Debug: print current workspace
-                                echo "📂 Current working directory for ${mod}:"
+                                echo "📂 Current working directory for ${module}:"
                                 sh 'pwd && ls -alh'
 
                                 // Debug: check if target/*.jar do exists
