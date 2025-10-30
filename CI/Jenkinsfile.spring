@@ -9,14 +9,11 @@ pipeline {
         GITHUB_TOKEN = credentials('github-token')
         DOCKER_CREDS = credentials('docker-hub-creds')
 
-        // Docker Hub credentials
-        DOCKER_USER = "${DOCKER_CREDS_USR}"
-        DOCKER_PASS = "${DOCKER_CREDS_PSW}"
-
         // ---- 🔧 General Config ----
         GIT_REPO_URL = "https://github.com/lvoxx/SRMS-backend.git"
         GIT_BRANCH = "main"
-        DOCKER_ORG = "srms"        // Docker Hub organization prefix
+        DOCKER_USER_ORG = "lvoxx"  // Docker Hub username/organization
+        DOCKER_PREFIX = "srms"      // Prefix for image names
 
         // ---- 🧩 Build Targets ----
         MODULES = "contactor,customer,dashboard,kitchen,notification,order,payment,reporting,warehouse"
@@ -78,17 +75,17 @@ pipeline {
 
                         for (module in modules) {
                             def moduleName = module.trim()
-                            def imageName = "${DOCKER_ORG}/${moduleName}"
+                            def imageName = "${DOCKER_USER_ORG}/${DOCKER_PREFIX}-${moduleName}"
                             def taggedNameLatest = "${imageName}:latest"
                             def taggedNameCommit = "${imageName}:${COMMIT_HASH}"
 
-                            echo "🚧 Building Docker image for module: ${moduleName}"
+                            echo "🚧 Building Docker image: ${imageName}"
 
                             try {
                                 dir("${moduleName}") {
                                     echo "🐳 Building in directory: ${pwd()}"
                                     sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
-                                    echo "✅ Successfully built ${moduleName}"
+                                    echo "✅ Successfully built ${imageName}"
                                 }
                             } catch (Exception e) {
                                 buildErrors.add("❌ Failed to build ${moduleName}: ${e.message}")
@@ -110,27 +107,33 @@ pipeline {
                     def modules = MODULES.split(',')
                     def pushErrors = []
 
-                    // Login to Docker Hub once
+                    // Login to Docker Hub using withCredentials for security
                     echo "🔹 Logging into Docker Hub..."
-                    sh """
-                        echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-                    """
-
-                    for (module in modules) {
-                        def moduleName = module.trim().toLowerCase()
-                        def imageName = "${DOCKER_ORG}/${moduleName}"
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-hub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh """
+                            echo "$DOCKER_CREDS_PSW" | docker login -u "$DOCKER_CREDS_USR" --password-stdin
+                        """
                         
-                        echo "📦 Pushing ${imageName}:latest and ${imageName}:${COMMIT_HASH}"
-                        
-                        try {
-                            sh """
-                                docker push ${imageName}:latest
-                                docker push ${imageName}:${COMMIT_HASH}
-                            """
-                            echo "✅ Successfully pushed ${moduleName}"
-                        } catch (Exception e) {
-                            pushErrors.add("❌ Failed to push ${moduleName}: ${e.message}")
-                            echo "⚠️ Error pushing ${moduleName}, continuing with other modules..."
+                        for (module in modules) {
+                            def moduleName = module.trim().toLowerCase()
+                            def imageName = "${DOCKER_USER_ORG}/${DOCKER_PREFIX}-${moduleName}"
+                            
+                            echo "📦 Pushing ${imageName}:latest and ${imageName}:${COMMIT_HASH}"
+                            
+                            try {
+                                sh """
+                                    docker push ${imageName}:latest
+                                    docker push ${imageName}:${COMMIT_HASH}
+                                """
+                                echo "✅ Successfully pushed ${imageName}"
+                            } catch (Exception e) {
+                                pushErrors.add("❌ Failed to push ${moduleName}: ${e.message}")
+                                echo "⚠️ Error pushing ${moduleName}, continuing with other modules..."
+                            }
                         }
                     }
 
@@ -152,14 +155,14 @@ pipeline {
                     
                     for (module in modules) {
                         def moduleName = module.trim().toLowerCase()
-                        def imageName = "${DOCKER_ORG}/${moduleName}"
+                        def imageName = "${DOCKER_USER_ORG}/${DOCKER_PREFIX}-${moduleName}"
                         
                         try {
                             sh """
                                 docker rmi ${imageName}:latest || true
                                 docker rmi ${imageName}:${COMMIT_HASH} || true
                             """
-                            echo "🗑️ Removed local images for ${moduleName}"
+                            echo "🗑️ Removed local images for ${imageName}"
                         } catch (Exception e) {
                             echo "⚠️ Could not remove images for ${moduleName}: ${e.message}"
                         }
@@ -210,7 +213,7 @@ pipeline {
             ═══════════════════════════════════════
             📦 Modules built: ${MODULES}
             🏷️  Commit hash: ${COMMIT_HASH}
-            🐳 Images pushed to: ${DOCKER_ORG}/*
+            🐳 Images pushed to: ${DOCKER_USER_ORG}/${DOCKER_PREFIX}-*
             ═══════════════════════════════════════
             """
         }
@@ -231,14 +234,14 @@ pipeline {
                 sh 'docker logout || true'
                 
                 // Additional cleanup if needed
-                sh '''
+                sh """
                     # Remove any stopped containers
                     docker container prune -f || true
                     
                     # Show disk usage
                     echo "💾 Current Docker disk usage:"
                     docker system df || true
-                '''
+                """
             }
         }
     }
