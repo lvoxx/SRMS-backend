@@ -10,8 +10,8 @@ pipeline {
         DOCKER_CREDS = credentials('docker-hub-creds')
 
         // Docker Hub credentials
-        DOCKER_USER = '$DOCKER_CREDS_USR'
-        DOCKER_PASS = '$DOCKER_CREDS_PSW'
+        DOCKER_USER = "${DOCKER_CREDS_USR}"
+        DOCKER_PASS = "${DOCKER_CREDS_PSW}"
 
         // ---- 🔧 General Config ----
         GIT_REPO_URL = "https://github.com/lvoxx/SRMS-backend.git"
@@ -25,15 +25,24 @@ pipeline {
         COMMIT_HASH = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
     }
 
+    options {
+        timestamps()
+        timeout(time: 2, unit: 'HOURS')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 echo "🔹 Cloning repository..."
                 git(
-                    url: 'https://github.com/lvoxx/SRMS-backend.git',
-                    branch: 'main',
+                    url: "${GIT_REPO_URL}",
+                    branch: "${GIT_BRANCH}",
                     credentialsId: 'github-token'
                 )
+                script {
+                    echo "📌 Current commit: ${COMMIT_HASH}"
+                }
             }
         }
 
@@ -44,13 +53,18 @@ pipeline {
                     sh 'mvn clean test -B'
                 }
             }
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                }
+            }
         }
 
-        stage('Install File Jar') {
+        stage('Install JAR Files') {
             steps {
                 dir('SpringServices') {
-                    echo "🔹 Running Jar installation from SpringServices root pom.xml"
-                    sh 'mvn clean install -DskipTests'
+                    echo "🔹 Running JAR installation from SpringServices root pom.xml"
+                    sh 'mvn clean install -DskipTests -B'
                 }
             }
         }
@@ -60,17 +74,30 @@ pipeline {
                 script {
                     dir("SpringServices") {
                         def modules = MODULES.split(',')
+                        def buildErrors = []
+
                         for (module in modules) {
-                            def imageName = "${DOCKER_ORG}/${module}"
+                            def moduleName = module.trim()
+                            def imageName = "${DOCKER_ORG}/${moduleName}"
                             def taggedNameLatest = "${imageName}:latest"
                             def taggedNameCommit = "${imageName}:${COMMIT_HASH}"
 
-                            echo "🚧 Building Docker image for module: ${module}"
+                            echo "🚧 Building Docker image for module: ${moduleName}"
 
-                            dir("${module}") {
-                                echo "🐳 Starting Docker build in directory: ${pwd}"
-                                sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
+                            try {
+                                dir("${moduleName}") {
+                                    echo "🐳 Building in directory: ${pwd()}"
+                                    sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
+                                    echo "✅ Successfully built ${moduleName}"
+                                }
+                            } catch (Exception e) {
+                                buildErrors.add("❌ Failed to build ${moduleName}: ${e.message}")
+                                echo "⚠️ Error building ${moduleName}, continuing with other modules..."
                             }
+                        }
+
+                        if (buildErrors.size() > 0) {
+                            error("Build failed for some modules:\n${buildErrors.join('\n')}")
                         }
                     }
                 }
@@ -81,21 +108,95 @@ pipeline {
             steps {
                 script {
                     def modules = MODULES.split(',')
+                    def pushErrors = []
 
-                    // Login Docker Hub
+                    // Login to Docker Hub once
+                    echo "🔹 Logging into Docker Hub..."
                     sh """
-                        echo "🔹 Logging into Docker Hub..."
                         echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
                     """
 
                     for (module in modules) {
-                        def imageName = "${DOCKER_ORG}/${module.trim().toLowerCase()}"
+                        def moduleName = module.trim().toLowerCase()
+                        def imageName = "${DOCKER_ORG}/${moduleName}"
+                        
                         echo "📦 Pushing ${imageName}:latest and ${imageName}:${COMMIT_HASH}"
-                        sh """
-                            docker push ${imageName}:latest
-                            docker push ${imageName}:${COMMIT_HASH}
-                        """
+                        
+                        try {
+                            sh """
+                                docker push ${imageName}:latest
+                                docker push ${imageName}:${COMMIT_HASH}
+                            """
+                            echo "✅ Successfully pushed ${moduleName}"
+                        } catch (Exception e) {
+                            pushErrors.add("❌ Failed to push ${moduleName}: ${e.message}")
+                            echo "⚠️ Error pushing ${moduleName}, continuing with other modules..."
+                        }
                     }
+
+                    if (pushErrors.size() > 0) {
+                        error("Push failed for some modules:\n${pushErrors.join('\n')}")
+                    }
+                }
+            }
+        }
+
+        stage('Clean Docker Images') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                script {
+                    echo "🧹 Cleaning local Docker images to free up space..."
+                    def modules = MODULES.split(',')
+                    
+                    for (module in modules) {
+                        def moduleName = module.trim().toLowerCase()
+                        def imageName = "${DOCKER_ORG}/${moduleName}"
+                        
+                        try {
+                            sh """
+                                docker rmi ${imageName}:latest || true
+                                docker rmi ${imageName}:${COMMIT_HASH} || true
+                            """
+                            echo "🗑️ Removed local images for ${moduleName}"
+                        } catch (Exception e) {
+                            echo "⚠️ Could not remove images for ${moduleName}: ${e.message}"
+                        }
+                    }
+                    
+                    // Clean dangling images
+                    sh 'docker image prune -f || true'
+                    echo "✅ Docker cleanup completed"
+                }
+            }
+        }
+
+        stage('Clean Workspace') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                script {
+                    echo "🧹 Cleaning workspace..."
+                    
+                    // Clean Maven artifacts
+                    dir('SpringServices') {
+                        sh 'mvn clean || true'
+                    }
+                    
+                    // Clean workspace
+                    cleanWs(
+                        deleteDirs: true,
+                        disableDeferredWipeout: true,
+                        notFailBuild: true,
+                        patterns: [
+                            [pattern: '**/target/**', type: 'INCLUDE'],
+                            [pattern: '**/.git/**', type: 'EXCLUDE']
+                        ]
+                    )
+                    
+                    echo "✅ Workspace cleaned successfully"
                 }
             }
         }
@@ -103,13 +204,42 @@ pipeline {
 
     post {
         success {
-            echo "✅ Build & Push completed successfully!"
+            echo """
+            ═══════════════════════════════════════
+            ✅ BUILD & PUSH COMPLETED SUCCESSFULLY!
+            ═══════════════════════════════════════
+            📦 Modules built: ${MODULES}
+            🏷️  Commit hash: ${COMMIT_HASH}
+            🐳 Images pushed to: ${DOCKER_ORG}/*
+            ═══════════════════════════════════════
+            """
         }
         failure {
-            echo "❌ Pipeline failed. Check logs for details."
+            echo """
+            ═══════════════════════════════════════
+            ❌ PIPELINE FAILED
+            ═══════════════════════════════════════
+            Check logs above for details.
+            Build: ${env.BUILD_NUMBER}
+            Commit: ${COMMIT_HASH}
+            ═══════════════════════════════════════
+            """
         }
         always {
-            sh 'docker logout || true'
+            script {
+                echo "🔚 Performing final cleanup..."
+                sh 'docker logout || true'
+                
+                // Additional cleanup if needed
+                sh '''
+                    # Remove any stopped containers
+                    docker container prune -f || true
+                    
+                    # Show disk usage
+                    echo "💾 Current Docker disk usage:"
+                    docker system df || true
+                '''
+            }
         }
     }
 }
