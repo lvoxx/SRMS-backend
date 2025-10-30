@@ -235,26 +235,56 @@ INSERT INTO warehouse (product_name, quantity, min_quantity, contactor_id, updat
 ('Pizza Serving Spatula', 12, 3, NULL, NULL);
 
 -- Insert sample warehouse history records
-INSERT INTO warehouse_history (invoice_id, warehouse_id, quantity, type, updated_by) VALUES
--- Initial stock intake
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', (SELECT id FROM warehouse WHERE product_name = '00 Flour'), 500, 'import', NULL),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', (SELECT id FROM warehouse WHERE product_name = 'Mozzarella Cheese'), 200, 'import', NULL),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', (SELECT id FROM warehouse WHERE product_name = 'Italian Tomato Sauce'), 150, 'import', NULL),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', (SELECT id FROM warehouse WHERE product_name = 'Pepperoni'), 120, 'import', NULL),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', (SELECT id FROM warehouse WHERE product_name = 'Pizza Base Size M'), 180, 'import', NULL),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16', (SELECT id FROM warehouse WHERE product_name = 'Coca Cola Can'), 300, 'import', NULL),
+INSERT INTO warehouse_history (warehouse_id, quantity, type, updated_by) VALUES
+-- Initial stock intake for flour
+((SELECT id FROM warehouse WHERE product_name = '00 Flour'), 500, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Pizza Flour'), 300, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Dry Yeast'), 50, 'import', NULL),
 
--- Stock out for sample orders
-('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', (SELECT id FROM warehouse WHERE product_name = 'Mozzarella Cheese'), 50, 'export', NULL),
-('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', (SELECT id FROM warehouse WHERE product_name = 'Italian Tomato Sauce'), 30, 'export', NULL),
-('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', (SELECT id FROM warehouse WHERE product_name = 'Pepperoni'), 25, 'export', NULL),
-('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', (SELECT id FROM warehouse WHERE product_name = 'Pizza Base Size M'), 45, 'export', NULL),
-('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', (SELECT id FROM warehouse WHERE product_name = 'Coca Cola Can'), 75, 'export', NULL),
-('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16', (SELECT id FROM warehouse WHERE product_name = '00 Flour'), 100, 'export', NULL),
+-- Initial stock intake for cheeses
+((SELECT id FROM warehouse WHERE product_name = 'Mozzarella Cheese'), 200, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Parmesan Cheese'), 80, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Cheddar Cheese'), 60, 'import', NULL),
 
--- Additional stock intake
-('c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', (SELECT id FROM warehouse WHERE product_name = 'Mozzarella Cheese'), 80, 'import', NULL),
-('c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', (SELECT id FROM warehouse WHERE product_name = 'Red Bell Pepper'), 40, 'import', NULL),
-('c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', (SELECT id FROM warehouse WHERE product_name = 'Fresh Mushrooms'), 30, 'import', NULL),
-('c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', (SELECT id FROM warehouse WHERE product_name = 'Fresh Basil'), 15, 'import', NULL),
-('c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', (SELECT id FROM warehouse WHERE product_name = 'Pizza Box Size L'), 200, 'import', NULL);
+-- Initial stock intake for sauces
+((SELECT id FROM warehouse WHERE product_name = 'Italian Tomato Sauce'), 150, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Crushed Tomatoes'), 120, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'BBQ Sauce'), 55, 'import', NULL),
+
+-- Initial stock intake for meats
+((SELECT id FROM warehouse WHERE product_name = 'Pepperoni'), 120, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Italian Sausage'), 90, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Ham'), 70, 'import', NULL),
+
+-- Initial stock intake for vegetables
+((SELECT id FROM warehouse WHERE product_name = 'Fresh Mushrooms'), 45, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Black Olives'), 35, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Green Bell Pepper'), 60, 'import', NULL),
+
+-- Initial stock intake for pizza bases
+((SELECT id FROM warehouse WHERE product_name = 'Pizza Base Size M'), 180, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Pizza Base Size L'), 160, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Thin Crispy Base'), 120, 'import', NULL),
+
+-- Initial stock intake for beverages
+((SELECT id FROM warehouse WHERE product_name = 'Coca Cola Can'), 300, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Bottled Water'), 400, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Heineken Beer'), 150, 'import', NULL),
+
+-- Export transactions for daily operations
+((SELECT id FROM warehouse WHERE product_name = 'Mozzarella Cheese'), 30, 'export', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Italian Tomato Sauce'), 20, 'export', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Pepperoni'), 15, 'export', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Pizza Base Size M'), 25, 'export', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Fresh Mushrooms'), 10, 'export', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Green Bell Pepper'), 12, 'export', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Coca Cola Can'), 45, 'export', NULL),
+((SELECT id FROM warehouse WHERE product_name = '00 Flour'), 80, 'export', NULL),
+
+-- Additional import transactions for restocking
+((SELECT id FROM warehouse WHERE product_name = 'Mozzarella Cheese'), 50, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Pepperoni'), 40, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Pizza Base Size M'), 60, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Coca Cola Can'), 100, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Fresh Mushrooms'), 25, 'import', NULL),
+((SELECT id FROM warehouse WHERE product_name = 'Pizza Box Size L'), 150, 'import', NULL);
