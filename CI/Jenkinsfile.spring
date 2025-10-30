@@ -67,6 +67,25 @@ pipeline {
                             echo "🚧 Building Docker image for module: ${module}"
 
                             dir("SpringServices/${module.trim()}") {
+                                // Debug: print current workspace
+                                echo "📂 Current working directory for ${mod}:"
+                                sh 'pwd && ls -alh'
+
+                                // Debug: check if target/*.jar do exists
+                                echo "🔍 Checking JAR files in target/..."
+                                sh '''
+                                    if [ -d target ]; then
+                                        echo "Contents of target/:"
+                                        ls -alh target
+                                        echo "Found JAR files:"
+                                        find target -maxdepth 1 -type f -name "*.jar" || echo "⚠️  No JAR found in target/"
+                                    else
+                                        echo "⚠️  target/ directory not found!"
+                                    fi
+                                '''
+
+                                // Docker image build
+                                echo "🐳 Starting Docker build in directory: $(pwd)"
                                 sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
                             }
                         }
