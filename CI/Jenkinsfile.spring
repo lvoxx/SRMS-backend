@@ -10,8 +10,8 @@ pipeline {
         DOCKER_CREDS = credentials('docker-hub-creds')
 
         // Docker Hub credentials
-        DOCKER_USER = DOCKER_CREDS.usr
-        DOCKER_PASS = DOCKER_CREDS.psw
+        DOCKER_USER = '$DOCKER_CREDS_USR'
+        DOCKER_PASS = '$DOCKER_CREDS_PSW'
 
         // ---- 🔧 General Config ----
         GIT_REPO_URL = "https://github.com/lvoxx/SRMS-backend.git"
