@@ -19,7 +19,7 @@ pipeline {
         DOCKER_ORG = "srms"        // Docker Hub organization prefix
 
         // ---- 🧩 Build Targets ----
-        MODULES = "contact,customer,dashboard,kitchen,notification,order,payment,reporting,warehouse"
+        MODULES = "contactor,customer,dashboard,kitchen,notification,order,payment,reporting,warehouse"
 
         // ---- 🏷️ Commit Tag ----
         COMMIT_HASH = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
