@@ -85,7 +85,7 @@ pipeline {
                                 """
 
                                 // Docker image build
-                                echo "🐳 Starting Docker build in directory: $(pwd)"
+                                echo "🐳 Starting Docker build in directory: ${pwd}"
                                 sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
                             }
                         }
