@@ -68,62 +68,6 @@ pipeline {
                             echo "🚧 Building Docker image for module: ${module}"
 
                             dir("${module}") {
-                                // DEBUG: print current workspace
-                                echo "📂 Current working directory for ${module}:"
-                                sh 'pwd && ls -alh'
-
-                                // DEBUG: check if target/*.jar do exists
-                                echo "🔍 Checking JAR files in target/..."
-                                sh """
-                                    if [ -d target ]; then
-                                        echo "Contents of target/:"
-                                        ls -alh target
-                                        echo "Found JAR files:"
-                                        find target -maxdepth 1 -type f -name "*.jar" || echo "⚠️  No JAR found in target/"
-                                    else
-                                        echo "⚠️  target/ directory not found!"
-                                    fi
-                                """
-
-                                // === DEBUG & VALIDATION BLOCK ===
-                                sh '''
-                                    echo "=== DOCKERFILE VALIDATION ==="
-                                    pwd
-                                    echo "Listing all files (case-sensitive):"
-                                    ls -alh
-
-                                    # Tìm tất cả các file có tên gần giống Dockerfile
-                                    echo "Searching for Dockerfile (any case):"
-                                    find . -maxdepth 2 -type f -iname "dockerfile*" | head -5 || echo "No file matching 'dockerfile*' found"
-
-                                    # Kiểm tra chính xác file tên Dockerfile (D hoa)
-                                    if [ ! -f "Dockerfile" ]; then
-                                        echo "ERROR: 'Dockerfile' NOT FOUND in $(pwd)!"
-                                        echo "   Expected location: $(pwd)/Dockerfile"
-                                        echo "   This will cause 'docker build' to fail."
-                                        exit 1
-                                    fi
-
-                                    echo "Dockerfile FOUND at: $(pwd)/Dockerfile"
-
-                                    # Kiểm tra quyền đọc
-                                    if [ ! -r "Dockerfile" ]; then
-                                        echo "ERROR: 'Dockerfile' exists but is NOT READABLE!"
-                                        ls -l Dockerfile
-                                        exit 1
-                                    fi
-
-                                    echo "Dockerfile is READABLE"
-
-                                    # In 10 dòng đầu của Dockerfile để kiểm tra nội dung
-                                    echo "First 10 lines of Dockerfile:"
-                                    head -10 Dockerfile
-
-                                    echo "=== DOCKERFILE VALIDATION PASSED ==="
-                                '''
-                                // === END DEBUG BLOCK ===
-
-                                // Docker image build
                                 echo "🐳 Starting Docker build in directory: ${pwd}"
                                 sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
                             }
