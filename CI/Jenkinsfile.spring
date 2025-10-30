@@ -59,19 +59,17 @@ pipeline {
             steps {
                 script {
                     def modules = MODULES.split(',')
-                    dir('SpringServices') {
-                        for (module in modules) {
+                    for (module in modules) {
                             def imageName = "${DOCKER_ORG}/${module.trim().toLowerCase()}"
                             def taggedNameLatest = "${imageName}:latest"
                             def taggedNameCommit = "${imageName}:${COMMIT_HASH}"
 
                             echo "🚧 Building Docker image for module: ${module}"
 
-                            dir(module.trim()) {
+                            dir("SpringServices/${module.trim()}") {
                                 sh "docker build -t ${taggedNameLatest} -t ${taggedNameCommit} ."
                             }
                         }
-                    }
                 }
             }
         }
