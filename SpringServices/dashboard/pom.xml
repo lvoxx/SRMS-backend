@@ -32,10 +32,6 @@
 		</developer>
 	</developers>
 
-	<properties>
-		<service.port>${port.dashboard}</service.port>
-	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>io.github.lvoxx.srms</groupId>

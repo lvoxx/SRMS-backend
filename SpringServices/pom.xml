@@ -84,19 +84,6 @@
 		<!-- DOCKER START -->
 		<docker.image.prefix>lvoxx/srms</docker.image.prefix>
 		<skip.docker.build>true</skip.docker.build>
-		<!-- Định nghĩa tất cả ports ở đây -->
-		<port.contactor>8081</port.contactor>
-		<port.customer>8082</port.customer>
-		<port.order>8083</port.order>
-		<port.payment>8084</port.payment>
-		<port.kitchen>8085</port.kitchen>
-		<port.warehouse>8086</port.warehouse>
-		<port.notification>8087</port.notification>
-		<port.dashboard>8088</port.dashboard>
-		<port.reporting>8089</port.reporting>
-
-		<!-- Property mặc định (cho service không tự định nghĩa) -->
-		<service.port>8080</service.port>
 		<!-- DOCKER END -->
 	</properties>
 

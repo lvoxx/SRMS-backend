@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS warehouse (
     product_name TEXT NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
     min_quantity INTEGER NOT NULL DEFAULT 0 CHECK (min_quantity >= 0),
-    supplier_id UUID, -- optional
+    contactor_id UUID, -- optional
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by UUID,
@@ -23,15 +23,14 @@ CREATE INDEX IF NOT EXISTS idx_warehouse_product_name ON warehouse (lower(produc
 -- Table warehouse_history (immutable)
 CREATE TABLE IF NOT EXISTS warehouse_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    invoice_id UUID NOT NULL,
-    product_id UUID NOT NULL,
+    warehouse_id UUID NOT NULL,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     type TEXT NOT NULL CHECK (type IN ('import', 'export')),
     updated_by UUID NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_warehouse_history_product_id ON warehouse_history (product_id);
+CREATE INDEX IF NOT EXISTS idx_warehouse_history_warehouse_id ON warehouse_history (warehouse_id);
 
 -- Prevent updates/deletes on warehouse_history at DB level
 CREATE OR REPLACE FUNCTION prevent_modify_warehouse_history() RETURNS trigger AS $$
@@ -83,7 +82,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN type = 'export' THEN quantity ELSE 0 END), 0)
     INTO v_total_nhap, v_total_xuat
     FROM warehouse_history
-    WHERE product_id = NEW.product_id;
+    WHERE warehouse_id = NEW.warehouse_id;
     
     v_new_quantity := v_total_nhap - v_total_xuat;
     
@@ -100,7 +99,7 @@ BEGIN
     SET quantity = v_new_quantity,
         updated_at = now(),
         updated_by = NEW.updated_by
-    WHERE id = NEW.product_id;
+    WHERE id = NEW.warehouse_id;
     
     -- Reset session variable
     PERFORM set_config('app.allow_quantity_update', NULL, true);
@@ -141,7 +140,7 @@ CREATE TRIGGER trg_warehouse_updated_at
 -- ============================================
 
 -- Insert sample products into warehouse
-INSERT INTO warehouse (product_name, quantity, min_quantity, supplier_id, updated_by) VALUES
+INSERT INTO warehouse (product_name, quantity, min_quantity, contactor_id, updated_by) VALUES
 -- Flour and baking ingredients
 ('00 Flour', 500, 100, NULL, NULL),
 ('Pizza Flour', 300, 80, NULL, NULL),
@@ -236,7 +235,7 @@ INSERT INTO warehouse (product_name, quantity, min_quantity, supplier_id, update
 ('Pizza Serving Spatula', 12, 3, NULL, NULL);
 
 -- Insert sample warehouse history records
-INSERT INTO warehouse_history (invoice_id, product_id, quantity, type, updated_by) VALUES
+INSERT INTO warehouse_history (invoice_id, warehouse_id, quantity, type, updated_by) VALUES
 -- Initial stock intake
 ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', (SELECT id FROM warehouse WHERE product_name = '00 Flour'), 500, 'import', NULL),
 ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', (SELECT id FROM warehouse WHERE product_name = 'Mozzarella Cheese'), 200, 'import', NULL),

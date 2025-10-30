@@ -31,11 +31,7 @@
 			<url>https://github.com/lvoxx</url>
 		</developer>
 	</developers>
-
-	<properties>
-		<service.port>${port.warehouse}</service.port>
-	</properties>
-
+	
 	<dependencies>
 		<dependency>
 			<groupId>io.github.lvoxx.srms</groupId>
