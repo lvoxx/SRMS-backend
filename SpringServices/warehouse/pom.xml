@@ -31,7 +31,7 @@
 			<url>https://github.com/lvoxx</url>
 		</developer>
 	</developers>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>io.github.lvoxx.srms</groupId>
@@ -45,7 +45,7 @@
 			<groupId>io.github.lvoxx.srms</groupId>
 			<artifactId>jdbc</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
@@ -79,6 +79,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-websocket</artifactId>
 		</dependency>
 
 		<dependency>
