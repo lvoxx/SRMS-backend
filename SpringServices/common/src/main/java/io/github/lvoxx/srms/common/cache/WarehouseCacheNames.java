@@ -41,4 +41,10 @@ public class WarehouseCacheNames {
     public static final String STATS_DASHBOARD = "warehouse:stats:dashboard";
     public static final String STATS_DETAILS = "warehouse:stats:details";
     public static final String STATS_TIME_BASED = "warehouse:stats:time-based";
+
+    // ==================== MANAGEMENT SERVICE ====================
+
+    public static final String DETAILS = "warehouse:details";
+    public static final String BY_NAME = "warehouse:by-name";
+
 }
