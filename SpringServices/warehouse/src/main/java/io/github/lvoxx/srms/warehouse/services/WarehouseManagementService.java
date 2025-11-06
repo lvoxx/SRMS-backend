@@ -49,7 +49,7 @@ public class WarehouseManagementService {
         @CacheEvict(value = WarehouseCacheNames.COUNT_STATISTICS, allEntries = true)
     })
     public Mono<WarehouseDTO.Response> createWarehouse(
-            WarehouseDTO.Request request, UUID createdBy) {
+            WarehouseDTO.Request request, String createdBy) {
         log.info("Creating warehouse: {}", request.getProductName());
         
         return validateProductNameUnique(request.getProductName(), null)
@@ -434,7 +434,7 @@ public class WarehouseManagementService {
         @CacheEvict(value = WarehouseCacheNames.STATS_DASHBOARD, allEntries = true)
     })
     public Flux<WarehouseDTO.Response> batchCreate(
-            Flux<WarehouseDTO.Request> requests, UUID createdBy) {
+            Flux<WarehouseDTO.Request> requests, String createdBy) {
         log.info("Batch creating warehouses");
         
         return requests
