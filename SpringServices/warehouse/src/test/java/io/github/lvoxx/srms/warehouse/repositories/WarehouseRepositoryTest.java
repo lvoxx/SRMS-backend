@@ -304,7 +304,7 @@ public class WarehouseRepositoryTest extends AbstractDatabaseTestContainer {
         @DisplayName("Should update warehouse without changing quantity")
         void shouldUpdateWarehouseWithoutQuantity() {
             UUID contactorId = UUID.randomUUID();
-            UUID updatedBy = UUID.randomUUID();
+            String updatedBy = UUID.randomUUID().toString();
             OffsetDateTime updatedAt = OffsetDateTime.now();
 
             StepVerifier.create(
@@ -361,7 +361,7 @@ public class WarehouseRepositoryTest extends AbstractDatabaseTestContainer {
         @Test
         @DisplayName("Should soft delete warehouse")
         void shouldSoftDeleteWarehouse() {
-            UUID updatedBy = UUID.randomUUID();
+            String updatedBy = UUID.randomUUID().toString();
             OffsetDateTime updatedAt = OffsetDateTime.now();
 
             StepVerifier.create(
@@ -398,7 +398,7 @@ public class WarehouseRepositoryTest extends AbstractDatabaseTestContainer {
                     null).block();
 
             // Then restore
-            UUID updatedBy = UUID.randomUUID();
+            String updatedBy = UUID.randomUUID().toString();
             OffsetDateTime updatedAt = OffsetDateTime.now();
 
             StepVerifier.create(

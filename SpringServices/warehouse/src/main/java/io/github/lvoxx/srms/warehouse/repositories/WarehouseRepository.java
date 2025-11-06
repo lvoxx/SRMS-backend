@@ -119,7 +119,7 @@ public interface WarehouseRepository extends R2dbcRepository<Warehouse, UUID> {
                         @Param("minQuantity") Integer minQuantity,
                         @Param("contactorId") UUID contactorId,
                         @Param("updatedAt") OffsetDateTime updatedAt,
-                        @Param("lastUpdatedBy") UUID lastUpdatedBy);
+                        @Param("lastUpdatedBy") String lastUpdatedBy);
 
         // ==================== SOFT DELETE ====================
 
@@ -135,7 +135,7 @@ public interface WarehouseRepository extends R2dbcRepository<Warehouse, UUID> {
         Mono<Integer> softDelete(
                         @Param("id") UUID id,
                         @Param("updatedAt") OffsetDateTime updatedAt,
-                        @Param("lastUpdatedBy") UUID lastUpdatedBy);
+                        @Param("lastUpdatedBy") String lastUpdatedBy);
 
         // ==================== RESTORE ====================
 
@@ -151,7 +151,7 @@ public interface WarehouseRepository extends R2dbcRepository<Warehouse, UUID> {
         Mono<Integer> restore(
                         @Param("id") UUID id,
                         @Param("updatedAt") OffsetDateTime updatedAt,
-                        @Param("lastUpdatedBy") UUID lastUpdatedBy);
+                        @Param("lastUpdatedBy") String lastUpdatedBy);
 
         // ==================== COUNT ====================
 
