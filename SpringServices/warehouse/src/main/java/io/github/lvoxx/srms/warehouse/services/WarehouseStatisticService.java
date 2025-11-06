@@ -321,8 +321,8 @@ public class WarehouseStatisticService {
                     .timestamp(OffsetDateTime.now())
                     .build();
             })
-            .onErrorResume(NotFoundException.class, Mono::error)
             .onErrorResume(e -> {
+                if (e instanceof NotFoundException) return Mono.error(e);
                 log.error("Error getting warehouse details for {}: {}", 
                     warehouseId, e.getMessage(), e);
                 return Mono.error(new InternalServerException(
@@ -397,6 +397,7 @@ public class WarehouseStatisticService {
         return Flux.interval(java.time.Duration.ofSeconds(5))
             .flatMap(tick -> getWarehouseDetails(warehouseId))
             .onErrorResume(e -> {
+                if (e instanceof NotFoundException) return Mono.error(e); 
                 log.error("Error in warehouse details stream for {}: {}", 
                     warehouseId, e.getMessage(), e);
                 return Flux.empty();
