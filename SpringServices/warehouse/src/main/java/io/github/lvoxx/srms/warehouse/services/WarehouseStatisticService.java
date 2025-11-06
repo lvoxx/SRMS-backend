@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import io.github.lvoxx.srms.common.cache.WarehouseCacheNames;
 import io.github.lvoxx.srms.controllerhandler.model.InternalServerException;
 import io.github.lvoxx.srms.controllerhandler.model.NotFoundException;
 import io.github.lvoxx.srms.warehouse.dto.WarehouseStatisticDTO;
@@ -34,7 +35,7 @@ public class WarehouseStatisticService {
     /**
      * Get total import quantity for a warehouse
      */
-    @Cacheable(value = "warehouse:stats:total-import", key = "#warehouseId")
+    @Cacheable(value = WarehouseCacheNames.STATS_TOTAL_IMPORT, key = "#warehouseId")
     public Mono<WarehouseStatisticDTO.QuantityResponse> getTotalImportQuantity(UUID warehouseId) {
         log.debug("Getting total import quantity for warehouse: {}", warehouseId);
         
@@ -57,7 +58,7 @@ public class WarehouseStatisticService {
     /**
      * Get total export quantity for a warehouse
      */
-    @Cacheable(value = "warehouse:stats:total-export", key = "#warehouseId")
+    @Cacheable(value = WarehouseCacheNames.STATS_TOTAL_EXPORT, key = "#warehouseId")
     public Mono<WarehouseStatisticDTO.QuantityResponse> getTotalExportQuantity(UUID warehouseId) {
         log.debug("Getting total export quantity for warehouse: {}", warehouseId);
         
@@ -80,7 +81,7 @@ public class WarehouseStatisticService {
     /**
      * Get quantity by type and date range
      */
-    @Cacheable(value = "warehouse:stats:quantity-by-date-range", 
+    @Cacheable(value = WarehouseCacheNames.STATS_QUANTITY_BY_DATE_RANGE, 
         key = "#warehouseId + ':' + #type + ':' + #from + ':' + #to")
     public Mono<WarehouseStatisticDTO.QuantityResponse> getQuantityByTypeAndDateRange(
             UUID warehouseId, String type, OffsetDateTime from, OffsetDateTime to) {
@@ -109,7 +110,7 @@ public class WarehouseStatisticService {
     /**
      * Get import/export balance for a warehouse
      */
-    @Cacheable(value = "warehouse:stats:balance", key = "#warehouseId")
+    @Cacheable(value = WarehouseCacheNames.STATS_BALANCE, key = "#warehouseId")
     public Mono<WarehouseStatisticDTO.BalanceResponse> getImportExportBalance(UUID warehouseId) {
         log.debug("Getting import/export balance for warehouse: {}", warehouseId);
         
@@ -143,7 +144,7 @@ public class WarehouseStatisticService {
     /**
      * Get products below minimum quantity
      */
-    @Cacheable(value = "warehouse:stats:below-minimum", key = "#page + ':' + #size")
+    @Cacheable(value = WarehouseCacheNames.STATS_BELOW_MINIMUM, key = "#page + ':' + #size")
     public Mono<WarehouseStatisticDTO.AlertListResponse> getProductsBelowMinimum(
             int page, int size) {
         log.debug("Getting products below minimum - page: {}, size: {}", page, size);
@@ -172,7 +173,7 @@ public class WarehouseStatisticService {
     /**
      * Get out of stock products
      */
-    @Cacheable(value = "warehouse:stats:out-of-stock", key = "#page + ':' + #size")
+    @Cacheable(value = WarehouseCacheNames.STATS_OUT_OF_STOCK, key = "#page + ':' + #size")
     public Mono<WarehouseStatisticDTO.AlertListResponse> getOutOfStockProducts(
             int page, int size) {
         log.debug("Getting out of stock products - page: {}, size: {}", page, size);
@@ -201,7 +202,7 @@ public class WarehouseStatisticService {
     /**
      * Get all warehouse alerts (below minimum + out of stock)
      */
-    @Cacheable(value = "warehouse:stats:all-alerts", key = "#page + ':' + #size")
+    @Cacheable(value = WarehouseCacheNames.STATS_ALL_ALERTS, key = "#page + ':' + #size")
     public Mono<WarehouseStatisticDTO.AlertListResponse> getAllWarehouseAlerts(
             int page, int size) {
         log.debug("Getting all warehouse alerts - page: {}, size: {}", page, size);
@@ -242,7 +243,7 @@ public class WarehouseStatisticService {
     /**
      * Get comprehensive dashboard statistics
      */
-    @Cacheable(value = "warehouse:stats:dashboard", key = "'comprehensive'")
+    @Cacheable(value = WarehouseCacheNames.STATS_DASHBOARD, key = "'comprehensive'")
     public Mono<WarehouseStatisticDTO.DashboardResponse> getDashboardStatistics() {
         log.debug("Getting comprehensive dashboard statistics");
         
@@ -289,7 +290,7 @@ public class WarehouseStatisticService {
     /**
      * Get warehouse details with statistics
      */
-    @Cacheable(value = "warehouse:stats:details", key = "#warehouseId")
+    @Cacheable(value = WarehouseCacheNames.STATS_DETAILS, key = "#warehouseId")
     public Mono<WarehouseStatisticDTO.WarehouseDetailsResponse> getWarehouseDetails(
             UUID warehouseId) {
         log.debug("Getting details for warehouse: {}", warehouseId);
@@ -334,7 +335,7 @@ public class WarehouseStatisticService {
     /**
      * Get time-based statistics for date range
      */
-    @Cacheable(value = "warehouse:stats:time-based", 
+    @Cacheable(value = WarehouseCacheNames.STATS_TIME_BASED, 
         key = "#warehouseId + ':' + #from + ':' + #to")
     public Mono<WarehouseStatisticDTO.TimeBasedStatisticsResponse> getTimeBasedStatistics(
             UUID warehouseId, OffsetDateTime from, OffsetDateTime to) {

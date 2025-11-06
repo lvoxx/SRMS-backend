@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import io.github.lvoxx.srms.common.cache.WarehouseCacheNames;
 import io.github.lvoxx.srms.controllerhandler.model.InternalServerException;
 import io.github.lvoxx.srms.warehouse.dto.WarehouseCountDTO;
 import io.github.lvoxx.srms.warehouse.repositories.WarehouseHistoryRepository;
@@ -26,7 +27,7 @@ public class WarehouseCountService {
      * @param includeDeleted whether to include deleted items
      * @return count of warehouses
      */
-    @Cacheable(value = "warehouse:count:all", key = "#includeDeleted")
+    @Cacheable(value = WarehouseCacheNames.COUNT_ALL, key = "#includeDeleted")
     public Mono<WarehouseCountDTO.CountResponse> countAllWarehouses(boolean includeDeleted) {
         log.debug("Counting all warehouses with includeDeleted={}", includeDeleted);
         
@@ -47,7 +48,7 @@ public class WarehouseCountService {
      * Count warehouses below minimum quantity
      * @return count of warehouses below minimum
      */
-    @Cacheable(value = "warehouse:count:below-minimum")
+    @Cacheable(value = WarehouseCacheNames.COUNT_BELOW_MINIMUM)
     public Mono<WarehouseCountDTO.CountResponse> countBelowMinimum() {
         log.debug("Counting warehouses below minimum quantity");
         
@@ -68,7 +69,7 @@ public class WarehouseCountService {
      * Count out of stock warehouses
      * @return count of out of stock warehouses
      */
-    @Cacheable(value = "warehouse:count:out-of-stock")
+    @Cacheable(value =WarehouseCacheNames.COUNT_OUT_OF_STOCK)
     public Mono<WarehouseCountDTO.CountResponse> countOutOfStock() {
         log.debug("Counting out of stock warehouses");
         
@@ -89,7 +90,7 @@ public class WarehouseCountService {
      * Count all warehouse history entries
      * @return count of all history entries
      */
-    @Cacheable(value = "warehouse:count:history:all")
+    @Cacheable(value = WarehouseCacheNames.COUNT_HISTORY_ALL)
     public Mono<WarehouseCountDTO.CountResponse> countAllHistory() {
         log.debug("Counting all warehouse history entries");
         
@@ -111,7 +112,7 @@ public class WarehouseCountService {
      * @param warehouseId the warehouse ID
      * @return count of history entries for specific warehouse
      */
-    @Cacheable(value = "warehouse:count:history:by-warehouse", key = "#warehouseId")
+    @Cacheable(value = WarehouseCacheNames.COUNT_HISTORY_BY_WAREHOUSE, key = "#warehouseId")
     public Mono<WarehouseCountDTO.CountResponse> countHistoryByWarehouseId(UUID warehouseId) {
         log.debug("Counting history entries for warehouse: {}", warehouseId);
         
@@ -133,7 +134,7 @@ public class WarehouseCountService {
      * @param type the history type (import/export)
      * @return count of history entries by type
      */
-    @Cacheable(value = "warehouse:count:history:by-type", key = "#type")
+    @Cacheable(value = WarehouseCacheNames.COUNT_HISTORY_BY_TYPE, key = "#type")
     public Mono<WarehouseCountDTO.CountResponse> countHistoryByType(String type) {
         log.debug("Counting history entries by type: {}", type);
         
@@ -156,7 +157,7 @@ public class WarehouseCountService {
      * @param type the history type
      * @return count of history entries
      */
-    @Cacheable(value = "warehouse:count:history:by-warehouse-and-type", key = "#warehouseId + ':' + #type")
+    @Cacheable(value = WarehouseCacheNames.COUNT_HISTORY_BY_WAREHOUSE_AND_TYPE, key = "#warehouseId + ':' + #type")
     public Mono<WarehouseCountDTO.CountResponse> countHistoryByWarehouseIdAndType(
             UUID warehouseId, String type) {
         log.debug("Counting history entries for warehouse {} and type {}", warehouseId, type);
@@ -180,7 +181,7 @@ public class WarehouseCountService {
      * Get comprehensive warehouse statistics
      * @return comprehensive statistics
      */
-    @Cacheable(value = "warehouse:count:statistics")
+    @Cacheable(value = WarehouseCacheNames.COUNT_STATISTICS)
     public Mono<WarehouseCountDTO.StatisticsResponse> getWarehouseStatistics() {
         log.debug("Getting comprehensive warehouse statistics");
         
@@ -209,7 +210,7 @@ public class WarehouseCountService {
      * Get warehouse health metrics
      * @return health metrics including percentages
      */
-    @Cacheable(value = "warehouse:count:health")
+    @Cacheable(value = WarehouseCacheNames.COUNT_HEALTH)
     public Mono<WarehouseCountDTO.HealthMetricsResponse> getWarehouseHealthMetrics() {
         log.debug("Getting warehouse health metrics");
         
