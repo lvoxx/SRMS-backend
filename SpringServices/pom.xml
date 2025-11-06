@@ -45,7 +45,6 @@
 		<module>customer</module>
 		<module>dashboard</module>
 		<module>kitchen</module>
-		<module>notification</module>
 		<module>order</module>
 		<module>payment</module>
 		<module>reporting</module>
