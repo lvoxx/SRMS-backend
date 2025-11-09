@@ -40,6 +40,7 @@
 		<module>common</module>
 		<module>starter/controllerhandler</module>
 		<module>starter/jdbc</module>
+		<module>starter/redisson</module>
 
 		<module>contactor</module>
 		<module>customer</module>
@@ -67,6 +68,7 @@
 
 		<postgresql.version>42.7.7</postgresql.version>
 		<r2dbc-postgresql.version>1.0.7.RELEASE</r2dbc-postgresql.version>
+		<redission.version>3.52.0</redission.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<jackson.version>2.19.2</jackson.version>
 		<lombok.version>1.18.38</lombok.version>
@@ -112,6 +114,11 @@
 				<artifactId>jdbc</artifactId>
 				<version>${application.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.github.lvoxx.srms</groupId>
+				<artifactId>redisson</artifactId>
+				<version>${application.version}</version>
+			</dependency>
 
 			<!-- SPRING BOOT -->
 			<dependency>
@@ -153,6 +160,11 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
 				<version>${spring-boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.redisson</groupId>
+				<artifactId>redisson-spring-boot-starter</artifactId>
+				<version>${redission.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.boot</groupId>

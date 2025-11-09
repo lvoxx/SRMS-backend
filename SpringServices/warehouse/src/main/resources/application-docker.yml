@@ -40,6 +40,23 @@ spring:
       adjust-dates-to-context-time-zone: false
     time-zone: Asia/Ho_Chi_Minh
 
+redisson:
+  single-server-config:
+    address: "redis://${spring.data.redis.host}:${spring.data.redis.port}"
+    password: ${spring.data.redis.password}
+    database: ${spring.data.redis.database}
+  threads: 16
+  netty-threads: 32
+  codec: !<org.redisson.codec.JsonJacksonCodec> {}
+  
+---
+
+db:
+  row-lock: 15      # thời gian chờ tối đa để lấy lock (seconds)
+  lease-time: 45    # thời gian giữ lock trước khi tự động giải phóng (seconds)
+
+---
+
 management:
   endpoints:
     web:
