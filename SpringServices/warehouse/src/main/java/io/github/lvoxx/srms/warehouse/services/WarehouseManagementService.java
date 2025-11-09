@@ -30,6 +30,21 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * Core service for warehouse management operations.
+ * <p>
+ * Handles CRUD operations, inventory transactions (import/export), soft
+ * deletes,
+ * restores, batch operations, and data validation.
+ * <p>
+ * Uses distributed row-level locking via Redisson for concurrency control.
+ * Implements comprehensive cache eviction policies to maintain data freshness.
+ * All data-modifying operations are transactional.
+ * 
+ * @author lvoxx
+ * @version 1.0
+ * @since 1.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -43,7 +58,16 @@ public class WarehouseManagementService {
         // ==================== CREATE ====================
 
         /**
-         * Create a new warehouse
+         * Creates a new warehouse record with optional initial stock.
+         * <p>
+         * Validates product name uniqueness, creates warehouse with quantity = 0,
+         * and if initial quantity provided, creates import history record.
+         * 
+         * @param request   warehouse creation request containing product details
+         * @param createdBy username/ID of user creating the warehouse
+         * @return Mono emitting created warehouse response
+         * @throws ConflictException       if product name already exists
+         * @throws DataPersistantException if database save fails
          */
         @Transactional
         @Caching(evict = {
@@ -103,7 +127,13 @@ public class WarehouseManagementService {
         // ==================== READ ====================
 
         /**
-         * Find warehouse by ID
+         * Retrieves warehouse by unique identifier.
+         * 
+         * @param id             unique identifier of the warehouse
+         * @param includeDeleted true to include soft-deleted warehouses
+         * @return Mono emitting warehouse response
+         * @throws NotFoundException       if warehouse not found
+         * @throws InternalServerException if database operation fails
          */
         @Cacheable(value = WarehouseCacheNames.DETAILS, key = "#id + ':' + #includeDeleted")
         public Mono<WarehouseDTO.Response> findById(UUID id, boolean includeDeleted) {
@@ -123,7 +153,13 @@ public class WarehouseManagementService {
         }
 
         /**
-         * Find warehouse by product name
+         * Retrieves warehouse by product name.
+         * 
+         * @param productName    name of the product to search for
+         * @param includeDeleted true to include soft-deleted warehouses
+         * @return Mono emitting warehouse response
+         * @throws NotFoundException       if warehouse not found
+         * @throws InternalServerException if database operation fails
          */
         @Cacheable(value = WarehouseCacheNames.BY_NAME, key = "#productName + ':' + #includeDeleted")
         public Mono<WarehouseDTO.Response> findByProductName(
@@ -145,7 +181,13 @@ public class WarehouseManagementService {
         }
 
         /**
-         * Find all warehouses with pagination
+         * Retrieves all warehouses with pagination support.
+         * 
+         * @param includeDeleted true to include soft-deleted warehouses
+         * @param page           zero-based page index
+         * @param size           number of items per page
+         * @return Flux emitting warehouse responses for requested page
+         * @throws InternalServerException if database operation fails
          */
         public Flux<WarehouseDTO.Response> findAll(
                         boolean includeDeleted, int page, int size) {
@@ -163,7 +205,24 @@ public class WarehouseManagementService {
         }
 
         /**
-         * Find all warehouses with filters
+         * Retrieves warehouses with complex filtering and pagination.
+         * <p>
+         * Supports filtering by product name, quantity range, creation date range, and
+         * update date range.
+         * All filter parameters are optional and can be combined.
+         * 
+         * @param includeDeleted true to include soft-deleted warehouses
+         * @param productName    partial product name to search (nullable)
+         * @param minQuantity    minimum quantity threshold (nullable)
+         * @param maxQuantity    maximum quantity threshold (nullable)
+         * @param createdFrom    start of creation date range (nullable)
+         * @param createdTo      end of creation date range (nullable)
+         * @param updatedFrom    start of update date range (nullable)
+         * @param updatedTo      end of update date range (nullable)
+         * @param page           zero-based page index
+         * @param size           number of items per page
+         * @return Flux emitting filtered warehouse responses
+         * @throws InternalServerException if database operation fails
          */
         public Flux<WarehouseDTO.Response> findAllWithFilters(
                         boolean includeDeleted,
@@ -194,7 +253,21 @@ public class WarehouseManagementService {
         // ==================== UPDATE ====================
 
         /**
-         * Update warehouse (without quantity)
+         * Updates warehouse information (excluding quantity).
+         * <p>
+         * Updates product name, minimum quantity threshold, and contactor ID.
+         * Quantity updates must be done through inventory transactions.
+         * Uses distributed row-level locking to prevent concurrent modifications.
+         * 
+         * @param id        unique identifier of warehouse to update
+         * @param request   update request containing new values
+         * @param updatedBy username/ID of user performing update
+         * @return Mono emitting updated warehouse response
+         * @throws NotFoundException       if warehouse doesn't exist
+         * @throws ConflictException       if new product name conflicts
+         * @throws DataPersistantException if update operation fails
+         * @throws InternalServerException if lock acquisition or database operation
+         *                                 fails
          */
         @Transactional
         @Caching(evict = {
@@ -262,9 +335,20 @@ public class WarehouseManagementService {
         // ==================== INVENTORY TRANSACTIONS ====================
 
         /**
-         * Process inventory transaction (import/export)
-         * This creates a history record and the database trigger will update the
-         * quantity
+         * Processes inventory transaction (import or export).
+         * <p>
+         * Acquires distributed lock, validates transaction, creates history record,
+         * and relies on database trigger to update warehouse quantity automatically.
+         * Validates sufficient stock for exports and positive quantities.
+         * 
+         * @param request transaction request containing warehouse ID, quantity, and
+         *                type
+         * @return Mono emitting updated warehouse response
+         * @throws NotFoundException       if warehouse doesn't exist
+         * @throws ValidationException     if validation fails (insufficient stock,
+         *                                 invalid quantity)
+         * @throws InternalServerException if lock acquisition or database operation
+         *                                 fails
          */
         @Transactional
         @Caching(evict = {
@@ -326,9 +410,15 @@ public class WarehouseManagementService {
         }
 
         /**
-         * Import inventory
-         * README: Already evict cache in processInventoryTransaction, no need to evict
-         * here
+         * Convenience method to import inventory to warehouse.
+         * 
+         * @param warehouseId unique identifier of warehouse
+         * @param quantity    quantity to import (must be positive)
+         * @param updatedBy   username/ID of user performing import
+         * @return Mono emitting updated warehouse response
+         * @throws NotFoundException       if warehouse doesn't exist
+         * @throws ValidationException     if quantity is invalid
+         * @throws InternalServerException if operation fails
          */
         @Transactional
         public Mono<WarehouseDTO.Response> importInventory(
@@ -346,9 +436,19 @@ public class WarehouseManagementService {
         }
 
         /**
-         * Export inventory
-         * README: Already evict cache in processInventoryTransaction, no need to evict
-         * here
+         * Convenience method to export inventory from warehouse.
+         * <p>
+         * Validates sufficient inventory exists before proceeding.
+         * 
+         * @param warehouseId unique identifier of warehouse
+         * @param quantity    quantity to export (must be positive and <= current
+         *                    quantity)
+         * @param updatedBy   username/ID of user performing export
+         * @return Mono emitting updated warehouse response
+         * @throws NotFoundException       if warehouse doesn't exist
+         * @throws ValidationException     if quantity invalid or exceeds available
+         *                                 stock
+         * @throws InternalServerException if operation fails
          */
         @Transactional
         public Mono<WarehouseDTO.Response> exportInventory(
@@ -368,7 +468,18 @@ public class WarehouseManagementService {
         // ==================== DELETE ====================
 
         /**
-         * Soft delete warehouse
+         * Performs soft delete on warehouse.
+         * <p>
+         * Marks warehouse as deleted without removing from database.
+         * Can be restored later. Preserves historical data and maintains referential
+         * integrity.
+         * 
+         * @param id        unique identifier of warehouse to delete
+         * @param deletedBy username/ID of user performing deletion
+         * @return Mono that completes when deletion is successful
+         * @throws NotFoundException       if warehouse doesn't exist or already deleted
+         * @throws DataPersistantException if database update fails
+         * @throws InternalServerException if operation fails
          */
         @Transactional
         @Caching(evict = {
@@ -409,7 +520,18 @@ public class WarehouseManagementService {
         }
 
         /**
-         * Restore deleted warehouse
+         * Restores previously soft-deleted warehouse.
+         * <p>
+         * Reverses soft delete by clearing deletion flags and timestamps.
+         * Can only restore warehouses currently marked as deleted.
+         * 
+         * @param id         unique identifier of warehouse to restore
+         * @param restoredBy username/ID of user performing restoration
+         * @return Mono emitting restored warehouse response
+         * @throws NotFoundException       if warehouse doesn't exist
+         * @throws ConflictException       if warehouse is not currently deleted
+         * @throws DataPersistantException if database update fails
+         * @throws InternalServerException if operation fails
          */
         @Transactional
         @Caching(evict = {
@@ -457,7 +579,15 @@ public class WarehouseManagementService {
         }
 
         /**
-         * Permanently delete warehouse (hard delete)
+         * Permanently deletes warehouse (hard delete).
+         * <p>
+         * WARNING: This permanently removes the warehouse from database.
+         * Cannot be undone. Use with caution.
+         * 
+         * @param id unique identifier of warehouse to permanently delete
+         * @return Mono that completes when deletion is successful
+         * @throws NotFoundException       if warehouse doesn't exist
+         * @throws InternalServerException if operation fails
          */
         @Transactional
         @Caching(evict = {
@@ -488,7 +618,14 @@ public class WarehouseManagementService {
         // ==================== BATCH OPERATIONS ====================
 
         /**
-         * Batch create warehouses
+         * Batch creates warehouses.
+         * <p>
+         * Processes multiple warehouse creation requests.
+         * Errors for individual items are logged but don't stop the batch.
+         * 
+         * @param requests  Flux of warehouse creation requests
+         * @param createdBy username/ID of user creating warehouses
+         * @return Flux emitting successfully created warehouse responses
          */
         @Transactional
         @Caching(evict = {
@@ -510,7 +647,14 @@ public class WarehouseManagementService {
         }
 
         /**
-         * Batch soft delete warehouses
+         * Batch soft deletes warehouses.
+         * <p>
+         * Processes multiple warehouse deletions.
+         * Errors for individual items are logged but don't stop the batch.
+         * 
+         * @param ids       Flux of warehouse IDs to delete
+         * @param deletedBy username/ID of user performing deletions
+         * @return Mono emitting count of successfully deleted warehouses
          */
         @Transactional
         @Caching(evict = {
@@ -536,7 +680,15 @@ public class WarehouseManagementService {
         // ==================== HELPER METHODS ====================
 
         /**
-         * Validate product name uniqueness
+         * Validates product name uniqueness.
+         * <p>
+         * Ensures product name doesn't conflict with existing warehouses.
+         * Can exclude a specific warehouse ID for update operations.
+         * 
+         * @param productName product name to validate
+         * @param excludeId   warehouse ID to exclude from uniqueness check (nullable)
+         * @return Mono that completes if valid, errors if duplicate found
+         * @throws ConflictException if product name already exists
          */
         private Mono<Void> validateProductNameUnique(String productName, UUID excludeId) {
                 if (productName == null || productName.isBlank()) {
@@ -555,7 +707,14 @@ public class WarehouseManagementService {
         }
 
         /**
-         * Validate inventory transaction
+         * Validates inventory transaction.
+         * <p>
+         * For exports: validates sufficient inventory exists.
+         * For all transactions: validates quantity is positive.
+         * 
+         * @param warehouse warehouse entity to validate against
+         * @param request   transaction request to validate
+         * @throws ValidationException if validation fails
          */
         private void validateInventoryTransaction(
                         Warehouse warehouse,
