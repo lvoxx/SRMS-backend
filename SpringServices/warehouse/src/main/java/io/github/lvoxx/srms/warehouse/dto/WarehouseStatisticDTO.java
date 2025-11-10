@@ -7,6 +7,9 @@ import java.util.UUID;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -55,7 +58,10 @@ public abstract class WarehouseStatisticDTO {
         private Integer currentQuantity;
         private Integer minQuantity;
         private Integer deficit;
-        private String severity; // CRITICAL, WARNING, INFO
+        
+        @Pattern(regexp = "CRITICAL|WARNING|INFO", message = "{error.validation.alert.invalidSeverity}")
+        private String severity;
+        
         private String message;
         private OffsetDateTime updatedAt;
     }
@@ -68,9 +74,15 @@ public abstract class WarehouseStatisticDTO {
     public static class AlertListResponse {
         private List<AlertItem> items;
         private Long totalItems;
+        
+        @Min(value = 0, message = "{error.validation.pagination.pageNegative}")
         private Integer page;
+        
+        @Min(value = 1, message = "{error.validation.pagination.sizeNegative}")
         private Integer size;
-        private String alertType; // BELOW_MINIMUM, OUT_OF_STOCK, ALL_ALERTS
+        
+        @Pattern(regexp = "BELOW_MINIMUM|OUT_OF_STOCK|ALL_ALERTS", message = "{error.validation.alert.invalidType}")
+        private String alertType;
     }
 
     // ==================== DASHBOARD STATISTICS ====================
@@ -123,6 +135,22 @@ public abstract class WarehouseStatisticDTO {
         private OffsetDateTime timestamp;
     }
 
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder(toBuilder = true)
+    @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
+    public static class TimeBasedStatisticsRequest {
+        @NotNull(message = "{error.validation.warehouseId.notNull}")
+        private UUID warehouseId;
+        
+        @NotNull(message = "{error.validation.dateRange.required}")
+        private OffsetDateTime fromDate;
+        
+        @NotNull(message = "{error.validation.dateRange.required}")
+        private OffsetDateTime toDate;
+    }
+
     // ==================== WEBSOCKET EVENT TYPES ====================
 
     @Data
@@ -131,8 +159,13 @@ public abstract class WarehouseStatisticDTO {
     @Builder(toBuilder = true)
     @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class WebSocketEvent {
-        private String eventType; // DASHBOARD_UPDATE, ALERT_UPDATE, WAREHOUSE_UPDATE
+        @NotNull(message = "{error.validation.event.typeRequired}")
+        @Pattern(regexp = "DASHBOARD_UPDATE|ALERT_UPDATE|WAREHOUSE_UPDATE", message = "{error.validation.event.invalidFormat}")
+        private String eventType;
+        
+        @NotNull(message = "{error.validation.event.dataRequired}")
         private Object data;
+        
         private OffsetDateTime timestamp;
     }
 
@@ -142,11 +175,23 @@ public abstract class WarehouseStatisticDTO {
     @Builder(toBuilder = true)
     @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class AlertNotification {
+        @NotNull(message = "{error.validation.warehouseId.notNull}")
         private UUID warehouseId;
+        
+        @NotNull(message = "{error.validation.productName.notBlank}")
         private String productName;
-        private String alertType; // OUT_OF_STOCK, BELOW_MINIMUM
-        private String severity; // CRITICAL, WARNING
+        
+        @NotNull(message = "{error.validation.alert.invalidType}")
+        @Pattern(regexp = "OUT_OF_STOCK|BELOW_MINIMUM", message = "{error.validation.alert.invalidType}")
+        private String alertType;
+        
+        @NotNull(message = "{error.validation.alert.invalidSeverity}")
+        @Pattern(regexp = "CRITICAL|WARNING", message = "{error.validation.alert.invalidSeverity}")
+        private String severity;
+        
+        @NotNull(message = "{error.validation.notification.messageRequired}")
         private String message;
+        
         private Integer currentQuantity;
         private Integer minQuantity;
         private OffsetDateTime timestamp;
