@@ -1,6 +1,10 @@
 spring:
   webflux:
     base-path: ""
+  # Disable WebSocket auto-configuration trong test
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.websocket.reactive.WebSocketReactiveAutoConfiguration
   main:
     web-application-type: reactive
   jackson:

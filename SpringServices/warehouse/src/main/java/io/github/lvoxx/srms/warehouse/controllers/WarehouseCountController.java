@@ -2,8 +2,7 @@ package io.github.lvoxx.srms.warehouse.controllers;
 
 import java.util.UUID;
 
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.hateoas.server.reactive.WebFluxLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.github.lvoxx.srms.warehouse.dto.WarehouseCountDTO;
+import io.github.lvoxx.srms.warehouse.hateoas.WarehouseCountResource;
+import io.github.lvoxx.srms.warehouse.hateoas.WarehouseHealthMetricsResource;
+import io.github.lvoxx.srms.warehouse.hateoas.WarehouseStatisticsResource;
 import io.github.lvoxx.srms.warehouse.services.WarehouseCountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,21 +45,13 @@ public class WarehouseCountController {
      * @return Mono emitting ResponseEntity with count response and HATEOAS links
      */
     @GetMapping
-    public Mono<ResponseEntity<EntityModel<WarehouseCountDTO.CountResponse>>> countAll(
-            @RequestParam(defaultValue = "false") boolean includeDeleted) {
+    public Mono<ResponseEntity<WarehouseCountResource>> countAll(
+            @RequestParam(defaultValue = "false", required = false) boolean includeDeleted) {
         log.debug("GET /warehouse/count");
 
         return countService.countAllWarehouses(includeDeleted)
-                .map(response -> {
-                    EntityModel<WarehouseCountDTO.CountResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .countAll(includeDeleted)).withSelfRel());
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .getStatistics()).withRel("statistics"));
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .getHealthMetrics()).withRel("health"));
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> toCountResource(response, includeDeleted))
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -66,18 +60,12 @@ public class WarehouseCountController {
      * @return Mono emitting ResponseEntity with count response and HATEOAS links
      */
     @GetMapping("/below-minimum")
-    public Mono<ResponseEntity<EntityModel<WarehouseCountDTO.CountResponse>>> countBelowMinimum() {
+    public Mono<ResponseEntity<WarehouseCountResource>> countBelowMinimum() {
         log.debug("GET /warehouse/count/below-minimum");
 
         return countService.countBelowMinimum()
-                .map(response -> {
-                    EntityModel<WarehouseCountDTO.CountResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .countBelowMinimum()).withSelfRel());
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .countAll(false)).withRel("all"));
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(this::toBelowMinimumResource)
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -86,18 +74,12 @@ public class WarehouseCountController {
      * @return Mono emitting ResponseEntity with count response and HATEOAS links
      */
     @GetMapping("/out-of-stock")
-    public Mono<ResponseEntity<EntityModel<WarehouseCountDTO.CountResponse>>> countOutOfStock() {
+    public Mono<ResponseEntity<WarehouseCountResource>> countOutOfStock() {
         log.debug("GET /warehouse/count/out-of-stock");
 
         return countService.countOutOfStock()
-                .map(response -> {
-                    EntityModel<WarehouseCountDTO.CountResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .countOutOfStock()).withSelfRel());
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .countAll(false)).withRel("all"));
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(this::toOutOfStockResource)
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -106,16 +88,12 @@ public class WarehouseCountController {
      * @return Mono emitting ResponseEntity with count response and HATEOAS links
      */
     @GetMapping("/history")
-    public Mono<ResponseEntity<EntityModel<WarehouseCountDTO.CountResponse>>> countAllHistory() {
+    public Mono<ResponseEntity<WarehouseCountResource>> countAllHistory() {
         log.debug("GET /warehouse/count/history");
 
         return countService.countAllHistory()
-                .map(response -> {
-                    EntityModel<WarehouseCountDTO.CountResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .countAllHistory()).withSelfRel());
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(this::toAllHistoryResource)
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -125,19 +103,13 @@ public class WarehouseCountController {
      * @return Mono emitting ResponseEntity with count response and HATEOAS links
      */
     @GetMapping("/history/warehouse/{warehouseId}")
-    public Mono<ResponseEntity<EntityModel<WarehouseCountDTO.CountResponse>>> countHistoryByWarehouse(
+    public Mono<ResponseEntity<WarehouseCountResource>> countHistoryByWarehouse(
             @PathVariable UUID warehouseId) {
         log.debug("GET /warehouse/count/history/warehouse/{}", warehouseId);
 
         return countService.countHistoryByWarehouseId(warehouseId)
-                .map(response -> {
-                    EntityModel<WarehouseCountDTO.CountResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .countHistoryByWarehouse(warehouseId)).withSelfRel());
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .countAllHistory()).withRel("all-history"));
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> toHistoryByWarehouseResource(response, warehouseId))
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -147,17 +119,13 @@ public class WarehouseCountController {
      * @return Mono emitting ResponseEntity with count response and HATEOAS links
      */
     @GetMapping("/history/type/{type}")
-    public Mono<ResponseEntity<EntityModel<WarehouseCountDTO.CountResponse>>> countHistoryByType(
+    public Mono<ResponseEntity<WarehouseCountResource>> countHistoryByType(
             @PathVariable String type) {
         log.debug("GET /warehouse/count/history/type/{}", type);
 
         return countService.countHistoryByType(type)
-                .map(response -> {
-                    EntityModel<WarehouseCountDTO.CountResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .countHistoryByType(type)).withSelfRel());
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> toHistoryByTypeResource(response, type))
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -168,17 +136,13 @@ public class WarehouseCountController {
      * @return Mono emitting ResponseEntity with count response and HATEOAS links
      */
     @GetMapping("/history/warehouse/{warehouseId}/type/{type}")
-    public Mono<ResponseEntity<EntityModel<WarehouseCountDTO.CountResponse>>> countHistoryByWarehouseAndType(
+    public Mono<ResponseEntity<WarehouseCountResource>> countHistoryByWarehouseAndType(
             @PathVariable UUID warehouseId, @PathVariable String type) {
         log.debug("GET /warehouse/count/history/warehouse/{}/type/{}", warehouseId, type);
 
         return countService.countHistoryByWarehouseIdAndType(warehouseId, type)
-                .map(response -> {
-                    EntityModel<WarehouseCountDTO.CountResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .countHistoryByWarehouseAndType(warehouseId, type)).withSelfRel());
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> toHistoryByWarehouseAndTypeResource(response, warehouseId, type))
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -190,18 +154,12 @@ public class WarehouseCountController {
      * @return Mono emitting ResponseEntity with statistics response and HATEOAS links
      */
     @GetMapping("/statistics")
-    public Mono<ResponseEntity<EntityModel<WarehouseCountDTO.StatisticsResponse>>> getStatistics() {
+    public Mono<ResponseEntity<WarehouseStatisticsResource>> getStatistics() {
         log.debug("GET /warehouse/count/statistics");
 
         return countService.getWarehouseStatistics()
-                .map(response -> {
-                    EntityModel<WarehouseCountDTO.StatisticsResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .getStatistics()).withSelfRel());
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .getHealthMetrics()).withRel("health"));
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(this::toStatisticsResource)
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -213,17 +171,213 @@ public class WarehouseCountController {
      * @return Mono emitting ResponseEntity with health metrics and HATEOAS links
      */
     @GetMapping("/health")
-    public Mono<ResponseEntity<EntityModel<WarehouseCountDTO.HealthMetricsResponse>>> getHealthMetrics() {
+    public Mono<ResponseEntity<WarehouseHealthMetricsResource>> getHealthMetrics() {
         log.debug("GET /warehouse/count/health");
 
         return countService.getWarehouseHealthMetrics()
-                .map(response -> {
-                    EntityModel<WarehouseCountDTO.HealthMetricsResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .getHealthMetrics()).withSelfRel());
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseCountController.class)
-                            .getStatistics()).withRel("statistics"));
-                    return ResponseEntity.ok(resource);
+                .flatMap(this::toHealthMetricsResource)
+                .map(ResponseEntity::ok);
+    }
+
+    // ==================== HATEOAS Resource Converters ====================
+
+    private Mono<WarehouseCountResource> toCountResource(WarehouseCountDTO.CountResponse dto, boolean includeDeleted) {
+        WarehouseCountResource resource = new WarehouseCountResource();
+        resource.setCount(dto.getCount());
+        resource.setDescription(dto.getDescription());
+
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseCountController.class).countAll(includeDeleted))
+                .withSelfRel()
+                .toMono()
+                .map(selfLink -> {
+                    resource.add(selfLink);
+                    return resource;
+                })
+                .flatMap(res -> WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(WarehouseCountController.class).getStatistics())
+                        .withRel("statistics")
+                        .toMono()
+                        .map(statsLink -> {
+                            res.add(statsLink);
+                            return res;
+                        }))
+                .flatMap(res -> WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(WarehouseCountController.class).getHealthMetrics())
+                        .withRel("health")
+                        .toMono()
+                        .map(healthLink -> {
+                            res.add(healthLink);
+                            return res;
+                        }));
+    }
+
+    private Mono<WarehouseCountResource> toBelowMinimumResource(WarehouseCountDTO.CountResponse dto) {
+        WarehouseCountResource resource = new WarehouseCountResource();
+        resource.setCount(dto.getCount());
+        resource.setDescription(dto.getDescription());
+
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseCountController.class).countBelowMinimum())
+                .withSelfRel()
+                .toMono()
+                .map(selfLink -> {
+                    resource.add(selfLink);
+                    return resource;
+                })
+                .flatMap(res -> WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(WarehouseCountController.class).countAll(false))
+                        .withRel("all")
+                        .toMono()
+                        .map(allLink -> {
+                            res.add(allLink);
+                            return res;
+                        }));
+    }
+
+    private Mono<WarehouseCountResource> toOutOfStockResource(WarehouseCountDTO.CountResponse dto) {
+        WarehouseCountResource resource = new WarehouseCountResource();
+        resource.setCount(dto.getCount());
+        resource.setDescription(dto.getDescription());
+
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseCountController.class).countOutOfStock())
+                .withSelfRel()
+                .toMono()
+                .map(selfLink -> {
+                    resource.add(selfLink);
+                    return resource;
+                })
+                .flatMap(res -> WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(WarehouseCountController.class).countAll(false))
+                        .withRel("all")
+                        .toMono()
+                        .map(allLink -> {
+                            res.add(allLink);
+                            return res;
+                        }));
+    }
+
+    private Mono<WarehouseCountResource> toAllHistoryResource(WarehouseCountDTO.CountResponse dto) {
+        WarehouseCountResource resource = new WarehouseCountResource();
+        resource.setCount(dto.getCount());
+        resource.setDescription(dto.getDescription());
+
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseCountController.class).countAllHistory())
+                .withSelfRel()
+                .toMono()
+                .map(selfLink -> {
+                    resource.add(selfLink);
+                    return resource;
                 });
+    }
+
+    private Mono<WarehouseCountResource> toHistoryByWarehouseResource(WarehouseCountDTO.CountResponse dto, UUID warehouseId) {
+        WarehouseCountResource resource = new WarehouseCountResource();
+        resource.setCount(dto.getCount());
+        resource.setDescription(dto.getDescription());
+
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseCountController.class).countHistoryByWarehouse(warehouseId))
+                .withSelfRel()
+                .toMono()
+                .map(selfLink -> {
+                    resource.add(selfLink);
+                    return resource;
+                })
+                .flatMap(res -> WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(WarehouseCountController.class).countAllHistory())
+                        .withRel("all-history")
+                        .toMono()
+                        .map(allHistoryLink -> {
+                            res.add(allHistoryLink);
+                            return res;
+                        }));
+    }
+
+    private Mono<WarehouseCountResource> toHistoryByTypeResource(WarehouseCountDTO.CountResponse dto, String type) {
+        WarehouseCountResource resource = new WarehouseCountResource();
+        resource.setCount(dto.getCount());
+        resource.setDescription(dto.getDescription());
+
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseCountController.class).countHistoryByType(type))
+                .withSelfRel()
+                .toMono()
+                .map(selfLink -> {
+                    resource.add(selfLink);
+                    return resource;
+                });
+    }
+
+    private Mono<WarehouseCountResource> toHistoryByWarehouseAndTypeResource(
+            WarehouseCountDTO.CountResponse dto, UUID warehouseId, String type) {
+        WarehouseCountResource resource = new WarehouseCountResource();
+        resource.setCount(dto.getCount());
+        resource.setDescription(dto.getDescription());
+
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseCountController.class)
+                        .countHistoryByWarehouseAndType(warehouseId, type))
+                .withSelfRel()
+                .toMono()
+                .map(selfLink -> {
+                    resource.add(selfLink);
+                    return resource;
+                });
+    }
+
+    private Mono<WarehouseStatisticsResource> toStatisticsResource(WarehouseCountDTO.StatisticsResponse dto) {
+        WarehouseStatisticsResource resource = new WarehouseStatisticsResource();
+        resource.setTotalWarehouses(dto.getTotalWarehouses());
+        resource.setInStock(dto.getInStock());
+        resource.setOutOfStock(dto.getOutOfStock());
+        resource.setBelowMinimum(dto.getBelowMinimum());
+        resource.setTotalHistoryEntries(dto.getTotalHistoryEntries());
+
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseCountController.class).getStatistics())
+                .withSelfRel()
+                .toMono()
+                .map(selfLink -> {
+                    resource.add(selfLink);
+                    return resource;
+                })
+                .flatMap(res -> WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(WarehouseCountController.class).getHealthMetrics())
+                        .withRel("health")
+                        .toMono()
+                        .map(healthLink -> {
+                            res.add(healthLink);
+                            return res;
+                        }));
+    }
+
+    private Mono<WarehouseHealthMetricsResource> toHealthMetricsResource(WarehouseCountDTO.HealthMetricsResponse dto) {
+        WarehouseHealthMetricsResource resource = new WarehouseHealthMetricsResource();
+        resource.setTotalWarehouses(dto.getTotalWarehouses());
+        resource.setBelowMinimum(dto.getBelowMinimum());
+        resource.setOutOfStock(dto.getOutOfStock());
+        resource.setBelowMinimumPercentage(dto.getBelowMinimumPercentage());
+        resource.setOutOfStockPercentage(dto.getOutOfStockPercentage());
+        resource.setHealthyPercentage(dto.getHealthyPercentage());
+
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseCountController.class).getHealthMetrics())
+                .withSelfRel()
+                .toMono()
+                .map(selfLink -> {
+                    resource.add(selfLink);
+                    return resource;
+                })
+                .flatMap(res -> WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(WarehouseCountController.class).getStatistics())
+                        .withRel("statistics")
+                        .toMono()
+                        .map(statsLink -> {
+                            res.add(statsLink);
+                            return res;
+                        }));
     }
 }
