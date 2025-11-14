@@ -4,6 +4,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -13,12 +14,21 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.github.lvoxx.srms.warehouse.dto.WarehouseCountDTO;
+import io.github.lvoxx.srms.warehouse.dto.WarehouseDTO.Response;
 import io.github.lvoxx.srms.warehouse.helper.MinimalWebFluxTest;
 import io.github.lvoxx.srms.warehouse.services.WarehouseCountService;
 import reactor.core.publisher.Mono;
@@ -31,8 +41,13 @@ import reactor.core.publisher.Mono;
 @ActiveProfiles("test")
 public class WarehouseCountControllerTest {
 
+        private static final Logger log = LoggerFactory.getLogger(WarehouseCountControllerTest.class);
+
         @Autowired
         private WebTestClient webTestClient;
+
+        @Autowired
+        private ObjectMapper mapper;
 
         @MockitoBean
         private WarehouseCountService countService;
@@ -63,13 +78,14 @@ public class WarehouseCountControllerTest {
                                         .exchange()
                                         .expectStatus().isOk()
                                         .expectBody()
-                                        .consumeWith(result -> {
+                                        .consumeWith(res -> {
                                                 // Debug: Print response body
-                                                System.out.println("Response: " + new String(result.getResponseBody()));
+                                                printPrettyLog(log, res);
                                         })
                                         .jsonPath("$.count").isEqualTo(100)
                                         .jsonPath("$.description").isEqualTo("Total warehouses")
-                                        .jsonPath("$._links.self.href").exists(); // Verify HATEOAS link exists
+                                        .jsonPath("$.links[0].rel").isEqualTo("self")
+                                        .jsonPath("$.links[0].href").isEqualTo("/warehouse/count?includeDeleted=true");
 
                         verify(countService).countAllWarehouses(true);
                 }
@@ -501,9 +517,12 @@ public class WarehouseCountControllerTest {
                                         .exchange()
                                         .expectStatus().isOk()
                                         .expectBody()
-                                        .jsonPath("$._links.self.href").exists()
-                                        .jsonPath("$._links.statistics.href").exists()
-                                        .jsonPath("$._links.health.href").exists();
+                                        .consumeWith(res -> {
+                                                // Debug: Print response body
+                                                printPrettyLog(log, res);
+                                        })
+                                        .jsonPath("$.links[0].rel").isEqualTo("self")
+                                        .jsonPath("$.links[0].href").isEqualTo("/warehouse/count?includeDeleted=false");
                 }
 
                 @Test
@@ -525,8 +544,12 @@ public class WarehouseCountControllerTest {
                                         .exchange()
                                         .expectStatus().isOk()
                                         .expectBody()
-                                        .jsonPath("$._links.self.href").exists()
-                                        .jsonPath("$._links.health.href").exists();
+                                        .consumeWith(res -> {
+                                                // Debug: Print response body
+                                                printPrettyLog(log, res);
+                                        })
+                                        .jsonPath("$.links[0].rel").isEqualTo("self")
+                                        .jsonPath("$.links[0].href").isEqualTo("/warehouse/count/statistics");
                 }
 
                 @Test
@@ -550,8 +573,38 @@ public class WarehouseCountControllerTest {
                                         .exchange()
                                         .expectStatus().isOk()
                                         .expectBody()
-                                        .jsonPath("$._links.self.href").exists()
-                                        .jsonPath("$._links.statistics.href").exists();
+                                        .consumeWith(res -> {
+                                                // Debug: Print response body
+                                                printPrettyLog(log, res);
+                                        })
+                                        .jsonPath("$.links[0].rel").isEqualTo("self")
+                                        .jsonPath("$.links[0].href").isEqualTo("/warehouse/count/health");
+                }
+        }
+
+        private void printPrettyLog(Logger log, EntityExchangeResult<byte[]> res) {
+                try {
+                        Object json = mapper.readValue(res.getResponseBody(), Object.class);
+                        log.debug("Response:\n{}", mapper.writerWithDefaultPrettyPrinter()
+                                        .writeValueAsString(json));
+                } catch (StreamReadException e) {
+                        e.printStackTrace();
+                } catch (DatabindException e) {
+                        e.printStackTrace();
+                } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                } catch (IOException e) {
+                        e.printStackTrace();
+                }
+        }
+
+        @SuppressWarnings("unused")
+        private void printPrettyDTOLog(Logger log, EntityExchangeResult<Response> res) {
+                try {
+                        log.debug("Response:\n{}", mapper.writerWithDefaultPrettyPrinter()
+                                        .writeValueAsString(res));
+                } catch (JsonProcessingException e) {
+                        e.printStackTrace();
                 }
         }
 }

@@ -53,6 +53,7 @@ import reactor.core.publisher.Mono;
                 ValidationExceptionHandler.class
 })
 @ActiveProfiles("test")
+@SuppressWarnings("null")
 public class ContactorControllerValidationTest {
 
         private static final Logger log = LoggerFactory.getLogger(ContactorControllerValidationTest.class);
