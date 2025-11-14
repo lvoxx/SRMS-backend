@@ -22,4 +22,5 @@ public class TestControllerWithMessagesConfig {
         bean.setValidationMessageSource(messageSource);
         return bean;
     }
+
 }

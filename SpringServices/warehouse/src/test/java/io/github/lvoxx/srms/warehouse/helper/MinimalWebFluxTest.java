@@ -21,19 +21,21 @@ import io.github.lvoxx.srms.warehouse.config.TestControllerWithMessagesConfig;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @WebFluxTest(excludeAutoConfiguration = {
-        R2dbcAutoConfiguration.class,
-        R2dbcDataAutoConfiguration.class,
-        R2dbcRepositoriesAutoConfiguration.class,
-        WebSocketReactiveAutoConfiguration.class
+                R2dbcAutoConfiguration.class,
+                R2dbcDataAutoConfiguration.class,
+                R2dbcRepositoriesAutoConfiguration.class,
+                WebSocketReactiveAutoConfiguration.class
 })
-@Import({ TestControllerWithMessagesConfig.class })
-@ContextConfiguration(classes = {
-        GlobalExceptionHandler.class, ValidationExceptionHandler.class
+@ContextConfiguration
+@Import({
+                TestControllerWithMessagesConfig.class,
+                GlobalExceptionHandler.class,
+                ValidationExceptionHandler.class
 })
 public @interface MinimalWebFluxTest {
-    @AliasFor(annotation = WebFluxTest.class, attribute = "controllers")
-    Class<?>[] controllers() default {};
+        @AliasFor(annotation = WebFluxTest.class, attribute = "controllers")
+        Class<?>[] controllers() default {};
 
-    @AliasFor(annotation = ContextConfiguration.class, attribute = "classes")
-    Class<?>[] controllersClasses() default {};
+        @AliasFor(annotation = ContextConfiguration.class, attribute = "classes")
+        Class<?>[] controllersClasses() default {};
 }

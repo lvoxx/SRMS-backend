@@ -1,4 +1,7 @@
 spring:
+  web:
+    resources:
+      add-mappings: false
   webflux:
     base-path: ""
   # Disable WebSocket auto-configuration trong test
