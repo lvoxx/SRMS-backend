@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.hateoas.server.reactive.WebFluxLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,16 +55,8 @@ public class WarehouseStatisticController {
         log.debug("GET /warehouse/statistic/import/{}", warehouseId);
 
         return statisticService.getTotalImportQuantity(warehouseId)
-                .map(response -> {
-                    EntityModel<WarehouseStatisticDTO.QuantityResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getTotalImport(warehouseId)).withSelfRel());
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getTotalExport(warehouseId)).withRel("export"));
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getBalance(warehouseId)).withRel("balance"));
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> addImportLinks(response, warehouseId))
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -79,14 +71,8 @@ public class WarehouseStatisticController {
         log.debug("GET /warehouse/statistic/export/{}", warehouseId);
 
         return statisticService.getTotalExportQuantity(warehouseId)
-                .map(response -> {
-                    EntityModel<WarehouseStatisticDTO.QuantityResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getTotalExport(warehouseId)).withSelfRel());
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getTotalImport(warehouseId)).withRel("import"));
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> addExportLinks(response, warehouseId))
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -109,12 +95,8 @@ public class WarehouseStatisticController {
         log.debug("GET /warehouse/statistic/quantity/{}", warehouseId);
 
         return statisticService.getQuantityByTypeAndDateRange(warehouseId, type, from, to)
-                .map(response -> {
-                    EntityModel<WarehouseStatisticDTO.QuantityResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getQuantityByDateRange(warehouseId, type, from, to)).withSelfRel());
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> addQuantityByDateRangeLinks(response, warehouseId, type, from, to))
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -132,12 +114,8 @@ public class WarehouseStatisticController {
         log.debug("GET /warehouse/statistic/balance/{}", warehouseId);
 
         return statisticService.getImportExportBalance(warehouseId)
-                .map(response -> {
-                    EntityModel<WarehouseStatisticDTO.BalanceResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getBalance(warehouseId)).withSelfRel());
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> addBalanceLinks(response, warehouseId))
+                .map(ResponseEntity::ok);
     }
 
     // ==================== WAREHOUSE ALERTS ====================
@@ -159,12 +137,8 @@ public class WarehouseStatisticController {
         log.debug("GET /warehouse/statistic/alerts/below-minimum");
 
         return statisticService.getProductsBelowMinimum(page, size)
-                .map(response -> {
-                    EntityModel<WarehouseStatisticDTO.AlertListResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getProductsBelowMinimum(page, size)).withSelfRel());
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> addBelowMinimumLinks(response, page, size))
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -184,12 +158,8 @@ public class WarehouseStatisticController {
         log.debug("GET /warehouse/statistic/alerts/out-of-stock");
 
         return statisticService.getOutOfStockProducts(page, size)
-                .map(response -> {
-                    EntityModel<WarehouseStatisticDTO.AlertListResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getOutOfStockProducts(page, size)).withSelfRel());
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> addOutOfStockLinks(response, page, size))
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -209,12 +179,8 @@ public class WarehouseStatisticController {
         log.debug("GET /warehouse/statistic/alerts");
 
         return statisticService.getAllWarehouseAlerts(page, size)
-                .map(response -> {
-                    EntityModel<WarehouseStatisticDTO.AlertListResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getAllAlerts(page, size)).withSelfRel());
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> addAllAlertsLinks(response, page, size))
+                .map(ResponseEntity::ok);
     }
 
     // ==================== DASHBOARD STATISTICS ====================
@@ -224,12 +190,8 @@ public class WarehouseStatisticController {
         log.debug("GET /warehouse/statistic/dashboard");
 
         return statisticService.getDashboardStatistics()
-                .map(response -> {
-                    EntityModel<WarehouseStatisticDTO.DashboardResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getDashboard()).withSelfRel());
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(this::addDashboardLinks)
+                .map(ResponseEntity::ok);
     }
 
     @GetMapping("/details/{warehouseId}")
@@ -238,12 +200,8 @@ public class WarehouseStatisticController {
         log.debug("GET /warehouse/statistic/details/{}", warehouseId);
 
         return statisticService.getWarehouseDetails(warehouseId)
-                .map(response -> {
-                    EntityModel<WarehouseStatisticDTO.WarehouseDetailsResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getWarehouseDetails(warehouseId)).withSelfRel());
-                    return ResponseEntity.ok(resource);
-                });
+                .flatMap(response -> addWarehouseDetailsLinks(response, warehouseId))
+                .map(ResponseEntity::ok);
     }
 
     @GetMapping("/time-based/{warehouseId}")
@@ -254,11 +212,169 @@ public class WarehouseStatisticController {
         log.debug("GET /warehouse/statistic/time-based/{}", warehouseId);
 
         return statisticService.getTimeBasedStatistics(warehouseId, from, to)
-                .map(response -> {
+                .flatMap(response -> addTimeBasedStatisticsLinks(response, warehouseId, from, to))
+                .map(ResponseEntity::ok);
+    }
+
+    // ==================== PRIVATE HATEOAS LINK BUILDERS ====================
+
+    private Mono<EntityModel<WarehouseStatisticDTO.QuantityResponse>> addImportLinks(
+            WarehouseStatisticDTO.QuantityResponse response, UUID warehouseId) {
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                        .getTotalImport(warehouseId))
+                .withSelfRel()
+                .toMono()
+                .zipWith(WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                                .getTotalExport(warehouseId))
+                        .withRel("export")
+                        .toMono())
+                .zipWith(WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                                .getBalance(warehouseId))
+                        .withRel("balance")
+                        .toMono())
+                .map(tuple -> {
+                    EntityModel<WarehouseStatisticDTO.QuantityResponse> resource = EntityModel.of(response);
+                    resource.add(tuple.getT1().getT1());
+                    resource.add(tuple.getT1().getT2());
+                    resource.add(tuple.getT2());
+                    return resource;
+                });
+    }
+
+    private Mono<EntityModel<WarehouseStatisticDTO.QuantityResponse>> addExportLinks(
+            WarehouseStatisticDTO.QuantityResponse response, UUID warehouseId) {
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                        .getTotalExport(warehouseId))
+                .withSelfRel()
+                .toMono()
+                .zipWith(WebFluxLinkBuilder.linkTo(
+                        WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                                .getTotalImport(warehouseId))
+                        .withRel("import")
+                        .toMono())
+                .map(tuple -> {
+                    EntityModel<WarehouseStatisticDTO.QuantityResponse> resource = EntityModel.of(response);
+                    resource.add(tuple.getT1());
+                    resource.add(tuple.getT2());
+                    return resource;
+                });
+    }
+
+    private Mono<EntityModel<WarehouseStatisticDTO.QuantityResponse>> addQuantityByDateRangeLinks(
+            WarehouseStatisticDTO.QuantityResponse response, UUID warehouseId, 
+            String type, OffsetDateTime from, OffsetDateTime to) {
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                        .getQuantityByDateRange(warehouseId, type, from, to))
+                .withSelfRel()
+                .toMono()
+                .map(link -> {
+                    EntityModel<WarehouseStatisticDTO.QuantityResponse> resource = EntityModel.of(response);
+                    resource.add(link);
+                    return resource;
+                });
+    }
+
+    private Mono<EntityModel<WarehouseStatisticDTO.BalanceResponse>> addBalanceLinks(
+            WarehouseStatisticDTO.BalanceResponse response, UUID warehouseId) {
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                        .getBalance(warehouseId))
+                .withSelfRel()
+                .toMono()
+                .map(link -> {
+                    EntityModel<WarehouseStatisticDTO.BalanceResponse> resource = EntityModel.of(response);
+                    resource.add(link);
+                    return resource;
+                });
+    }
+
+    private Mono<EntityModel<WarehouseStatisticDTO.AlertListResponse>> addBelowMinimumLinks(
+            WarehouseStatisticDTO.AlertListResponse response, int page, int size) {
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                        .getProductsBelowMinimum(page, size))
+                .withSelfRel()
+                .toMono()
+                .map(link -> {
+                    EntityModel<WarehouseStatisticDTO.AlertListResponse> resource = EntityModel.of(response);
+                    resource.add(link);
+                    return resource;
+                });
+    }
+
+    private Mono<EntityModel<WarehouseStatisticDTO.AlertListResponse>> addOutOfStockLinks(
+            WarehouseStatisticDTO.AlertListResponse response, int page, int size) {
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                        .getOutOfStockProducts(page, size))
+                .withSelfRel()
+                .toMono()
+                .map(link -> {
+                    EntityModel<WarehouseStatisticDTO.AlertListResponse> resource = EntityModel.of(response);
+                    resource.add(link);
+                    return resource;
+                });
+    }
+
+    private Mono<EntityModel<WarehouseStatisticDTO.AlertListResponse>> addAllAlertsLinks(
+            WarehouseStatisticDTO.AlertListResponse response, int page, int size) {
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                        .getAllAlerts(page, size))
+                .withSelfRel()
+                .toMono()
+                .map(link -> {
+                    EntityModel<WarehouseStatisticDTO.AlertListResponse> resource = EntityModel.of(response);
+                    resource.add(link);
+                    return resource;
+                });
+    }
+
+    private Mono<EntityModel<WarehouseStatisticDTO.DashboardResponse>> addDashboardLinks(
+            WarehouseStatisticDTO.DashboardResponse response) {
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                        .getDashboard())
+                .withSelfRel()
+                .toMono()
+                .map(link -> {
+                    EntityModel<WarehouseStatisticDTO.DashboardResponse> resource = EntityModel.of(response);
+                    resource.add(link);
+                    return resource;
+                });
+    }
+
+    private Mono<EntityModel<WarehouseStatisticDTO.WarehouseDetailsResponse>> addWarehouseDetailsLinks(
+            WarehouseStatisticDTO.WarehouseDetailsResponse response, UUID warehouseId) {
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                        .getWarehouseDetails(warehouseId))
+                .withSelfRel()
+                .toMono()
+                .map(link -> {
+                    EntityModel<WarehouseStatisticDTO.WarehouseDetailsResponse> resource = EntityModel.of(response);
+                    resource.add(link);
+                    return resource;
+                });
+    }
+
+    private Mono<EntityModel<WarehouseStatisticDTO.TimeBasedStatisticsResponse>> addTimeBasedStatisticsLinks(
+            WarehouseStatisticDTO.TimeBasedStatisticsResponse response, UUID warehouseId,
+            OffsetDateTime from, OffsetDateTime to) {
+        return WebFluxLinkBuilder.linkTo(
+                WebFluxLinkBuilder.methodOn(WarehouseStatisticController.class)
+                        .getTimeBasedStatistics(warehouseId, from, to))
+                .withSelfRel()
+                .toMono()
+                .map(link -> {
                     EntityModel<WarehouseStatisticDTO.TimeBasedStatisticsResponse> resource = EntityModel.of(response);
-                    resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarehouseStatisticController.class)
-                            .getTimeBasedStatistics(warehouseId, from, to)).withSelfRel());
-                    return ResponseEntity.ok(resource);
+                    resource.add(link);
+                    return resource;
                 });
     }
 }
