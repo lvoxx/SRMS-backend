@@ -2,8 +2,9 @@ package io.github.lvoxx.srms.warehouse.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -512,7 +513,7 @@ public class WarehouseManagementControllerTest {
                 }
 
                 @Test
-                @DisplayName("Should accept search with no filters")
+                @DisplayName("Should not accept search with no filters")
                 void shouldAcceptSearchWithNoFilters() {
                         log.info("\n" + "=".repeat(80));
                         log.info("TEST: Should accept search with no filters");
@@ -520,8 +521,7 @@ public class WarehouseManagementControllerTest {
 
                         // DTO rỗng (dùng default page=0, size=20)
                         WarehouseSearchDTO.Request request = WarehouseSearchDTO.Request.builder()
-                                        .productName("") // vì @NotBlank nên bạn phải truyền chuỗi rỗng hoặc null →
-                                                         // KHÔNG ĐƯỢC null
+                                        .productName("")
                                         .minQuantity(null)
                                         .maxQuantity(null)
                                         .createdFrom(null)
@@ -532,17 +532,29 @@ public class WarehouseManagementControllerTest {
                                         .size(20)
                                         .build();
 
+                        WarehouseDTO.Response response = WarehouseDTO.Response.builder()
+                                        .id(WAREHOUSE_ID)
+                                        .productName("Test Product")
+                                        .quantity(1100)
+                                        .minQuantity(10)
+                                        .createdAt(OffsetDateTime.now().minusDays(1))
+                                        .updatedAt(OffsetDateTime.now())
+                                        .lastUpdatedBy(USER_ID)
+                                        .isDeleted(false)
+                                        .version(2L)
+                                        .build();
+
                         when(managementService.findAllWithFilters(
-                                        eq(false),
-                                        eq(""), // vì productName not blank nên phải có string
-                                        isNull(),
-                                        isNull(),
-                                        isNull(),
-                                        isNull(),
-                                        isNull(),
-                                        isNull(),
-                                        eq(0),
-                                        eq(20))).thenReturn(Flux.empty());
+                                        anyBoolean(),
+                                        any(),
+                                        any(),
+                                        any(),
+                                        any(),
+                                        any(),
+                                        any(),
+                                        any(),
+                                        anyInt(),
+                                        anyInt())).thenReturn(Flux.just(response));
 
                         webTestClient.post()
                                         .uri("/warehouse/management/search?includeDeleted=false")

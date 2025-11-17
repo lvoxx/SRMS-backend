@@ -1,6 +1,7 @@
 package io.github.lvoxx.srms.warehouse.dto;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +10,8 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 import io.github.lvoxx.srms.controllerhandler.model.ValidationException;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -25,27 +26,36 @@ public class WarehouseSearchDTO {
     @Builder(toBuilder = true)
     @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
     public static class Request {
-        @NotBlank(message = "{error.validation.productName.notBlank}")
         @Size(max = 255, message = "{error.validation.productName.size}")
-
         private String productName;
         @Min(value = 0, message = "minQuantity must be greater than or equal to 0")
-        private Integer minQuantity;
+        @Builder.Default
+        private Integer minQuantity = Integer.valueOf(0);
 
         @Min(value = 0, message = "maxQuantity must be greater than or equal to 0")
-        private Integer maxQuantity;
+        @Max(value = 1_000_000, message = "maxQuantity must be less than one million")
+        @Builder.Default
+        private Integer maxQuantity = 1_000_000;
 
         @Pattern(regexp = "^$|^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?([+-]\\d{2}:\\d{2}|Z)$", message = "createdFrom must be in ISO 8601 format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-        private String createdFrom;
+        @Builder.Default
+        private String createdFrom = OffsetDateTime.now().minusDays(7).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                .toString();
 
         @Pattern(regexp = "^$|^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?([+-]\\d{2}:\\d{2}|Z)$", message = "createdTo must be in ISO 8601 format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-        private String createdTo;
+        @Builder.Default
+        private String createdTo = OffsetDateTime.now().plusDays(7).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                .toString();
 
         @Pattern(regexp = "^$|^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?([+-]\\d{2}:\\d{2}|Z)$", message = "updatedFrom must be in ISO 8601 format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-        private String updatedFrom;
+        @Builder.Default
+        private String updatedFrom = OffsetDateTime.now().minusDays(7).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                .toString();
 
         @Pattern(regexp = "^$|^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?([+-]\\d{2}:\\d{2}|Z)$", message = "updatedTo must be in ISO 8601 format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-        private String updatedTo;
+        @Builder.Default
+        private String updatedTo = OffsetDateTime.now().plusDays(7).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                .toString();
 
         @Builder.Default
         @Min(value = 0, message = "page must be greater than or equal to 0")
