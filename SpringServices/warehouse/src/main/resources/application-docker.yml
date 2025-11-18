@@ -40,6 +40,34 @@ spring:
       adjust-dates-to-context-time-zone: false
     time-zone: Asia/Ho_Chi_Minh
 
+---
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    properties:
+      schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        auto.register.schemas: true
+        use.latest.version: true
+        enable.idempotence: true
+      acks: all
+      retries: 3
+        
+    consumer:
+      group-id: inventory-alert-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        specific.avro.reader: true
+        auto.register.schemas: true
+
+
+---
+
 redisson:
   single-server-config:
     address: "redis://${spring.data.redis.host}:${spring.data.redis.port}"

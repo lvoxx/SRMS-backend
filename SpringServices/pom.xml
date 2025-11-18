@@ -41,6 +41,7 @@
 		<module>starter/controllerhandler</module>
 		<module>starter/jdbc</module>
 		<module>starter/redisson</module>
+		<module>starter/kafka</module>
 
 		<module>contactor</module>
 		<module>customer</module>
@@ -59,6 +60,7 @@
 		<spring-context.version>6.2.10</spring-context.version>
 		<spring-aop.version>6.2.10</spring-aop.version>
 		<spring-boot.version>3.5.3</spring-boot.version>
+		<spring-kafka.version>3.3.10</spring-kafka.version>
 		<spring-websocket.version>7.0.0-M9</spring-websocket.version>
 		<spring-cloud.version>4.3.0</spring-cloud.version>
 		<spring-cloud.kubernetes.version>3.3.0</spring-cloud.kubernetes.version>
@@ -69,6 +71,8 @@
 		<postgresql.version>42.7.7</postgresql.version>
 		<r2dbc-postgresql.version>1.0.7.RELEASE</r2dbc-postgresql.version>
 		<redission.version>3.52.0</redission.version>
+		<avro.version>1.12.1</avro.version>
+		<kafka-avro.version>8.1.0</kafka-avro.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<jackson.version>2.19.2</jackson.version>
 		<lombok.version>1.18.38</lombok.version>
@@ -119,7 +123,11 @@
 				<artifactId>redisson</artifactId>
 				<version>${application.version}</version>
 			</dependency>
-
+			<dependency>
+				<groupId>io.github.lvoxx.srms</groupId>
+				<artifactId>kafka</artifactId>
+				<version>${application.version}</version>
+			</dependency>
 			<!-- SPRING BOOT -->
 			<dependency>
 				<groupId>org.springframework</groupId>
@@ -186,6 +194,11 @@
 				<artifactId>spring-websocket</artifactId>
 				<version>${spring-websocket.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.springframework.kafka</groupId>
+				<artifactId>spring-kafka</artifactId>
+				<version>${spring-kafka.version}</version>
+			</dependency>
 			<!-- SPRING BOOT -->
 
 			<!-- SPRING CLOUD -->
@@ -228,6 +241,16 @@
 				<artifactId>r2dbc-postgresql</artifactId>
 				<version>${r2dbc-postgresql.version}</version>
 				<scope>runtime</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.avro</groupId>
+				<artifactId>avro</artifactId>
+				<version>${avro.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.confluent</groupId>
+				<artifactId>kafka-avro-serializer</artifactId>
+				<version>${kafka-avro.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mapstruct</groupId>

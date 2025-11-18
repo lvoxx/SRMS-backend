@@ -49,6 +49,10 @@
 			<groupId>io.github.lvoxx.srms</groupId>
 			<artifactId>redisson</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>io.github.lvoxx.srms</groupId>
+			<artifactId>kafka</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
