@@ -73,6 +73,7 @@
 		<redission.version>3.52.0</redission.version>
 		<avro.version>1.12.1</avro.version>
 		<kafka-avro.version>8.1.0</kafka-avro.version>
+		<kafka-schema.version>8.1.0</kafka-schema.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<jackson.version>2.19.2</jackson.version>
 		<lombok.version>1.18.38</lombok.version>
@@ -85,6 +86,7 @@
 		<mockserver.client.version>5.15.0</mockserver.client.version>
 		<spring-security-test.version>6.5.2</spring-security-test.version>
 		<spring-boot.testcontainers.version>3.5.3</spring-boot.testcontainers.version>
+		<spring-kafka-test.version>3.3.10</spring-kafka-test.version>
 		<!-- VERSIONING END -->
 
 		<!-- DOCKER START -->
@@ -253,6 +255,11 @@
 				<version>${kafka-avro.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>io.confluent</groupId>
+				<artifactId>kafka-schema-registry-client</artifactId>
+				<version>${kafka-schema.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.mapstruct</groupId>
 				<artifactId>mapstruct</artifactId>
 				<version>${mapstruct.version}</version>
@@ -275,6 +282,12 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-test</artifactId>
 				<version>${spring-boot.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.kafka</groupId>
+				<artifactId>spring-kafka-test</artifactId>
+				<version>${spring-kafka-test.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>

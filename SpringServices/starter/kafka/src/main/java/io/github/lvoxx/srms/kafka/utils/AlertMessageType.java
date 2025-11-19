@@ -26,10 +26,9 @@ public enum AlertMessageType {
      * Action Required: Plan restocking, create purchase orders.
      */
     BELOW_MINIMUM(
-        "WARNING",
-        "Product quantity below minimum threshold",
-        "Restocking recommended - Please create purchase order"
-    ),
+            "WARNING",
+            "Product quantity below minimum threshold",
+            "Restocking recommended - Please create purchase order"),
 
     /**
      * CRITICAL level alert.
@@ -40,10 +39,9 @@ public enum AlertMessageType {
      * consider backorder management.
      */
     OUT_OF_STOCK(
-        "CRITICAL",
-        "Product is out of stock",
-        "Immediate restocking required - Notify sales and procurement teams"
-    );
+            "CRITICAL",
+            "Product is out of stock",
+            "Immediate restocking required - Notify sales and procurement teams");
 
     /**
      * Severity level matching Avro AlertLevel enum (WARNING, CRITICAL)

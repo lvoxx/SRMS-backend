@@ -194,7 +194,7 @@ public class WarehouseAlertProducerService {
                 : AlertMessageType.BELOW_MINIMUM;
 
         String enhancedMessage = String.format(
-                "[%s]%s - Current: %d, Minimum: %d, Deficit: %d units.\n %s",
+                "[%s] %s - %s. Current: %d, Minimum: %d, Deficit: %d units. %s",
                 messageType.getSeverity(),
                 messageType.getDescription(),
                 alert.getMessage(),

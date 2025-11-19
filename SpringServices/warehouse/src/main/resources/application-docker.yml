@@ -46,25 +46,26 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     properties:
-      schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+      schema:
+        registry:
+          url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+      auto:
+        register:
+          schemas: true
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
-      properties:
-        auto.register.schemas: true
-        use.latest.version: true
-        enable.idempotence: true
       acks: all
       retries: 3
-        
-    consumer:
-      group-id: inventory-alert-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      compression-type: snappy
+      batch-size: 16384
+      linger-ms: 10
+      buffer-memory: 33554432
       properties:
-        specific.avro.reader: true
-        auto.register.schemas: true
-
+        max.in.flight.requests.per.connection: 5
+        enable.idempotence: true
+        request.timeout.ms: 30000
+        delivery.timeout.ms: 120000
 
 ---
 
@@ -82,6 +83,34 @@ redisson:
 db:
   row-lock: 15      # thời gian chờ tối đa để lấy lock (seconds)
   lease-time: 45    # thời gian giữ lock trước khi tự động giải phóng (seconds)
+
+# Warehouse Alert Configuration
+warehouse:
+  alert:
+    # Interval between alert checks (ISO-8601 Duration format)
+    # Examples: PT5M (5 minutes), PT30S (30 seconds), PT1H (1 hour)
+    check-interval: ${WAREHOUSE_ALERT_CHECK_INTERVAL:PT5M}
+    
+    # Initial delay before first alert check
+    initial-delay: ${WAREHOUSE_ALERT_INITIAL_DELAY:PT30S}
+    
+    # Number of alerts to fetch per page
+    page-size: ${WAREHOUSE_ALERT_PAGE_SIZE:50}
+    
+    # Enable/disable alert publishing
+    enabled: ${WAREHOUSE_ALERT_ENABLED:true}
+    
+    # Number of retry attempts for failed Kafka sends
+    retry-attempts: ${WAREHOUSE_ALERT_RETRY_ATTEMPTS:3}
+    
+    # Delay between retry attempts
+    retry-delay: ${WAREHOUSE_ALERT_RETRY_DELAY:PT1S}
+    
+    # Maximum alerts to process in a single run (prevents overwhelming)
+    max-alerts-per-run: ${WAREHOUSE_ALERT_MAX_PER_RUN:1000}
+    
+    # Timeout for blocking operations
+    operation-timeout: ${WAREHOUSE_ALERT_OPERATION_TIMEOUT:PT30S}
 
 ---
 
