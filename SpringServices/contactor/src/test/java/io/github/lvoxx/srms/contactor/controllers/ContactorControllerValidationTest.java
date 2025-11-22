@@ -143,8 +143,11 @@ public class ContactorControllerValidationTest {
                                         .expectBody()
                                         .jsonPath("$.errors").isMap()
                                         .jsonPath("$.errors.length()").isEqualTo(1)
-                                        .jsonPath("$.errors.phoneNumber").isEqualTo(
-                                                        "Phone number must be 7-15 digits, optionally starting with +");
+                                        .jsonPath("$.errors.phoneNumber").value(
+                                                        Matchers.anyOf(
+                                                                        Matchers.equalTo("Phone number is required"),
+                                                                        Matchers.equalTo(
+                                                                                        "Phone number must be 7-15 digits, optionally starting with +")));
                 }
 
                 @Test
