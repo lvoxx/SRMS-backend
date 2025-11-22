@@ -46,7 +46,7 @@ warehouse:
     page-size: 10
     enabled: true
     retry-attempts: 1
-    retry-delay: PT100MS
+    retry-delay: PT0.1S
     max-alerts-per-run: 100
     operation-timeout: PT5S
 

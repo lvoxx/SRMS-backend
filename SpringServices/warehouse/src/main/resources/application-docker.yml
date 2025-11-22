@@ -110,7 +110,7 @@ warehouse:
   retry-attempts: ${WAREHOUSE_ALERT_RETRY_ATTEMPTS:3}
 
   # Delay between retry attempts
-  retry-delay: ${WAREHOUSE_ALERT_RETRY_DELAY:PT1S}
+  retry-delay: ${WAREHOUSE_ALERT_RETRY_DELAY:PT0.1S}
 
   # Maximum alerts to process in a single run (prevents overwhelming)
   max-alerts-per-run: ${WAREHOUSE_ALERT_MAX_PER_RUN:1000}
