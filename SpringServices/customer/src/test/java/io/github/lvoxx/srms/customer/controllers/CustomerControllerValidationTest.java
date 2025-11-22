@@ -207,7 +207,7 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.errors[?(@.field == 'firstName')].error")
+                                .jsonPath("$.errors.firstName")
                                 .isEqualTo("First name cannot be empty");
         }
 
@@ -225,7 +225,7 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.errors[?(@.field == 'lastName')].error")
+                                .jsonPath("$.errors.lastName")
                                 .isEqualTo("Last name cannot be empty");
         }
 
@@ -243,7 +243,7 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.errors[?(@.field == 'firstName')].error")
+                                .jsonPath("$.errors.firstName")
                                 .isEqualTo("First name must not exceed 50 characters");
         }
 
@@ -264,14 +264,14 @@ public class CustomerControllerValidationTest {
                                 .consumeWith(res -> {
                                         printPrettyLog(log, res);
                                 })
-                                .jsonPath("$.message").isEqualTo("Validation Failure")
+                                .jsonPath("$.message").isEqualTo("Validation failed for request body")
                                 .jsonPath("$.status").isEqualTo(400)
-                                .jsonPath("$.errors").isArray()
-                                .jsonPath("$.errors.length()").isEqualTo(2) // Kiểm tra có đúng 2 lỗi
-                                .jsonPath("$.errors[?(@.field == 'phoneNumber')].error").value(
-                                                Matchers.containsInAnyOrder(
-                                                                "Phone number cannot be empty",
-                                                                "Invalid phone number format"));
+                                .jsonPath("$.errors").isMap()
+                                .jsonPath("$.errors.length()").isEqualTo(1) // Kiểm tra có đúng 1 lỗi
+                                .jsonPath("$.errors.phoneNumber").value(
+                                                Matchers.anyOf(
+                                                                Matchers.equalTo("Phone number cannot be empty"),
+                                                                Matchers.equalTo("Invalid phone number format")));
         }
 
         @ParameterizedTest
@@ -289,7 +289,7 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.errors[?(@.field == 'phoneNumber')].error")
+                                .jsonPath("$.errors.phoneNumber")
                                 .isEqualTo("Invalid phone number format");
         }
 
@@ -327,7 +327,7 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.errors[?(@.field == 'email')].error").isEqualTo("Invalid email format");
+                                .jsonPath("$.errors.email").isEqualTo("Invalid email format");
         }
 
         @Test
@@ -365,7 +365,7 @@ public class CustomerControllerValidationTest {
                                 .consumeWith(res -> {
                                         printPrettyLog(log, res);
                                 })
-                                .jsonPath("$.errors[?(@.field == 'email')].error")
+                                .jsonPath("$.errors.email")
                                 .isEqualTo("Email must not exceed 100 characters");
         }
 
@@ -389,16 +389,16 @@ public class CustomerControllerValidationTest {
                                 .consumeWith(res -> {
                                         printPrettyLog(log, res);
                                 })
-                                .jsonPath("$.message").isEqualTo("Validation Failure")
+                                .jsonPath("$.message").isEqualTo("Validation failed for request body")
                                 .jsonPath("$.status").isEqualTo(400)
-                                .jsonPath("$.errors").isArray()
+                                .jsonPath("$.errors").isMap()
                                 .jsonPath("$.errors.length()").isEqualTo(4) // Kiểm tra số lượng lỗi
-                                .jsonPath("$.errors[?(@.field == 'lastName')].error")
+                                .jsonPath("$.errors.lastName")
                                 .isEqualTo("Last name must not exceed 50 characters")
-                                .jsonPath("$.errors[?(@.field == 'firstName')].error")
+                                .jsonPath("$.errors.firstName")
                                 .isEqualTo("First name cannot be empty")
-                                .jsonPath("$.errors[?(@.field == 'email')].error").isEqualTo("Invalid email format")
-                                .jsonPath("$.errors[?(@.field == 'phoneNumber')].error")
+                                .jsonPath("$.errors.email").isEqualTo("Invalid email format")
+                                .jsonPath("$.errors.phoneNumber")
                                 .isEqualTo("Invalid phone number format");
         }
 
@@ -430,7 +430,7 @@ public class CustomerControllerValidationTest {
                                 .exchange()
                                 .expectStatus().isBadRequest()
                                 .expectBody()
-                                .jsonPath("$.errors[?(@.field == 'firstName')].error")
+                                .jsonPath("$.errors.firstName")
                                 .isEqualTo("First name cannot be empty");
         }
 

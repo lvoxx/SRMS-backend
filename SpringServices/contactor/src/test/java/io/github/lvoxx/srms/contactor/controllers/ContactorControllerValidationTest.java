@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -121,11 +122,9 @@ public class ContactorControllerValidationTest {
                                         .expectStatus().isBadRequest()
                                         .expectBody()
                                         .consumeWith(res -> printPrettyLog(log, res))
-                                        .jsonPath("$.errors").isArray()
+                                        .jsonPath("$.errors").isMap()
                                         .jsonPath("$.errors.length()").isEqualTo(1)
-                                        .jsonPath("$.errors[?(@.field == 'type')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "Contact type is required"));
+                                        .jsonPath("$.errors.type").isEqualTo("Contact type is required");
                 }
 
                 @Test
@@ -142,12 +141,10 @@ public class ContactorControllerValidationTest {
                                         .exchange()
                                         .expectStatus().isBadRequest()
                                         .expectBody()
-                                        .jsonPath("$.errors").isArray()
-                                        .jsonPath("$.errors.length()").isEqualTo(2)
-                                        .jsonPath("$.errors[?(@.field == 'phoneNumber')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "Phone number is required",
-                                                                        "Phone number must be 7-15 digits, optionally starting with +"));
+                                        .jsonPath("$.errors").isMap()
+                                        .jsonPath("$.errors.length()").isEqualTo(1)
+                                        .jsonPath("$.errors.phoneNumber").isEqualTo(
+                                                        "Phone number must be 7-15 digits, optionally starting with +");
                 }
 
                 @Test
@@ -164,11 +161,10 @@ public class ContactorControllerValidationTest {
                                         .exchange()
                                         .expectStatus().isBadRequest()
                                         .expectBody()
-                                        .jsonPath("$.errors").isArray()
+                                        .jsonPath("$.errors").isMap()
                                         .jsonPath("$.errors.length()").isEqualTo(1)
-                                        .jsonPath("$.errors[?(@.field == 'phoneNumber')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "Phone number must be 7-15 digits, optionally starting with +"));
+                                        .jsonPath("$.errors.phoneNumber").isEqualTo(
+                                                        "Phone number must be 7-15 digits, optionally starting with +");
                 }
 
                 @Test
@@ -185,11 +181,10 @@ public class ContactorControllerValidationTest {
                                         .exchange()
                                         .expectStatus().isBadRequest()
                                         .expectBody()
-                                        .jsonPath("$.errors").isArray()
+                                        .jsonPath("$.errors").isMap()
                                         .jsonPath("$.errors.length()").isEqualTo(1)
-                                        .jsonPath("$.errors[?(@.field == 'email')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "Invalid email format"));
+                                        .jsonPath("$.errors.email").isEqualTo(
+                                                        "Invalid email format");
                 }
 
                 @Test
@@ -207,11 +202,10 @@ public class ContactorControllerValidationTest {
                                         .exchange()
                                         .expectStatus().isBadRequest()
                                         .expectBody()
-                                        .jsonPath("$.errors").isArray()
+                                        .jsonPath("$.errors").isMap()
                                         .jsonPath("$.errors.length()").isEqualTo(1)
-                                        .jsonPath("$.errors[?(@.field == 'organizationName')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "Organization name must be between 1 and 100 characters"));
+                                        .jsonPath("$.errors.organizationName").isEqualTo(
+                                                        "Organization name must be between 1 and 100 characters");
                 }
 
                 @Test
@@ -229,11 +223,10 @@ public class ContactorControllerValidationTest {
                                         .exchange()
                                         .expectStatus().isBadRequest()
                                         .expectBody()
-                                        .jsonPath("$.errors").isArray()
+                                        .jsonPath("$.errors").isMap()
                                         .jsonPath("$.errors.length()").isEqualTo(1)
-                                        .jsonPath("$.errors[?(@.field == 'fullname')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "First name must be between 1 and 50 characters"));
+                                        .jsonPath("$.errors.fullname").isEqualTo(
+                                                        "First name must be between 1 and 50 characters");
                 }
 
                 @Test
@@ -251,11 +244,10 @@ public class ContactorControllerValidationTest {
                                         .exchange()
                                         .expectStatus().isBadRequest()
                                         .expectBody()
-                                        .jsonPath("$.errors").isArray()
+                                        .jsonPath("$.errors").isMap()
                                         .jsonPath("$.errors.length()").isEqualTo(1)
-                                        .jsonPath("$.errors[?(@.field == 'email')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "Invalid email format"));
+                                        .jsonPath("$.errors.email").isEqualTo(
+                                                        "Invalid email format");
                 }
 
                 @Test
@@ -273,11 +265,10 @@ public class ContactorControllerValidationTest {
                                         .exchange()
                                         .expectStatus().isBadRequest()
                                         .expectBody()
-                                        .jsonPath("$.errors").isArray()
+                                        .jsonPath("$.errors").isMap()
                                         .jsonPath("$.errors.length()").isEqualTo(1)
-                                        .jsonPath("$.errors[?(@.field == 'address')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "Address must be between 1 and 200 characters"));
+                                        .jsonPath("$.errors.address").isEqualTo(
+                                                        "Address must be between 1 and 200 characters");
                 }
 
                 @Test
@@ -314,8 +305,8 @@ public class ContactorControllerValidationTest {
                                         .expectStatus().isNotFound()
                                         .expectBody()
                                         .jsonPath("$.details")
-                                        .value(org.hamcrest.Matchers.containsString(
-                                                        "Contactor not found with id " + nonExistentId));
+                                        .isEqualTo(
+                                                        "Contactor not found with id " + nonExistentId + ".");
                 }
 
                 @Test
@@ -360,7 +351,7 @@ public class ContactorControllerValidationTest {
                                         .exchange()
                                         .expectStatus().isEqualTo(409)
                                         .expectBody()
-                                        .jsonPath("$.details").value(org.hamcrest.Matchers
+                                        .jsonPath("$.details").value(Matchers
                                                         .containsString("Contactor with email " + existingEmail
                                                                         + " is already existed"));
                 }
@@ -390,7 +381,7 @@ public class ContactorControllerValidationTest {
                                                 printPrettyLog(log, res);
                                         })
                                         .jsonPath("$.details")
-                                        .value(org.hamcrest.Matchers.containsString(
+                                        .value(Matchers.containsString(
                                                         "Failed to create contactor with email " + testEmail));
                 }
 
@@ -417,7 +408,7 @@ public class ContactorControllerValidationTest {
                                         .expectStatus().is5xxServerError()
                                         .expectBody()
                                         .jsonPath("$.details")
-                                        .value(org.hamcrest.Matchers.containsString(
+                                        .value(Matchers.containsString(
                                                         "Failed to update contactor with email " + testEmail));
                 }
 
@@ -436,7 +427,7 @@ public class ContactorControllerValidationTest {
                                         .expectStatus().is5xxServerError()
                                         .expectBody()
                                         .jsonPath("$.details")
-                                        .value(org.hamcrest.Matchers.containsString(
+                                        .value(Matchers.containsString(
                                                         "Failed to delete contactor with id " + testId));
                 }
 
@@ -455,7 +446,7 @@ public class ContactorControllerValidationTest {
                                         .expectStatus().is5xxServerError()
                                         .expectBody()
                                         .jsonPath("$.details")
-                                        .value(org.hamcrest.Matchers.containsString("Failed to restore contactor"));
+                                        .value(Matchers.containsString("Failed to restore contactor"));
                 }
 
                 @Test
@@ -473,7 +464,7 @@ public class ContactorControllerValidationTest {
                                         .expectStatus().isNotFound()
                                         .expectBody()
                                         .jsonPath("$.details")
-                                        .value(org.hamcrest.Matchers.containsString(
+                                        .value(Matchers.containsString(
                                                         "Contactor not found with id " + nonExistentId));
                 }
 
@@ -492,7 +483,7 @@ public class ContactorControllerValidationTest {
                                         .expectStatus().isNotFound()
                                         .expectBody()
                                         .jsonPath("$.details")
-                                        .value(org.hamcrest.Matchers.containsString(
+                                        .value(Matchers.containsString(
                                                         "Contactor not found with id " + nonExistentId));
                 }
         }
@@ -557,20 +548,18 @@ public class ContactorControllerValidationTest {
                                         })
                                         .jsonPath("$.message").exists()
                                         .jsonPath("$.timestamp").exists()
-                                        .jsonPath("$.errors").isArray()
-                                        .jsonPath("$.errors.length()").isEqualTo(6)
-                                        .jsonPath("$.errors[?(@.field == 'phoneNumber')].error").value(
-                                                        Matchers.containsInAnyOrder("Phone number is required",
-                                                                        "Phone number must be 7-15 digits, optionally starting with +"))
-                                        .jsonPath("$.errors[?(@.field == 'rating')].error").value(
-                                                        Matchers.containsInAnyOrder("Rating is required"))
-                                        .jsonPath("$.errors[?(@.field == 'type')].error").value(
-                                                        Matchers.containsInAnyOrder("Contact type is required"))
-                                        .jsonPath("$.errors[?(@.field == 'email')].error").value(
-                                                        Matchers.containsInAnyOrder("Invalid email format"))
-                                        .jsonPath("$.errors[?(@.field == 'organizationName')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "Organization name must be between 1 and 100 characters"));
+                                        .jsonPath("$.errors").isMap()
+                                        .jsonPath("$.errors.length()").isEqualTo(5)
+                                        .jsonPath("$.errors.phoneNumber")
+                                        .value(Matchers.anyOf(
+                                                        Matchers.equalTo("Phone number is required"),
+                                                        Matchers.equalTo(
+                                                                        "Phone number must be 7-15 digits, optionally starting with +")))
+                                        .jsonPath("$.errors.rating").isEqualTo("Rating is required")
+                                        .jsonPath("$.errors.type").isEqualTo("Contact type is required")
+                                        .jsonPath("$.errors.email").isEqualTo("Invalid email format")
+                                        .jsonPath("$.errors.organizationName")
+                                        .isEqualTo("Organization name must be between 1 and 100 characters");
                 }
         }
 
@@ -628,11 +617,10 @@ public class ContactorControllerValidationTest {
                                         .exchange()
                                         .expectStatus().isBadRequest()
                                         .expectBody()
-                                        .jsonPath("$.errors").isArray()
+                                        .jsonPath("$.errors").isMap()
                                         .jsonPath("$.errors.length()").isEqualTo(1)
-                                        .jsonPath("$.errors[?(@.field == 'phoneNumber')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "Phone number must be 7-15 digits, optionally starting with +"));
+                                        .jsonPath("$.errors.phoneNumber").isEqualTo(
+                                                        "Phone number must be 7-15 digits, optionally starting with +");
                 }
 
                 @Test
@@ -649,11 +637,10 @@ public class ContactorControllerValidationTest {
                                         .exchange()
                                         .expectStatus().isBadRequest()
                                         .expectBody()
-                                        .jsonPath("$.errors").isArray()
+                                        .jsonPath("$.errors").isMap()
                                         .jsonPath("$.errors.length()").isEqualTo(1)
-                                        .jsonPath("$.errors[?(@.field == 'phoneNumber')].error").value(
-                                                        Matchers.containsInAnyOrder(
-                                                                        "Phone number must be 7-15 digits, optionally starting with +"));
+                                        .jsonPath("$.errors.phoneNumber").isEqualTo(
+                                                        "Phone number must be 7-15 digits, optionally starting with +");
                 }
         }
 
