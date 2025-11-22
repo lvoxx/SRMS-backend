@@ -1,0 +1,57 @@
+spring:
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers}
+    properties:
+      schema:
+        registry:
+          url: mock://test-registry
+      auto:
+        register:
+          schemas: true
+      specific:
+        avro:
+          reader: true
+      value:
+        subject:
+          name:
+            strategy: io.confluent.kafka.serializers.subject.RecordNameStrategy
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      acks: all
+      retries: 0
+      batch-size: 0          # Disable batching for immediate send in tests
+      linger-ms: 0           # Send immediately, don't wait
+      compression-type: none # No compression for faster tests
+      properties:
+        max.in.flight.requests.per.connection: 1
+        enable.idempotence: false
+        max.block.ms: 5000
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 10000
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      auto-offset-reset: earliest
+      fetch-min-bytes: 1     # Fetch immediately, don't wait for more data
+      fetch-max-wait-ms: 100 # Short wait for fetch
+      properties:
+        specific.avro.reader: true
+
+# Warehouse Alert Configuration for Testing
+warehouse:
+  alert:
+    check-interval: PT1M
+    initial-delay: PT1S
+    page-size: 10
+    enabled: true
+    retry-attempts: 1
+    retry-delay: PT100MS
+    max-alerts-per-run: 100
+    operation-timeout: PT5S
+
+logging:
+  level:
+    io.github.lvoxx.srms: DEBUG
+    org.apache.kafka: WARN
+    org.springframework.kafka: DEBUG

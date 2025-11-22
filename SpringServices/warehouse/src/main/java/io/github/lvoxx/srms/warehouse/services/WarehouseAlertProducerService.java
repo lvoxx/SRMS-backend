@@ -193,9 +193,11 @@ public class WarehouseAlertProducerService {
                 ? AlertMessageType.OUT_OF_STOCK
                 : AlertMessageType.BELOW_MINIMUM;
 
+        // Include product name in the message for better monitoring/alerting
         String enhancedMessage = String.format(
-                "[%s] %s - %s. Current: %d, Minimum: %d, Deficit: %d units. %s",
+                "[%s] %s: %s - %s. Current: %d, Minimum: %d, Deficit: %d units. %s",
                 messageType.getSeverity(),
+                alert.getProductName(), // ADDED: Product name at the beginning
                 messageType.getDescription(),
                 alert.getMessage(),
                 alert.getCurrentQuantity(),

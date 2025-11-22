@@ -1,127 +1,132 @@
 spring:
-  cache:
-    type: redis 
-  r2dbc:
-    url: r2dbc:postgresql://postgres:5432/demo_db
-    username: demo_user
-    password: demo_pass
+ cache:
+  type: redis
+ r2dbc:
+  url: r2dbc:postgresql://postgres:5432/demo_db
+  username: demo_user
+  password: demo_pass
+  pool:
+   initial-size: 10
+   max-size: 100 # tăng pool size cho high load
+   max-idle-time: 60s
+   validation-query: SELECT 1
+
+ data:
+  redis:
+   host: redis
+   port: 6379
+   timeout: 5s
+   client-type: lettuce
+   lettuce:
     pool:
-      initial-size: 10
-      max-size: 100            # tăng pool size cho high load
-      max-idle-time: 60s
-      validation-query: SELECT 1
+     max-active: 50
+     max-idle: 20
+     min-idle: 5
+     time-between-eviction-runs: 5s
+    shutdown-timeout: 100ms
 
-  data:
-    redis:
-      host: redis
-      port: 6379
-      timeout: 5s
-      client-type: lettuce
-      lettuce:
-        pool:
-          max-active: 50
-          max-idle: 20
-          min-idle: 5
-          time-between-eviction-runs: 5s
-        shutdown-timeout: 100ms
+ webflux:
+  base-path: ""
 
-  webflux:
-    base-path: ""
+ main:
+  web-application-type: reactive
 
-  main:
-    web-application-type: reactive
-
-  jackson:
-    default-property-inclusion: non_null
-    property-naming-strategy: KEBAB_CASE
-    serialization:
-      write-dates-as-timestamps: false
-    deserialization:
-      adjust-dates-to-context-time-zone: false
-    time-zone: Asia/Ho_Chi_Minh
-
+ jackson:
+  default-property-inclusion: non_null
+  property-naming-strategy: KEBAB_CASE
+  serialization:
+   write-dates-as-timestamps: false
+  deserialization:
+   adjust-dates-to-context-time-zone: false
+  time-zone: Asia/Ho_Chi_Minh
 ---
-
 spring:
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    properties:
-      schema:
-        registry:
-          url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
-      auto:
-        register:
-          schemas: true
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
-      acks: all
-      retries: 3
-      compression-type: snappy
-      batch-size: 16384
-      linger-ms: 10
-      buffer-memory: 33554432
-      properties:
-        max.in.flight.requests.per.connection: 5
-        enable.idempotence: true
-        request.timeout.ms: 30000
-        delivery.timeout.ms: 120000
-
+ kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+  properties:
+   schema:
+    registry:
+     url: ${SCHEMA_REGISTRY_URL:http://schema-registry:8081}
+   auto:
+    register:
+     schemas: true
+   # Thêm cấu hình Avro
+   specific:
+    avro:
+     reader: true
+   value:
+    subject:
+     name:
+      strategy: io.confluent.kafka.serializers.subject.RecordNameStrategy
+  producer:
+   key-serializer: org.apache.kafka.common.serialization.StringSerializer
+   value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+   acks: all
+   retries: 3
+   compression-type: snappy
+   batch-size: 16384
+   linger-ms: 10
+   buffer-memory: 33554432
+   properties:
+    max.in.flight.requests.per.connection: 5
+    enable.idempotence: true
+    request.timeout.ms: 30000
+    delivery.timeout.ms: 120000
+    # Thêm timeout cho metadata
+    max.block.ms: 60000
 ---
 
 redisson:
   single-server-config:
     address: "redis://${spring.data.redis.host}:${spring.data.redis.port}"
-    password: ${spring.data.redis.password}
-    database: ${spring.data.redis.database}
+    password: ${spring.data.redis.password:}
+    database: ${spring.data.redis.database:0}
   threads: 16
   netty-threads: 32
   codec: !<org.redisson.codec.JsonJacksonCodec> {}
   
 ---
-
 db:
-  row-lock: 15      # thời gian chờ tối đa để lấy lock (seconds)
-  lease-time: 45    # thời gian giữ lock trước khi tự động giải phóng (seconds)
+ row-lock: 15 # thời gian chờ tối đa để lấy lock (seconds)
+ lease-time: 45 # thời gian giữ lock trước khi tự động giải phóng (seconds)
 
 # Warehouse Alert Configuration
 warehouse:
-  alert:
-    # Interval between alert checks (ISO-8601 Duration format)
-    # Examples: PT5M (5 minutes), PT30S (30 seconds), PT1H (1 hour)
-    check-interval: ${WAREHOUSE_ALERT_CHECK_INTERVAL:PT5M}
-    
-    # Initial delay before first alert check
-    initial-delay: ${WAREHOUSE_ALERT_INITIAL_DELAY:PT30S}
-    
-    # Number of alerts to fetch per page
-    page-size: ${WAREHOUSE_ALERT_PAGE_SIZE:50}
-    
-    # Enable/disable alert publishing
-    enabled: ${WAREHOUSE_ALERT_ENABLED:true}
-    
-    # Number of retry attempts for failed Kafka sends
-    retry-attempts: ${WAREHOUSE_ALERT_RETRY_ATTEMPTS:3}
-    
-    # Delay between retry attempts
-    retry-delay: ${WAREHOUSE_ALERT_RETRY_DELAY:PT1S}
-    
-    # Maximum alerts to process in a single run (prevents overwhelming)
-    max-alerts-per-run: ${WAREHOUSE_ALERT_MAX_PER_RUN:1000}
-    
-    # Timeout for blocking operations
-    operation-timeout: ${WAREHOUSE_ALERT_OPERATION_TIMEOUT:PT30S}
+ alert:
+  # Interval between alert checks (ISO-8601 Duration format)
+  # Examples: PT5M (5 minutes), PT30S (30 seconds), PT1H (1 hour)
+  check-interval: ${WAREHOUSE_ALERT_CHECK_INTERVAL:PT5M}
+
+  # Initial delay before first alert check
+  initial-delay: ${WAREHOUSE_ALERT_INITIAL_DELAY:PT30S}
+
+  # Number of alerts to fetch per page
+  page-size: ${WAREHOUSE_ALERT_PAGE_SIZE:50}
+
+  # Enable/disable alert publishing
+  enabled: ${WAREHOUSE_ALERT_ENABLED:true}
+
+  # Number of retry attempts for failed Kafka sends
+  retry-attempts: ${WAREHOUSE_ALERT_RETRY_ATTEMPTS:3}
+
+  # Delay between retry attempts
+  retry-delay: ${WAREHOUSE_ALERT_RETRY_DELAY:PT1S}
+
+  # Maximum alerts to process in a single run (prevents overwhelming)
+  max-alerts-per-run: ${WAREHOUSE_ALERT_MAX_PER_RUN:1000}
+
+  # Timeout for blocking operations
+  operation-timeout: ${WAREHOUSE_ALERT_OPERATION_TIMEOUT:PT30S}
 
 ---
-
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: always
-  metrics:
-    tags:
-      application: ${spring.application.name}
+ endpoints:
+  web:
+   exposure:
+    include: health,info,metrics,prometheus
+ endpoint:
+  health:
+   show-details: always
+ metrics:
+  tags:
+   application: ${spring.application.name}

@@ -78,6 +78,7 @@
 		<jackson.version>2.19.2</jackson.version>
 		<lombok.version>1.18.38</lombok.version>
 		<mockito.version>5.19.0</mockito.version>
+		<awaitility.version>4.3.0</awaitility.version>
 
 		<testcontainers.version>1.21.3</testcontainers.version>
 		<testcontainers-keycloak.version>3.4.0</testcontainers-keycloak.version>
@@ -336,6 +337,12 @@
 				<groupId>org.testcontainers</groupId>
 				<artifactId>mockserver</artifactId>
 				<version>${testcontainers-mockserver.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.awaitility</groupId>
+				<artifactId>awaitility</artifactId>
+				<version>${awaitility.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<!-- TEST -->
