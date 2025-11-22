@@ -23,6 +23,7 @@ spring:
           max-idle: 20
           min-idle: 5
           time-between-eviction-runs: 5s
+        shutdown-timeout: 100ms
 
   webflux:
     base-path: ""

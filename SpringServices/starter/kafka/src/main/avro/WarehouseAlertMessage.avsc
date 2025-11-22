@@ -1,0 +1,53 @@
+{
+  "namespace": "io.github.lvoxx.srms.kafka.warehouse",
+  "type": "record",
+  "name": "WarehouseAlertMessage",
+  "doc": "Warehouse's product alert message with threshold for monitoring",
+  "fields": [
+    {
+      "name": "messageId",
+      "type": "string",
+      "doc": "Unique identifier for the alert message"
+    },
+    {
+      "name": "productId",
+      "type": "string",
+      "doc": "Unique identifier of the product"
+    },
+    {
+      "name": "productName",
+      "type": "string",
+      "doc": "Name of the product"
+    },
+    {
+      "name": "currentQuantity",
+      "type": "int",
+      "doc": "Current quantity in warehouse inventory"
+    },
+    {
+      "name": "threshold",
+      "type": "int",
+      "doc": "Threshold value that triggers the alert"
+    },
+    {
+      "name": "level",
+      "type": {
+        "type": "enum",
+        "name": "AlertLevel",
+        "symbols": ["WARNING", "CRITICAL"]
+      },
+      "doc": "Severity level of the alert"
+    },
+    {
+      "name": "message",
+      "type": "string",
+      "doc": "Human readable alert message"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "Timestamp when the alert was created in milliseconds"
+    }
+  ]
+}

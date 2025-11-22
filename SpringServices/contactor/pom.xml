@@ -32,10 +32,6 @@
 		</developer>
 	</developers>
 
-	<properties>
-		<service.port>${port.contactor}</service.port>
-	</properties>
-
 	<dependencies>
 
 		<dependency>

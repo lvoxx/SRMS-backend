@@ -40,12 +40,13 @@
 		<module>common</module>
 		<module>starter/controllerhandler</module>
 		<module>starter/jdbc</module>
+		<module>starter/redisson</module>
+		<module>starter/kafka</module>
 
 		<module>contactor</module>
 		<module>customer</module>
 		<module>dashboard</module>
 		<module>kitchen</module>
-		<module>notification</module>
 		<module>order</module>
 		<module>payment</module>
 		<module>reporting</module>
@@ -59,6 +60,8 @@
 		<spring-context.version>6.2.10</spring-context.version>
 		<spring-aop.version>6.2.10</spring-aop.version>
 		<spring-boot.version>3.5.3</spring-boot.version>
+		<spring-kafka.version>3.3.10</spring-kafka.version>
+		<spring-websocket.version>7.0.0-M9</spring-websocket.version>
 		<spring-cloud.version>4.3.0</spring-cloud.version>
 		<spring-cloud.kubernetes.version>3.3.0</spring-cloud.kubernetes.version>
 		<kubernetes.client.version>18.0.0</kubernetes.client.version>
@@ -67,10 +70,15 @@
 
 		<postgresql.version>42.7.7</postgresql.version>
 		<r2dbc-postgresql.version>1.0.7.RELEASE</r2dbc-postgresql.version>
+		<redission.version>3.52.0</redission.version>
+		<avro.version>1.12.1</avro.version>
+		<kafka-avro.version>8.1.0</kafka-avro.version>
+		<kafka-schema.version>8.1.0</kafka-schema.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<jackson.version>2.19.2</jackson.version>
 		<lombok.version>1.18.38</lombok.version>
 		<mockito.version>5.19.0</mockito.version>
+		<awaitility.version>4.3.0</awaitility.version>
 
 		<testcontainers.version>1.21.3</testcontainers.version>
 		<testcontainers-keycloak.version>3.4.0</testcontainers-keycloak.version>
@@ -79,24 +87,12 @@
 		<mockserver.client.version>5.15.0</mockserver.client.version>
 		<spring-security-test.version>6.5.2</spring-security-test.version>
 		<spring-boot.testcontainers.version>3.5.3</spring-boot.testcontainers.version>
+		<spring-kafka-test.version>3.3.10</spring-kafka-test.version>
 		<!-- VERSIONING END -->
 
 		<!-- DOCKER START -->
 		<docker.image.prefix>lvoxx/srms</docker.image.prefix>
 		<skip.docker.build>true</skip.docker.build>
-		<!-- Định nghĩa tất cả ports ở đây -->
-		<port.contactor>8081</port.contactor>
-		<port.customer>8082</port.customer>
-		<port.order>8083</port.order>
-		<port.payment>8084</port.payment>
-		<port.kitchen>8085</port.kitchen>
-		<port.warehouse>8086</port.warehouse>
-		<port.notification>8087</port.notification>
-		<port.dashboard>8088</port.dashboard>
-		<port.reporting>8089</port.reporting>
-
-		<!-- Property mặc định (cho service không tự định nghĩa) -->
-		<service.port>8080</service.port>
 		<!-- DOCKER END -->
 	</properties>
 
@@ -125,7 +121,16 @@
 				<artifactId>jdbc</artifactId>
 				<version>${application.version}</version>
 			</dependency>
-
+			<dependency>
+				<groupId>io.github.lvoxx.srms</groupId>
+				<artifactId>redisson</artifactId>
+				<version>${application.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.lvoxx.srms</groupId>
+				<artifactId>kafka</artifactId>
+				<version>${application.version}</version>
+			</dependency>
 			<!-- SPRING BOOT -->
 			<dependency>
 				<groupId>org.springframework</groupId>
@@ -168,6 +173,11 @@
 				<version>${spring-boot.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.redisson</groupId>
+				<artifactId>redisson-spring-boot-starter</artifactId>
+				<version>${redission.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-webflux</artifactId>
 				<version>${spring-boot.version}</version>
@@ -181,6 +191,16 @@
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-aop</artifactId>
 				<version>${spring-aop.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-websocket</artifactId>
+				<version>${spring-websocket.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.kafka</groupId>
+				<artifactId>spring-kafka</artifactId>
+				<version>${spring-kafka.version}</version>
 			</dependency>
 			<!-- SPRING BOOT -->
 
@@ -226,6 +246,21 @@
 				<scope>runtime</scope>
 			</dependency>
 			<dependency>
+				<groupId>org.apache.avro</groupId>
+				<artifactId>avro</artifactId>
+				<version>${avro.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.confluent</groupId>
+				<artifactId>kafka-avro-serializer</artifactId>
+				<version>${kafka-avro.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.confluent</groupId>
+				<artifactId>kafka-schema-registry-client</artifactId>
+				<version>${kafka-schema.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.mapstruct</groupId>
 				<artifactId>mapstruct</artifactId>
 				<version>${mapstruct.version}</version>
@@ -248,6 +283,12 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-test</artifactId>
 				<version>${spring-boot.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.kafka</groupId>
+				<artifactId>spring-kafka-test</artifactId>
+				<version>${spring-kafka-test.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
@@ -296,6 +337,12 @@
 				<groupId>org.testcontainers</groupId>
 				<artifactId>mockserver</artifactId>
 				<version>${testcontainers-mockserver.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.awaitility</groupId>
+				<artifactId>awaitility</artifactId>
+				<version>${awaitility.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<!-- TEST -->

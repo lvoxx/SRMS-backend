@@ -23,13 +23,13 @@ import lombok.experimental.SuperBuilder;
 public abstract class AbstractEntity {
     @Id
     @Column("id")
-    private UUID id;
+    protected UUID id;
 
     @Column("created_at")
     @Default
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    protected OffsetDateTime createdAt = OffsetDateTime.now();
 
     @Column("updated_at")
-    private OffsetDateTime updatedAt;
+    protected OffsetDateTime updatedAt;
 
 }

@@ -1,6 +1,14 @@
 server:
-    port: 5050
+  port: 9090
+  reactive:
+    session:
+      timeout: 30m
 
 spring:
-    application:
-        name: warehouse_service
+  application:
+    name: warehouse_service
+  profiles:
+    active: docker
+  threads:
+    virtual:
+      enabled: true 

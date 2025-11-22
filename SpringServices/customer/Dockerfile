@@ -26,7 +26,7 @@ ENV JAVA_OPTS="\
 -XX:+UseG1GC \
 -Xlog:gc*,gc+heap=debug:file=/logs/gc.log:time,uptime,level,tags"
 
-EXPOSE 5050
+EXPOSE 9090
 
 # Distroless không có sh, nên phải chạy trực tiếp java
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-cp", "/app", "org.springframework.boot.loader.launch.JarLauncher"]
