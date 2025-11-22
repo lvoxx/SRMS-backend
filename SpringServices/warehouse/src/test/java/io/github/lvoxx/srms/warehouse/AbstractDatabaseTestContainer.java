@@ -1,12 +1,16 @@
 package io.github.lvoxx.srms.warehouse;
 
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import io.github.lvoxx.srms.warehouse.config.NoCacheLoadConfig;
+
 @Testcontainers
+@Import(NoCacheLoadConfig.class)
 public abstract class AbstractDatabaseTestContainer {
     @SuppressWarnings("resource")
     @Container
