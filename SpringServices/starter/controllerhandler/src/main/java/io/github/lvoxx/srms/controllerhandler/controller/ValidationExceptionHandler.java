@@ -55,7 +55,7 @@ public class ValidationExceptionHandler {
                                 .error("Bad Request")
                                 .message("Validation failed for one or more parameters")
                                 .path(exchange.getRequest().getPath().value())
-                                .validationErrors(errors)
+                                .errors(errors)
                                 .build();
 
                 return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
@@ -94,7 +94,7 @@ public class ValidationExceptionHandler {
                                 .error("Bad Request")
                                 .message("Validation failed for one or more parameters")
                                 .path(exchange.getRequest().getPath().value())
-                                .validationErrors(errors)
+                                .errors(errors)
                                 .build();
 
                 return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
@@ -123,7 +123,7 @@ public class ValidationExceptionHandler {
                                 .error("Bad Request")
                                 .message("Validation on method failed for one or more parameters")
                                 .path(exchange.getRequest().getPath().value())
-                                .validationErrors(errors)
+                                .errors(errors)
                                 .build();
 
                 return Mono.just(ResponseEntity.badRequest().body(errorResponse));
@@ -183,7 +183,7 @@ public class ValidationExceptionHandler {
                                 .error("Bad Request")
                                 .message("Validation failed for request body")
                                 .path(exchange.getRequest().getPath().value())
-                                .validationErrors(errors)
+                                .errors(errors)
                                 .build();
 
                 return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
@@ -202,6 +202,6 @@ public class ValidationExceptionHandler {
                 private String error;
                 private String message;
                 private String path;
-                private Map<String, String> validationErrors;
+                private Map<String, String> errors;
         }
 }
