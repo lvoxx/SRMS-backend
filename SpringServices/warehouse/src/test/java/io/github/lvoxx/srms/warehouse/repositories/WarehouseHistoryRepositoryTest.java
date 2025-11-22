@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
@@ -28,6 +30,7 @@ import io.github.lvoxx.srms.warehouse.models.WarehouseHistory.HistoryType;
 import reactor.test.StepVerifier;
 
 @DataR2dbcTest
+@ImportAutoConfiguration(exclude = CacheAutoConfiguration.class)
 @ActiveProfiles("repo")
 @DisplayName("Warehouse History Repository Tests")
 @Tags({

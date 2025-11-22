@@ -2,6 +2,7 @@ package io.github.lvoxx.srms.customer;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -9,7 +10,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.redis.testcontainers.RedisContainer;
 
+import io.github.lvoxx.srms.customer.config.NoCacheLoadConfig;
+
 @Testcontainers
+@Import(NoCacheLoadConfig.class)
 public abstract class AbstractCacheTestContainer {
 
     @SuppressWarnings("resource")
