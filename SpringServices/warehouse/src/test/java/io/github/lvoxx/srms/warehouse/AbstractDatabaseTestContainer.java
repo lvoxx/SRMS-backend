@@ -12,22 +12,28 @@ import io.github.lvoxx.srms.warehouse.config.NoCacheLoadConfig;
 @Testcontainers
 @Import(NoCacheLoadConfig.class)
 public abstract class AbstractDatabaseTestContainer {
-    @SuppressWarnings("resource")
+
     @Container
-    protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17.4-alpine")
-            .withDatabaseName("test")
-            .withUsername("root")
-            .withPassword("Te3tP4ssW@r$")
-            .withInitScript("warehouse_test.sql");
+    static final PostgreSQLContainer<?> POSTGRES;
+
+    static {
+        POSTGRES = new PostgreSQLContainer<>("postgres:17.4-alpine")
+                .withDatabaseName("test")
+                .withUsername("root")
+                .withPassword("Te3tP4ssW@r$")
+                .withInitScript("warehouse_test.sql")
+                .withReuse(true);
+        POSTGRES.start();
+    }
 
     @DynamicPropertySource
     static void configureR2dbc(DynamicPropertyRegistry registry) {
         registry.add("spring.r2dbc.url",
                 () -> String.format("r2dbc:postgresql://%s:%d/%s",
-                        postgres.getHost(),
-                        postgres.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT),
-                        postgres.getDatabaseName()));
-        registry.add("spring.r2dbc.username", postgres::getUsername);
-        registry.add("spring.r2dbc.password", postgres::getPassword);
+                        POSTGRES.getHost(),
+                        POSTGRES.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT),
+                        POSTGRES.getDatabaseName()));
+        registry.add("spring.r2dbc.username", POSTGRES::getUsername);
+        registry.add("spring.r2dbc.password", POSTGRES::getPassword);
     }
 }

@@ -15,7 +15,8 @@ public abstract class AbstractCacheTestContainer {
     @SuppressWarnings("resource")
     @Container
     protected static RedisContainer redis = new RedisContainer("redis:7.4-alpine")
-            .withExposedPorts(6379);
+            .withExposedPorts(6379)
+            .withReuse(true);
 
     @DynamicPropertySource
     static void configureCache(DynamicPropertyRegistry registry) {
