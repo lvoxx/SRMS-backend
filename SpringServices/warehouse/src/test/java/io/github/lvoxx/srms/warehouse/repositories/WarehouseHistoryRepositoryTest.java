@@ -21,6 +21,7 @@ import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import io.github.lvoxx.srms.warehouse.AbstractDatabaseTestContainer;
@@ -30,13 +31,13 @@ import io.github.lvoxx.srms.warehouse.models.WarehouseHistory.HistoryType;
 import reactor.test.StepVerifier;
 
 @DataR2dbcTest
-@ImportAutoConfiguration(exclude = CacheAutoConfiguration.class)
 @ActiveProfiles("repo")
 @DisplayName("Warehouse History Repository Tests")
 @Tags({
         @Tag("Repository"), @Tag("Integration")
 })
 @SuppressWarnings("unused")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class WarehouseHistoryRepositoryTest extends AbstractDatabaseTestContainer {
 
     private static final Logger log = LoggerFactory.getLogger(WarehouseHistoryRepositoryTest.class);
