@@ -1,12 +1,13 @@
 package io.github.lvoxx.srms.kitchen.models;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.util.UUID;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import io.github.lvoxx.srms.jdbc.AbstractEntity;
+import io.github.lvoxx.srms.jdbc.AbstractPersonEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,8 +22,12 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Table("kitchen_inventory_current")
-public class KitchenInventoryCurrent extends AbstractEntity {
+public class KitchenInventoryCurrent extends AbstractPersonEntity {
     
+    @Id
+    @Column("id")
+    private UUID id;
+
     @Column("item_name")
     private String itemName;
     
@@ -40,10 +45,5 @@ public class KitchenInventoryCurrent extends AbstractEntity {
     
     @Column("max_threshold")
     private BigDecimal maxThreshold;
-    
-    @Column("last_updated")
-    private OffsetDateTime lastUpdated;
-    
-    @Column("updated_by")
-    private String updatedBy;
+
 }

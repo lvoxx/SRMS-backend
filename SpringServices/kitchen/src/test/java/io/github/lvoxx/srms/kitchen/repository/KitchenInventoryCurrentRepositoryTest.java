@@ -44,7 +44,6 @@ class KitchenInventoryCurrentRepositoryTest extends AbstractDatabaseTestContaine
 
         // Normal stock
         normalStock = KitchenInventoryCurrent.builder()
-                .id(UUID.randomUUID())
                 .itemName("Gạo")
                 .itemCategory("Thực phẩm khô")
                 .currentQuantity(new BigDecimal("100"))
@@ -57,7 +56,6 @@ class KitchenInventoryCurrentRepositoryTest extends AbstractDatabaseTestContaine
 
         // Low stock
         lowStock = KitchenInventoryCurrent.builder()
-                .id(UUID.randomUUID())
                 .itemName("Thịt bò")
                 .itemCategory("Thực phẩm tươi sống")
                 .currentQuantity(new BigDecimal("5"))
@@ -70,7 +68,6 @@ class KitchenInventoryCurrentRepositoryTest extends AbstractDatabaseTestContaine
 
         // Out of stock
         outOfStock = KitchenInventoryCurrent.builder()
-                .id(UUID.randomUUID())
                 .itemName("Bia Heineken")
                 .itemCategory("Đồ uống")
                 .currentQuantity(BigDecimal.ZERO)
@@ -89,7 +86,6 @@ class KitchenInventoryCurrentRepositoryTest extends AbstractDatabaseTestContaine
     @Test
     void testSaveAndFindById() {
         KitchenInventoryCurrent newItem = KitchenInventoryCurrent.builder()
-                .id(UUID.randomUUID())
                 .itemName("Dầu ăn")
                 .itemCategory("Gia vị")
                 .currentQuantity(new BigDecimal("15"))
@@ -177,7 +173,6 @@ class KitchenInventoryCurrentRepositoryTest extends AbstractDatabaseTestContaine
     @Test
     void testInventoryWithNoThresholds() {
         KitchenInventoryCurrent noThreshold = KitchenInventoryCurrent.builder()
-                .id(UUID.randomUUID())
                 .itemName("Khăn lạnh")
                 .itemCategory("Vật dụng")
                 .currentQuantity(new BigDecimal("50"))
@@ -221,7 +216,6 @@ class KitchenInventoryCurrentRepositoryTest extends AbstractDatabaseTestContaine
     @Test
     void testItemNameUniqueness() {
         KitchenInventoryCurrent duplicate = KitchenInventoryCurrent.builder()
-                .id(UUID.randomUUID())
                 .itemName("Gạo") // Duplicate name
                 .itemCategory("Thực phẩm khô")
                 .currentQuantity(new BigDecimal("50"))

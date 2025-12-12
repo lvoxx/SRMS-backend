@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 -- =====================================================
 -- KITCHEN SERVICE DATABASE SCHEMA
 -- =====================================================
@@ -5,9 +7,9 @@
 -- Table: menu_category
 -- Purpose: Hierarchical categorization of kitchen menu items
 CREATE TABLE menu_category (
-    self_id VARCHAR(36) PRIMARY KEY,
-    ctg_parent_id VARCHAR(36),
-    category_name NVARCHAR(255) NOT NULL,
+    self_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ctg_parent_id UUID,
+    category_name VARCHAR(255) NOT NULL,
     display_order INT DEFAULT 0,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -33,15 +35,15 @@ CREATE INDEX idx_menu_category_active ON menu_category(is_active) WHERE is_activ
 -- Table: kitchen_menu
 -- Purpose: Menu items available for ordering
 CREATE TABLE kitchen_menu (
-    menu_id VARCHAR(36) PRIMARY KEY,
-    menu_name NVARCHAR(255) NOT NULL,
+    menu_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    menu_name VARCHAR(255) NOT NULL,
     image_url VARCHAR(500),
     min_quantity INT DEFAULT 1,
-    unit NVARCHAR(50) DEFAULT 'phần',
+    unit VARCHAR(50) DEFAULT 'phần',
     max_quantity INT DEFAULT 20,
-    menu_ctg_id VARCHAR(36) NOT NULL,
+    menu_ctg_id UUID NOT NULL,
     price DECIMAL(12, 2),
-    description NVARCHAR(1000),
+    description VARCHAR(1000),
     is_available BOOLEAN DEFAULT TRUE,
     preparation_time_minutes INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -73,14 +75,14 @@ CREATE INDEX idx_kitchen_menu_available ON kitchen_menu(is_available) WHERE is_a
 -- Table: kitchen_orders
 -- Purpose: Track orders received from order service
 CREATE TABLE kitchen_orders (
-    kitchen_order_id VARCHAR(36) PRIMARY KEY,
-    order_id VARCHAR(36) NOT NULL,
-    table_location NVARCHAR(100) NOT NULL,
-    staff_name NVARCHAR(100) NOT NULL,
+    kitchen_order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID NOT NULL,
+    table_location VARCHAR(100) NOT NULL,
+    staff_name VARCHAR(100) NOT NULL,
     order_time TIMESTAMPTZ NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'received',
-    kitchen_note NVARCHAR(500),
-    customer_note NVARCHAR(500),
+    kitchen_note VARCHAR(500),
+    customer_note VARCHAR(500),
     completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -123,13 +125,13 @@ CREATE INDEX idx_kitchen_orders_time ON kitchen_orders(order_time DESC);
 -- Table: kitchen_order_items
 -- Purpose: Individual items within each kitchen order
 CREATE TABLE kitchen_order_items (
-    item_id VARCHAR(36) PRIMARY KEY,
-    kitchen_order_id VARCHAR(36) NOT NULL,
-    menu_id VARCHAR(36) NOT NULL,
-    menu_name NVARCHAR(255) NOT NULL,
+    item_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    kitchen_order_id UUID NOT NULL,
+    menu_id UUID NOT NULL,
+    menu_name VARCHAR(255) NOT NULL,
     quantity INT NOT NULL,
-    unit NVARCHAR(50) DEFAULT 'phần',
-    special_request NVARCHAR(500),
+    unit VARCHAR(50) DEFAULT 'phần',
+    special_request VARCHAR(500),
     item_status VARCHAR(50) DEFAULT 'pending',
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     
@@ -155,16 +157,16 @@ CREATE INDEX idx_order_items_menu ON kitchen_order_items(menu_id);
 -- Table: kitchen_inside_history
 -- Purpose: Track internal kitchen inventory movements
 CREATE TABLE kitchen_inside_history (
-    history_id VARCHAR(36) PRIMARY KEY,
+    history_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     transaction_type VARCHAR(50) NOT NULL,
-    item_name NVARCHAR(255) NOT NULL,
-    item_category NVARCHAR(100),
+    item_name VARCHAR(255) NOT NULL,
+    item_category VARCHAR(100),
     quantity DECIMAL(12, 3) NOT NULL,
-    unit NVARCHAR(50) NOT NULL,
+    unit VARCHAR(50) NOT NULL,
     source_reference VARCHAR(100),
-    staff_name NVARCHAR(100) NOT NULL,
+    staff_name VARCHAR(100) NOT NULL,
     transaction_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    notes NVARCHAR(1000),
+    notes VARCHAR(1000),
     cost_amount DECIMAL(12, 2),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     
@@ -207,15 +209,15 @@ CREATE INDEX idx_kitchen_history_category ON kitchen_inside_history(item_categor
 -- Table: kitchen_inventory_current
 -- Purpose: Current inventory levels (optional, for quick reference)
 CREATE TABLE kitchen_inventory_current (
-    inventory_id VARCHAR(36) PRIMARY KEY,
-    item_name NVARCHAR(255) NOT NULL UNIQUE,
-    item_category NVARCHAR(100),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    item_name VARCHAR(255) NOT NULL UNIQUE,
+    item_category VARCHAR(100),
     current_quantity DECIMAL(12, 3) NOT NULL DEFAULT 0,
-    unit NVARCHAR(50) NOT NULL,
+    unit VARCHAR(50) NOT NULL,
     min_threshold DECIMAL(12, 3),
     max_threshold DECIMAL(12, 3),
     last_updated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_by NVARCHAR(100),
+    updated_by VARCHAR(100),
     
     -- Constraints
     CONSTRAINT chk_current_quantity_non_negative 
