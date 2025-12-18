@@ -134,7 +134,8 @@ CREATE TABLE kitchen_order_items (
     special_request VARCHAR(500),
     item_status VARCHAR(50) DEFAULT 'pending',
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
     -- Constraints
     CONSTRAINT fk_kitchen_order 
         FOREIGN KEY (kitchen_order_id) 
@@ -157,7 +158,7 @@ CREATE INDEX idx_order_items_menu ON kitchen_order_items(menu_id);
 -- Table: kitchen_inside_history
 -- Purpose: Track internal kitchen inventory movements
 CREATE TABLE kitchen_inside_history (
-    history_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     transaction_type VARCHAR(50) NOT NULL,
     item_name VARCHAR(255) NOT NULL,
     item_category VARCHAR(100),
@@ -169,6 +170,7 @@ CREATE TABLE kitchen_inside_history (
     notes VARCHAR(1000),
     cost_amount DECIMAL(12, 2),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     
     -- Constraints
     CONSTRAINT chk_transaction_type 

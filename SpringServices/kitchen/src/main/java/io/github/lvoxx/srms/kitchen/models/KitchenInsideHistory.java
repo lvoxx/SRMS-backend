@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.Builder.Default;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder(toBuilder = true)
@@ -33,23 +34,29 @@ public class KitchenInsideHistory extends AbstractEntity {
     private String itemCategory;
 
     @Column("quantity")
-    private BigDecimal quantity;
+    @Default
+    private BigDecimal quantity = BigDecimal.ZERO;
 
     @Column("unit")
     private String unit;
 
     @Column("source_reference")
-    private String sourceReference;
+    @Default
+    private String sourceReference = "Unknown";
 
     @Column("staff_name")
-    private String staffName;
+    @Default
+    private String staffName = "Unknown";
 
     @Column("transaction_date")
-    private OffsetDateTime transactionDate;
+    @Default
+    private OffsetDateTime transactionDate = OffsetDateTime.now();
 
     @Column("notes")
-    private String notes;
+    @Default
+    private String notes = "None";
 
     @Column("cost_amount")
-    private BigDecimal costAmount;
+    @Default
+    private BigDecimal costAmount = BigDecimal.ZERO;
 }
