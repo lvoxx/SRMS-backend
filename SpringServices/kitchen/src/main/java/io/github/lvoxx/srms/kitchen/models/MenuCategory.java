@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.Builder.Default;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder(toBuilder = true)
@@ -29,8 +30,10 @@ public class MenuCategory extends AbstractEntity {
     private String categoryName;
 
     @Column("display_order")
-    private Integer displayOrder;
+    @Default
+    private Integer displayOrder = 0;
 
     @Column("is_active")
-    private Boolean isActive;
+    @Default
+    private Boolean isActive = true;
 }

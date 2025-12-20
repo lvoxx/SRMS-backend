@@ -41,28 +41,26 @@ public class MenuCategoryRepositoryTest extends AbstractDatabaseTestContainer {
 
         // Create test data
         rootCategory = MenuCategory.builder()
-                .id(UUID.randomUUID())
                 .categoryName("Món chính")
                 .displayOrder(1)
                 .isActive(true)
                 .build();
 
+        repository.save(rootCategory).block();
+
         childCategory = MenuCategory.builder()
-                .id(UUID.randomUUID())
                 .ctgParentId(rootCategory.getId())
                 .categoryName("Món nướng")
                 .displayOrder(1)
                 .isActive(true)
                 .build();
 
-        repository.save(rootCategory).block();
         repository.save(childCategory).block();
     }
 
     @Test
     void testSaveAndFindById() {
         MenuCategory category = MenuCategory.builder()
-                .id(UUID.randomUUID())
                 .categoryName("Món tráng miệng")
                 .displayOrder(2)
                 .isActive(true)
@@ -96,7 +94,6 @@ public class MenuCategoryRepositoryTest extends AbstractDatabaseTestContainer {
     @Test
     void testFindByIsActiveTrue() {
         MenuCategory inactiveCategory = MenuCategory.builder()
-                .id(UUID.randomUUID())
                 .categoryName("Ngừng phục vụ")
                 .displayOrder(99)
                 .isActive(false)
@@ -112,9 +109,11 @@ public class MenuCategoryRepositoryTest extends AbstractDatabaseTestContainer {
     void testFindRootCategories() {
         StepVerifier.create(repository.findRootCategories())
                 .assertNext(category -> {
-                    assertThat(category.getId()).isEqualTo(rootCategory.getId());
-                    assertThat(category.getCtgParentId()).isNull();
+                assertThat(category.getId()).isEqualTo(rootCategory.getId());
+                assertThat(category.getCtgParentId()).isNull();
+                log.info("Found root category: {}", category);
                 })
+                // .expectNextCount(2)
                 .verifyComplete();
     }
 
