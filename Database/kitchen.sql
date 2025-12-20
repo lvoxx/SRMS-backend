@@ -7,7 +7,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Table: menu_category
 -- Purpose: Hierarchical categorization of kitchen menu items
 CREATE TABLE menu_category (
-    self_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ctg_parent_id UUID,
     category_name VARCHAR(255) NOT NULL,
     display_order INT DEFAULT 0,
@@ -18,10 +18,10 @@ CREATE TABLE menu_category (
     -- Constraints
     CONSTRAINT fk_parent_category 
         FOREIGN KEY (ctg_parent_id) 
-        REFERENCES menu_category(self_id) 
+        REFERENCES menu_category(id) 
         ON DELETE SET NULL,
     CONSTRAINT chk_no_self_reference 
-        CHECK (self_id != ctg_parent_id),
+        CHECK (id != ctg_parent_id),
     CONSTRAINT chk_category_name_not_empty 
         CHECK (TRIM(category_name) != '')
 );
@@ -52,7 +52,7 @@ CREATE TABLE kitchen_menu (
     -- Constraints
     CONSTRAINT fk_menu_category 
         FOREIGN KEY (menu_ctg_id) 
-        REFERENCES menu_category(self_id) 
+        REFERENCES menu_category(id) 
         ON DELETE RESTRICT,
     CONSTRAINT chk_menu_name_not_empty 
         CHECK (TRIM(menu_name) != ''),
